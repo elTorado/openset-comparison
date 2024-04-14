@@ -14,8 +14,8 @@ from vast import architectures, tools, losses
 import pathlib
 import json
 
-_DATA_DIR = '/home/user/heizmann/data/'
-DATA_DIR = '/home/deanheizmann/data/'
+DATA_DIR = '/home/user/heizmann/data/'
+_DATA_DIR = '/home/deanheizmann/data/'
 
 def command_line_options():
     import argparse
@@ -397,5 +397,5 @@ def train(args):
 if __name__ == "__main__":
     args = command_line_options()
     example = Dataset(dataset_root=args.dataset_root)
-    # example.create_png()
+    example.create_png()
     create_fold()

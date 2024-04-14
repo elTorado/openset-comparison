@@ -9,3 +9,5 @@ openset_imagenet.egg-info
 *.dataset
 *.csv
 protocols/
+counterfactual-open-set/images/
+counterfactual-open-set/trajectories/

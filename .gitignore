@@ -6,3 +6,6 @@
 data/*
 experiments/*
 openset_imagenet.egg-info
+*.dataset
+*.csv
+protocols/

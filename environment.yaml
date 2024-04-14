@@ -1,12 +1,16 @@
-name: openset-imagenet
+name: synthetic-imagenet
 
 channels:
   - default
   - conda-forge
   - pytorch
 
+
+# ISSUE: ONE OF THESE PACKAGES INSTALLS LOGUTIL BUT WE NEED TO CUSTOM VERSION FROM 
+# THE GIT REPO IN THE pip SECTION. SOLUTION; AFTER SETTING UP ENV; REMOVE LOGUTIL AND RE INSTALL FROM GIT
+
 dependencies:
-  - python=3.8
+  - python=3.10.13
   - pandas>=1.4.3
   - numpy>=1.22.3
   - matplotlib>=3.5.2
@@ -19,7 +23,19 @@ dependencies:
   - pyyaml
   - pip
   - tensorboard
+  - scipy
+  - Pillow==9.5.0 # above will trough error due to missing getsite funciton
+  - requests
+  - tqdm
+  - Cython
+  
+
+   
   - pip:
+      - libMR
       - robustness>=1.2.1.post2
+      - seaborn
       - git+https://github.com/Vastlab/vast.git
+      - git+http://github.com/lwneal/imutil
+      - git+http://github.com/lwneal/logutil
       - -e . # install this package as well

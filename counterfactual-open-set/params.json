@@ -1,0 +1,34 @@
+{
+  "batch_size": 64,
+  "beta1": 0.5,
+  "cf_distance_weight": 1,
+  "cf_gan_scale": 4,
+  "cf_max_iters": 100,
+  "cf_speed": 0.1,
+
+  "rdataset": "/home/deanheizmann/data/cifar10-split0a.dataset",
+  "rcomparison_dataset": "/home/deanheizmann/data/cifar10-split0b.dataset",
+
+  "Edataset": "/home/deanheizmann/data/mnist-split0a.dataset",
+  "Ecomparison_dataset": "/home/deanheizmann/data/mnist-split0b.dataset",
+
+  "Xdataset": "/home/deanheizmann/data/emnist/emnist_split1.dataset",
+  "Xcomparison_dataset": "/home/deanheizmann/data/emnist/emnist_split2.dataset",
+
+
+
+
+
+  "dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split1.dataset",
+  "comparison_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split2.dataset",
+
+  "hypothesis": "Example run on tiny imagenet",
+  "delete_background": false,
+  "discriminator_weight": 0.01,
+  "generator_weight": 0.01,
+  "image_size": 32,
+  "latent_size": 64,
+  "random_horizontal_flip": false,
+  "reconstruction_weight": 1.0,
+  "weight_decay": 0.0
+}

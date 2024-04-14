@@ -1,0 +1,14 @@
+git+http://github.com/lwneal/imutil
+git+http://github.com/lwneal/logutil
+numpy
+scipy
+torch
+torchvision
+Pillow
+requests
+tqdm
+scikit-learn
+matplotlib
+seaborn
+Cython
+libMR

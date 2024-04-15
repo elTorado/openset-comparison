@@ -109,6 +109,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
         for item in file_content:
             try:
+                item = json.loads(item.strip())
                 image = Image.open(item["filename"])    
                 image_tensor = transforms.Compose([
                     transforms.ToTensor(),

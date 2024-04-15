@@ -297,33 +297,35 @@ def create_fold():
     
 def get_loss_functions(args):
     """Returns the loss function and the data for training and validation"""
+    print("XXXXXXXXXXXXXXX ARGS XXXXXXXXXXX")
+    print(args.dataset_root)
     if args.approach == "SoftMax":
         return dict(
                     first_loss_func=nn.CrossEntropyLoss(reduction='none'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
-                    training_data = Dataset(args.dataset_root, include_unknown=False),
-                    val_data = Dataset(args.dataset_root, which_set="val", include_unknown=False),
+                    training_data = Dataset(args, args.dataset_root, include_unknown=False),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=False),
                 )
     elif args.approach =="Garbage":
         return dict(
                     first_loss_func=nn.CrossEntropyLoss(reduction='none'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
-                    training_data = Dataset(args.dataset_root, has_garbage_class=True),
-                    val_data = Dataset(args.dataset_root, which_set="val", has_garbage_class=True)
+                    training_data = Dataset(args, args.dataset_root, has_garbage_class=True),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", has_garbage_class=True)
                 )
     elif args.approach == "EOS":
         return dict(
                     first_loss_func=losses.entropic_openset_loss(),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
-                    training_data=Dataset(args.dataset_root),
-                    val_data = Dataset(args.dataset_root, which_set="val")
+                    training_data=Dataset(args, args.dataset_root),
+                    val_data = Dataset(args, args.dataset_root, which_set="val")
                 )
     elif args.approach == "Objectosphere":
         return dict(
                     first_loss_func=losses.entropic_openset_loss(),
                     second_loss_func=losses.objectoSphere_loss(args.Minimum_Knowns_Magnitude),
-                    training_data=Dataset(args.dataset_root),
-                    val_data = Dataset(args.dataset_root, which_set="val")
+                    training_data=Dataset(args, args.dataset_root),
+                    val_data = Dataset(args, args.dataset_root, which_set="val")
                 )
 
 

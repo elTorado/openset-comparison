@@ -337,7 +337,7 @@ def train(args):
     results_dir.mkdir(parents=True, exist_ok=True)
 
     # instantiate network and data loader
-    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage",final_layer_bias=False)
+    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
     net = tools.device(net)
     train_data_loader = torch.utils.data.DataLoader(
         training_data,

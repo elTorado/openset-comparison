@@ -442,6 +442,8 @@ def train(args):
             debug = True
             
             for x,y in val_data_loader:
+                if debug: print("ENTER THE TRAIN LOOP WITH X: " + x + "AND WITH Y: " + y)
+                
                 x = tools.device(x)
                 if debug: print(x)
                 

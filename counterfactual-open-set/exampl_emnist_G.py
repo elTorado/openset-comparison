@@ -180,14 +180,31 @@ class Dataset(torch.utils.data.dataset.Dataset):
     def __getitem__(self, index):
         total_mnist = len(self.mnist)
         total_letters = len(self.letter_indexes)  # Use the length of letter_indexes, not self.letters
+        data = None
+
         if index < total_mnist:
-            return self.mnist[index]
+            data = self.mnist[index]
+            data_kind = 'mnist'
         elif index < total_mnist + total_letters:
             letter_index = index - total_mnist
-            return self.letters[self.letter_indexes[letter_index]][0], 10 if self.has_garbage_class else -1
+            data = self.letters[self.letter_indexes[letter_index]][0], 10 if self.has_garbage_class else -1
+            data_kind = 'letter'
         else:
             synthetic_index = index - (total_mnist + total_letters)
-        return self.synthetic_samples[synthetic_index], 10 if self.has_garbage_class else -1            
+            data = self.synthetic_samples[synthetic_index], 10 if self.has_garbage_class else -1
+            data_kind = 'synthetic'
+
+        # Check if the first element of the tuple (should be the image data) is a tensor
+        if not isinstance(data[0], torch.Tensor):
+            print(f"Non-tensor data found: {data_kind} data at index {index}")
+            print(f"Data element: {data[0]}")  # Print the problematic data
+
+        # Similarly, check the label if necessary, assuming it might not be a tensor and is an int or similar
+        if not isinstance(data[1], (torch.Tensor, int)):
+            print(f"Label data is not int or tensor: {data_kind} label at index {index}")
+            print(f"Label element: {data[1]}")  # Print the problematic label data
+
+        return data            
             
     '''def __getitem__(self, index):
         if index < len(self.mnist):

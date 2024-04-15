@@ -113,7 +113,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 image = Image.open(item["filename"])    
                 image_tensor = transforms.Compose([
                     transforms.ToTensor(),
-                    self.transpose 
+                    transpose # IS THIS STILL NECESSARY?
                 ])(image)
                 label = item["label"]
                 self.synthetic_samples.append((image_tensor, label))

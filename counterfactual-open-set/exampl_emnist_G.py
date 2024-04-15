@@ -102,17 +102,25 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         
         
-    def load_counterfactuals(self, data_path = GENERATED_NEGATIVES_DIR):
-        with open(data_path, 'r') as file:
-            synthetic_data_info = json.load(file)
+    def load_counterfactuals(self, data_path=GENERATED_NEGATIVES_DIR):
+        try:
+            with open(data_path, 'r') as file:
+                synthetic_data_info = json.load(file)
+        except json.JSONDecodeError as e:
+            print(f"Failed to decode JSON: {e}")
+            return
+
         for item in synthetic_data_info:
+            try:
                 image = Image.open(item["filename"])
                 image_tensor = transforms.Compose([
                     transforms.ToTensor(),
-                    self.transpose  # Make sure to define or adjust this transform to match your data preprocessing needs
+                    self.transpose  # Ensure this is correctly defined elsewhere in your code
                 ])(image)
                 label = item["label"]
                 self.synthetic_samples.append((image_tensor, label))
+            except Exception as e:
+                print(f"Error processing item {item}: {e}")
     
     def load_arpl(self):
         return

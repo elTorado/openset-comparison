@@ -98,10 +98,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
         targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
         self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
         self.has_garbage_class = has_garbage_class
-        self.counterfactuals = self.load_counterfactuals()
         self.synthetic_samples = list() if not include_counterfactuals else self.load_arpl() if include_arpl else self.load_counterfactuals()
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
-        print(" ========= LENGTH OF LETTER :" + str(len(self.letter)))
+        print(" ========= LENGTH OF LETTER :" + str(len(self.letters)))
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))
         
         print(" ========= LENGTH OF CLASS ITSELF :" + str(len(self)))
@@ -297,8 +296,6 @@ def create_fold():
     
 def get_loss_functions(args):
     """Returns the loss function and the data for training and validation"""
-    print("XXXXXXXXXXXXXXX ARGS XXXXXXXXXXX")
-    print(args.dataset_root)
     if args.approach == "SoftMax":
         return dict(
                     first_loss_func=nn.CrossEntropyLoss(reduction='none'),

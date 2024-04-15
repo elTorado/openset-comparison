@@ -40,6 +40,9 @@ def command_line_options():
     parser.add_argument("--no_of_epochs", "-e", dest="no_of_epochs", type=int, default=70)
     parser.add_argument("--dataset_root", "-d", default ="/tmp", help="Select the directory where datasets are stored.")
     parser.add_argument("--gpu", "-g", type=int, nargs="?", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
+    parser.add_argument("--include_counterfactuals", "-inc_c", type=bool, default=False, dest="include_counterfactuals", help="Include counterfactual images in the dataset")
+    parser.add_argument("--include_arpl", "-inc_a", type=bool, default=False, dest="include_arpl", help="Include ARPL samples in the dataset")
+    parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
 
     return parser.parse_args()
 
@@ -66,7 +69,12 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     has_garbage_class: Set this to True when training softmax with background class. This way, unknown samples will get class label 10. If False (the default), unknown samples will get label -1.
     """
-    def __init__(self, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False, include_counterfactuals = False, include_arpl = False, mixed_unknowns = False):
+    def __init__(self, args, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False, include_counterfactuals = False, include_arpl = False, mixed_unknowns = False):
+        
+        include_arpl = args.include_arpl
+        include_counterfactuals = args.include_counterfactuals
+        mixed_unknowns = args.mixed_unknowns
+        
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
@@ -404,6 +412,6 @@ def train(args):
 
 if __name__ == "__main__":
     args = command_line_options()
-    example = Dataset(dataset_root=args.dataset_root)
+    example = Dataset(args = args, dataset_root=args.dataset_root)
     example.create_png()
     create_fold()

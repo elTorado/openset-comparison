@@ -51,9 +51,9 @@ def transpose(x):
     """Used for correcting rotation of EMNIST Letters"""
     return x.transpose(2,1)
 
-class Dataset(torch.utils.data.dataset.Dataset):
-    """A split dataset for our experiments. It uses MNIST as known samples and EMNIST letters as unknowns.
-    Particularly, the 11 letters will be used as negatives (for training and validation), and the 11 letters will serve as unknowns (for testing only) -- 
+
+"""A split dataset for our experiments. It uses MNIST as known samples and EMNIST letters as unknowns.
+    Particularly, the 11 letters will be used as negatives (for training and validation), and the 11 other letters will serve as unknowns (for testing only) -- 
     we removed letters `g`, `l`, `i` and `o` due to large overlap to the digits.
     The MNIST test set is used both in the validation and test split of this dataset.
 
@@ -68,7 +68,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
     include_unknown: Include unknown samples at all (might not be required in some cases, such as training with plain softmax)
 
     has_garbage_class: Set this to True when training softmax with background class. This way, unknown samples will get class label 10. If False (the default), unknown samples will get label -1.
-    """
+"""
+class Dataset(torch.utils.data.dataset.Dataset):
+
     def __init__(self, args, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False, include_counterfactuals = False, include_arpl = False, mixed_unknowns = False):
         
         include_arpl = args.include_arpl
@@ -98,6 +100,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.has_garbage_class = has_garbage_class
         self.counterfactuals = self.load_counterfactuals()
         self.synthetic_samples = list() if not include_counterfactuals else self.load_arpl() if include_arpl else self.load_counterfactuals()
+        print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
+        print(" ========= LENGTH OF LETTER :" + str(len(self.letter)))
+        print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))
+        
+        print(" ========= LENGTH OF CLASS ITSELF :" + str(len(self)))
         
         
     def load_counterfactuals(self, data_path=GENERATED_NEGATIVES_DIR):
@@ -107,6 +114,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         # Read the whole file at once
         with open(data_path, 'r') as file:
             file_content = file.readlines()
+            print(len(file_content))
 
         for item in file_content:
             try:
@@ -170,12 +178,16 @@ class Dataset(torch.utils.data.dataset.Dataset):
             
     def __getitem__(self, index):
         if index < len(self.mnist):
-            return self.mnist[index]
-        else:
-            return self.letters[self.letter_indexes[index - len(self.mnist)]][0], 10 if self.has_garbage_class else -1
+            return self.mnist[index] 
+        elif index < len(self.mnist) + len(self.letters):
+            # index provided as input is based on the combined length of both datasets, but each dataset needs to be accessed independently.
+            # [0] extracts the image data
+            return self.letters[self.letter_indexes[index - len(self.mnist)]][0], 10 if self.has_garbage_class else -1 
+        else: 
+            return self.synthetic_samples[index - len(self.mnist) + len(self.letters)], 10 if self.has_garbage_class else -1 
 
     def __len__(self):
-        return len(self.mnist) + len(self.letter_indexes)
+        return len(self.mnist) + len(self.letter_indexes) + len(self.synthetic_samples)
 def create_fold():
     
     # We read through all letters and digits and create three different distributions.

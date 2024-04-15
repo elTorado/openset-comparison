@@ -101,11 +101,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         
     def load_counterfactuals(self, data_path=GENERATED_NEGATIVES_DIR):
+        
+        samples = []
         # Read the whole file at once
         with open(data_path, 'r') as file:
             file_content = file.readlines()
-
-
 
         for item in file_content:
             try:
@@ -116,9 +116,10 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     transpose # IS THIS STILL NECESSARY?
                 ])(image)
                 label = item["label"]
-                self.synthetic_samples.append((image_tensor, label))
+                self.samples.append((image_tensor, label))
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
+        return samples
     
     def load_arpl(self):
         return

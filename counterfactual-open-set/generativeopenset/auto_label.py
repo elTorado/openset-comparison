@@ -54,7 +54,7 @@ def save_image(pixels):
 
 # This function does two things related to generated images. First it writes the paths and labels into a simples text file.
 # Then it creates a csv file that contains the positive train and validation closed-set samples combined with the generated negative samples
-def write_dataset(examples, filename):
+'''def write_dataset(examples, filename):
     split1_path = os.path.join(DATASET_DIR, "emnist_split1.dataset")
     aux_split1 = DATASET_DIR + "/aux_emnist_split1.csv"
     with open(filename, 'w') as fp:
@@ -91,7 +91,7 @@ def write_dataset(examples, filename):
         for e in examples[-examples_to_val:]: 
             fieldnames = examples[0].keys()   
             writer_val = csv.DictWriter(val, fieldnames=fieldnames) 
-            writer_val.writerow(e)
+            writer_val.writerow(e)'''
             
             
 

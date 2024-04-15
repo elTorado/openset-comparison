@@ -116,7 +116,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     transpose # IS THIS STILL NECESSARY?
                 ])(image)
                 label = item["label"]
-                self.samples.append((image_tensor, label))
+                samples.append((image_tensor, label))
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
         return samples

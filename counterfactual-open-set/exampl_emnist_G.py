@@ -438,12 +438,23 @@ def train(args):
             val_magnitude = torch.zeros(2, dtype=float)
             val_confidence = torch.zeros(2, dtype=float)
             net.eval()
+            
+            debug = True
+            
             for x,y in val_data_loader:
                 x = tools.device(x)
+                if debug: print(x)
+                
                 y = tools.device(y)
-                outputs = net(x)
+                if debug: print(y)
 
+                outputs = net(x)
+                if debug: print(outputs)
+                
                 loss = first_loss_func(outputs[0], y) + args.second_loss_weight * second_loss_func(outputs[1], y)
+                if debug: print(loss)
+                debug = False
+                
                 val_loss += torch.tensor((torch.sum(loss), len(loss)))
                 val_accuracy += losses.accuracy(outputs[0], y)
                 val_confidence += losses.confidence(outputs[0], y)

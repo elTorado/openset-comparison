@@ -191,7 +191,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             data_kind = 'letter'
         else:
             synthetic_index = index - (total_mnist + total_letters)
-            data = self.synthetic_samples[synthetic_index], 10 if self.has_garbage_class else -1
+            data = self.synthetic_samples[synthetic_index][0], 10 if self.has_garbage_class else -1
             data_kind = 'synthetic'
 
         # Check if the first element of the tuple (should be the image data) is a tensor

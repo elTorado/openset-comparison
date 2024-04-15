@@ -101,9 +101,17 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.synthetic_samples = list() if not include_counterfactuals else self.load_arpl() if include_arpl else self.load_counterfactuals()
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         print(" ========= LENGTH OF LETTER :" + str(len(self.letters)))
-        print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))
-        
+        print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
         print(" ========= LENGTH OF CLASS ITSELF :" + str(len(self)))
+        
+        # Print tensor sizes for each dataset sample
+        if len(self.mnist) > 0:
+            print(f"MNIST sample tensor size: {self.mnist[0][0].size()}")
+        if len(self.letter_indexes) > 0:
+            print(f"Letters sample tensor size: {self.letters[self.letter_indexes[0]][0].size()}")
+        if len(self.synthetic_samples) > 0:
+            print(f"Synthetic sample tensor size: {self.synthetic_samples[0][0].size()}")
+
         
         
     def load_counterfactuals(self, data_path=GENERATED_NEGATIVES_DIR):

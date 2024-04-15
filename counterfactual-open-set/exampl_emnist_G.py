@@ -413,11 +413,23 @@ def train(args):
         train_magnitude = torch.zeros(2, dtype=float)
         train_confidence = torch.zeros(2, dtype=float)
         net.train()
+        
+        debug = True
+        
         for x, y in train_data_loader:
+            if debug: print("ENTER THE TRAIN LOOP WITH X: " + x + "AND WITH Y: " + y)
+          
             x = tools.device(x)
+            if debug: print(x)
+            
             y = tools.device(y)
+            if debug: print(y)    
+                    
             optimizer.zero_grad()
+            if debug: print("ENTERING NET")
             logits, features = net(x)
+            if debug: print(logits)
+            
             # first loss is always computed, second loss only for some loss functions
             loss = first_loss_func(logits, y) + args.second_loss_weight * second_loss_func(features, y)
 
@@ -439,30 +451,20 @@ def train(args):
             val_confidence = torch.zeros(2, dtype=float)
             net.eval()
             
-            debug = True
-            
-            for x,y in val_data_loader:
-                if debug: print("ENTER THE TRAIN LOOP WITH X: " + x + "AND WITH Y: " + y)
-                
-                x = tools.device(x)
-                if debug: print(x)
-                
+            for x,y in val_data_loader:                
+                x = tools.device(x)          
                 y = tools.device(y)
-                if debug: print(y)
-
-                outputs = net(x)
-                if debug: print(outputs)
-                
-                loss = first_loss_func(outputs[0], y) + args.second_loss_weight * second_loss_func(outputs[1], y)
-                if debug: print(loss)
-                debug = False
+                outputs = net(x)             
+                loss = first_loss_func(outputs[0], y) + args.second_loss_weight * second_loss_func(outputs[1], y)               
                 
                 val_loss += torch.tensor((torch.sum(loss), len(loss)))
                 val_accuracy += losses.accuracy(outputs[0], y)
                 val_confidence += losses.confidence(outputs[0], y)
                 if args.approach not in ("SoftMax", "Garbage"):
                     val_magnitude += losses.sphere(outputs[1], y, args.Minimum_Knowns_Magnitude if args.approach == "Objectosphere" else None)
-
+                    
+                debug = False
+                
         # log statistics
         epoch_running_loss = torch.mean(torch.tensor(loss_history))
         writer.add_scalar('Loss/train', epoch_running_loss, epoch)

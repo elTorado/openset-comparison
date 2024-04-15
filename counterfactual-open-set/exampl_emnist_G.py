@@ -183,6 +183,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
         elif index < len(self.mnist) + len(self.letters):
             # index provided as input is based on the combined length of both datasets, but each dataset needs to be accessed independently.
             # [0] extracts the image data
+            print("------------- INDEX: "+ str(index)+"  ---------------")
+            print("------------- LENGTH OF LETTER INDEXES: "+ str(self.letter_indexes)+"  ---------------")
+
             return self.letters[self.letter_indexes[index - len(self.mnist)]][0], 10 if self.has_garbage_class else -1 
         else: 
             return self.synthetic_samples[index - len(self.mnist) + len(self.letters)], 10 if self.has_garbage_class else -1 
@@ -337,6 +340,7 @@ def train(args):
     results_dir.mkdir(parents=True, exist_ok=True)
 
     # instantiate network and data loader
+    # WHY IS GARBAGE HARDCODED?
     net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
     net = tools.device(net)
     train_data_loader = torch.utils.data.DataLoader(

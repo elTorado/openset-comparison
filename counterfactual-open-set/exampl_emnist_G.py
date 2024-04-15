@@ -129,6 +129,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 counter += 1
                 if counter%500 == 0:
                     print("ADDED "+ str(counter) +" NEGATIVE COUNTERFACTUAL SAMPLES")
+                if counter == 6400:
+                    break
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
         
@@ -437,6 +439,6 @@ def train(args):
 
 if __name__ == "__main__":
     args = command_line_options()
-    example = Dataset(args = args, dataset_root=args.dataset_root)
+    example = tra(args = args, dataset_root=args.dataset_root)
     # example.create_png()
     # create_fold()

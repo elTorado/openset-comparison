@@ -103,6 +103,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
     def load_counterfactuals(self, data_path=GENERATED_NEGATIVES_DIR):
         
         samples = []
+        counter = 0
         # Read the whole file at once
         with open(data_path, 'r') as file:
             file_content = file.readlines()
@@ -117,8 +118,13 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 ])(image)
                 label = item["label"]
                 samples.append((image_tensor, label))
+                counter += 1
+                if counter%500 == 0:
+                    print("ADDED "+ str(counter) +" NEGATIVE COUNTERFACTUAL SAMPLES")
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
+        
+        print("======= ADDED "+ str(counter) +" NEGATIVE COUNTERFACTUAL SAMPLES TO EMNIST DATSET =========")
         return samples
     
     def load_arpl(self):

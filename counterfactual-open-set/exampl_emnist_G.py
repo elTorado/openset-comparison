@@ -17,6 +17,8 @@ import json
 DATA_DIR = '/home/user/heizmann/data/'
 _DATA_DIR = '/home/deanheizmann/data/'
 
+GENERATED_NEGATIVES_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
+
 def command_line_options():
     import argparse
 
@@ -64,7 +66,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     has_garbage_class: Set this to True when training softmax with background class. This way, unknown samples will get class label 10. If False (the default), unknown samples will get label -1.
     """
-    def __init__(self, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False):
+    def __init__(self, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False, include_counterfactuals = False, include_arpl = False, mixed_unknowns = False):
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
@@ -86,20 +88,26 @@ class Dataset(torch.utils.data.dataset.Dataset):
         targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
         self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
         self.has_garbage_class = has_garbage_class
+        self.counterfactuals = self.load_counterfactuals()
+        self.synthetic_samples = list() if not include_counterfactuals else self.load_arpl() if include_arpl else self.load_counterfactuals()
         
-    def load_synthetic_data(self, data_path):
+        
+        
+        
+    def load_counterfactuals(self, data_path = GENERATED_NEGATIVES_DIR):
         with open(data_path, 'r') as file:
             synthetic_data_info = json.load(file)
         for item in synthetic_data_info:
-            if item["fold"] == self.which_set:
                 image = Image.open(item["filename"])
                 image_tensor = transforms.Compose([
                     transforms.ToTensor(),
                     self.transpose  # Make sure to define or adjust this transform to match your data preprocessing needs
                 ])(image)
-                label = 10 if self.has_garbage_class else -1
+                label = item["label"]
                 self.synthetic_samples.append((image_tensor, label))
     
+    def load_arpl(self):
+        return
 
     def create_png(self):
         images_path = os.path.join(DATA_DIR, "emnist")

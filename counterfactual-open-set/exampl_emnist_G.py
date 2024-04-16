@@ -13,7 +13,7 @@ from PIL import Image
 from vast import architectures, tools, losses
 import pathlib
 import json
-from vast.tools import set_device_gpu, set_device_cpu, device
+from vast.tools import set_device_gpu, set_device_cpu
 
 
 DATA_DIR = '/home/user/heizmann/data/'
@@ -41,7 +41,7 @@ def command_line_options():
     parser.add_argument('--batch_size', "-b", help='Batch_Size', action="store", dest="Batch_Size", type=int, default=128)
     parser.add_argument("--no_of_epochs", "-e", dest="no_of_epochs", type=int, default=70)
     parser.add_argument("--dataset_root", "-d", dest= "dataset_root", default ="/tmp", help="Select the directory where datasets are stored.")
-    parser.add_argument("--gpu", "-g", type=int, nargs="?", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
+    parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
     parser.add_argument("--include_counterfactuals", "-inc_c", type=bool, default=False, dest="include_counterfactuals", help="Include counterfactual images in the dataset")
     parser.add_argument("--include_arpl", "-inc_a", type=bool, default=False, dest="include_arpl", help="Include ARPL samples in the dataset")
     parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
@@ -373,6 +373,15 @@ def get_loss_functions(args):
 
 
 def train(args):
+    
+    # setup device
+    if args.gpu is not None:
+        set_device_gpu(index=args.gpu)
+        print(" ============== GPU Selected! =============")
+    else:
+        print("No GPU device selected, training will be extremely slow")
+        set_device_cpu()
+    
     torch.manual_seed(0)
 
     # get training data and loss function(s)
@@ -384,8 +393,8 @@ def train(args):
 
     # instantiate network and data loader
     # WHY IS GARBAGE HARDCODED?
-    '''  net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
-    net = tools.device(net)'''
+    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
+    net = tools.device(net)
     train_data_loader = torch.utils.data.DataLoader(
         training_data,
         batch_size=args.Batch_Size,
@@ -398,16 +407,6 @@ def train(args):
         batch_size=args.Batch_Size,
         pin_memory=True
     )
-    
-    # setup device
-    if args.gpu is not None:
-        set_device_gpu(index=args.gpu)
-    else:
-        print("No GPU device selected, training will be extremely slow")
-        set_device_cpu()
-        
-    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
-    device(net)
     
     if args.solver == 'adam':
         optimizer = optim.Adam(net.parameters(), lr=args.lr)
@@ -432,8 +431,8 @@ def train(args):
         
         for x, y in train_data_loader:
           
-            x = device(x)
-            y = device(y)    
+            x = tools.device(x)
+            y = tools.device(y)    
                     
             optimizer.zero_grad()
             logits, features = net(x)
@@ -460,8 +459,8 @@ def train(args):
             net.eval()
             
             for x,y in val_data_loader:                
-                x = device(x)          
-                y = device(y)
+                x = tools.device(x)          
+                y = tools.device(y)
                 outputs = net(x)             
                 loss = first_loss_func(outputs[0], y) + args.second_loss_weight * second_loss_func(outputs[1], y)               
                 

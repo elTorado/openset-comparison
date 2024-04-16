@@ -432,8 +432,8 @@ def train(args):
         
         for x, y in train_data_loader:
           
-            x = tools.device(x)
-            y = tools.device(y)    
+            x = device(x)
+            y = device(y)    
                     
             optimizer.zero_grad()
             logits, features = net(x)
@@ -460,8 +460,8 @@ def train(args):
             net.eval()
             
             for x,y in val_data_loader:                
-                x = tools.device(x)          
-                y = tools.device(y)
+                x = device(x)          
+                y = device(y)
                 outputs = net(x)             
                 loss = first_loss_func(outputs[0], y) + args.second_loss_weight * second_loss_func(outputs[1], y)               
                 

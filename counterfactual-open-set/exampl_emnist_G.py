@@ -13,6 +13,8 @@ from PIL import Image
 from vast import architectures, tools, losses
 import pathlib
 import json
+from vast.tools import set_device_gpu, set_device_cpu, device
+
 
 DATA_DIR = '/home/user/heizmann/data/'
 _DATA_DIR = '/home/deanheizmann/data/'
@@ -396,6 +398,13 @@ def train(args):
         batch_size=args.Batch_Size,
         pin_memory=True
     )
+    
+    # setup device
+    if args.gpu is not None:
+        set_device_gpu(index=args.gpu)
+    else:
+        print("No GPU device selected, training will be extremely slow")
+        set_device_cpu()
 
     if args.solver == 'adam':
         optimizer = optim.Adam(net.parameters(), lr=args.lr)
@@ -408,6 +417,8 @@ def train(args):
     # train network
     prev_confidence = None
     for epoch in range(1, args.no_of_epochs + 1, 1):  # loop over the dataset multiple times
+        print ("======== TRAINING EPOCH: " + str(epoch) +" ===============")
+        
         loss_history = []
         train_accuracy = torch.zeros(2, dtype=int)
         train_magnitude = torch.zeros(2, dtype=float)
@@ -417,18 +428,12 @@ def train(args):
         debug = True
         
         for x, y in train_data_loader:
-            if debug: print("ENTER THE TRAIN LOOP")
           
             x = tools.device(x)
-            if debug: print(x)
-            
-            y = tools.device(y)
-            if debug: print(y)    
+            y = tools.device(y)    
                     
             optimizer.zero_grad()
-            if debug: print("ENTERING NET")
             logits, features = net(x)
-            if debug: print(logits)
             
             # first loss is always computed, second loss only for some loss functions
             loss = first_loss_func(logits, y) + args.second_loss_weight * second_loss_func(features, y)

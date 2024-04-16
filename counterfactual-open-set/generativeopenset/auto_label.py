@@ -120,4 +120,3 @@ for filename in ls('trajectories', '.npy'):
             'label': -1,
         })
 
-write_dataset(examples, options['output_filename'])

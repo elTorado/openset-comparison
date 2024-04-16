@@ -384,8 +384,8 @@ def train(args):
 
     # instantiate network and data loader
     # WHY IS GARBAGE HARDCODED?
-    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
-    net = tools.device(net)
+    '''  net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
+    net = tools.device(net)'''
     train_data_loader = torch.utils.data.DataLoader(
         training_data,
         batch_size=args.Batch_Size,
@@ -405,7 +405,10 @@ def train(args):
     else:
         print("No GPU device selected, training will be extremely slow")
         set_device_cpu()
-
+        
+    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
+    device(net)
+    
     if args.solver == 'adam':
         optimizer = optim.Adam(net.parameters(), lr=args.lr)
     elif args.solver == 'sgd':

@@ -531,8 +531,8 @@ def evaluate(args):
     print(f"Test dataset len:{len(test_dataset)}")
 
     # create data loaders
-    val_loader = DataLoader(val_dataset, batch_size=args.Batch_Size, num_workers=args.workers)
-    test_loader = DataLoader(test_dataset, batch_size=args.Batch_Size, num_workers=args.workers)
+    val_loader = DataLoader(val_dataset, batch_size=args.Batch_Size, num_workers=5)
+    test_loader = DataLoader(test_dataset, batch_size=args.Batch_Size, num_workers=2)
 
     # create device
     if args.gpu is not None:

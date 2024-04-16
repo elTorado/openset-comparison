@@ -90,7 +90,7 @@ def main():
 
     # create datasets
     val_dataset = openset_imagenet.ImagenetDataset(
-        csv_file=args.protocol_directory/f"p{args.protocol}_val.csv",
+        csv_file=args.protocol  _directory/f"p{args.protocol}_val.csv",
         imagenet_path=args.imagenet_directory,
         transform=transform_val)
 

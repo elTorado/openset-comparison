@@ -14,7 +14,8 @@ from vast import architectures, tools, losses
 import pathlib
 import json
 from vast.tools import set_device_gpu, set_device_cpu
-
+from openset_imagenet.train import get_arrays
+import numpy as np
 
 DATA_DIR = '/home/user/heizmann/data/'
 _DATA_DIR = '/home/deanheizmann/data/'
@@ -343,6 +344,7 @@ def create_fold():
 def get_loss_functions(args):
     """Returns the loss function and the data for training and validation"""
     if args.approach == "SoftMax":
+        print(" ========= Using SoftMax Loss ===========")
         return dict(
                     first_loss_func=nn.CrossEntropyLoss(reduction='none'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
@@ -350,6 +352,7 @@ def get_loss_functions(args):
                     val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=False),
                 )
     elif args.approach =="Garbage":
+        print(" ========= Using Garbage Loss ===========")
         return dict(
                     first_loss_func=nn.CrossEntropyLoss(reduction='none'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
@@ -357,6 +360,7 @@ def get_loss_functions(args):
                     val_data = Dataset(args, args.dataset_root, which_set="val", has_garbage_class=True)
                 )
     elif args.approach == "EOS":
+        print(" ========= Using Entropic Openset Loss ===========")
         return dict(
                     first_loss_func=losses.entropic_openset_loss(),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
@@ -364,6 +368,7 @@ def get_loss_functions(args):
                     val_data = Dataset(args, args.dataset_root, which_set="val")
                 )
     elif args.approach == "Objectosphere":
+        print(" ========= Using Objectosphere Loss ===========")
         return dict(
                     first_loss_func=losses.entropic_openset_loss(),
                     second_loss_func=losses.objectoSphere_loss(args.Minimum_Knowns_Magnitude),
@@ -373,7 +378,6 @@ def get_loss_functions(args):
 
 
 def train(args):
-    
     # setup device
     if args.gpu is not None:
         set_device_gpu(index=args.gpu)
@@ -502,7 +506,81 @@ def train(args):
               f"magnitude {val_magnitude[0] / val_magnitude[1] if val_magnitude[1] else -1:.5f} -- "
               f"Saving Model {save_status}")
 
+def evaluate(args):
+    
+    # create datasets    
+    if args.approach == "SoftMax":
+        print(" ========= Using SoftMax Loss ===========")
+        val_dataset = Dataset(args, args.dataset_root, include_unknown=False)
+        test_dataset = Dataset(args, args.dataset_root, which_set="test", include_unknown=False)
+            
+    elif args.approach =="Garbage":
+        print(" ========= Using Garbage Loss ===========")
+        val_dataset = Dataset(args, args.dataset_root, has_garbage_class=True),
+        test_dataset = Dataset(args, args.dataset_root, which_set="test", has_garbage_class=True)
+                
+    elif args.approach == "EOS":
+        print(" ========= Using Entropic Openset Loss ===========")
+        val_dataset=Dataset(args, args.dataset_root),
+        test_dataset = Dataset(args, args.dataset_root, which_set="test")
 
+    # Info on console
+    print("\n========== Data ==========")
+    print(f"Val dataset len:{len(val_dataset)}, labels:{val_dataset.label_count}")
+    print(f"Test dataset len:{len(test_dataset)}, labels:{test_dataset.label_count}")
+
+    # create data loaders
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.workers)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.workers)
+
+    # create device
+    if args.gpu is not None:
+        set_device_gpu(index=args.gpu)
+    else:
+        print("No GPU device selected, evaluation will be slow")
+        set_device_cpu()
+
+    '''
+    if args.loss == "garbage":
+        n_classes = val_dataset.label_count # we use one class for the negatives
+    else:
+        n_classes = val_dataset.label_count - 1  # number of classes - 1 when training with unknowns
+    '''
+    
+    # create model
+    loss_suffix = str(args.approach)
+    
+    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
+    net = tools.device(net)
+    
+    model_path = 'LeNet_plus_plus/' + loss_suffix + '/' + loss_suffix + '.model'
+    print(f"Taking model from:  {model_path}")
+    net.load_state_dict(torch.load(model_path, map_location=net.device))
+
+
+    print("========== Evaluating ==========")
+    print("Validation data:")
+    # extracting arrays for validation
+    gt, logits, features, scores = get_arrays(
+        model=net,
+        loader=val_loader
+    )
+    file_path = args.output_directory / f"{args.loss}_val_arr{suffix}.npz"
+    np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
+    print(f"Target labels, logits, features and scores saved in: {file_path}")
+
+    # extracting arrays for test
+    print("Test data:")
+    gt, logits, features, scores = get_arrays(
+        model=net,
+        loader=test_loader
+    )
+    file_path = args.output_directory / f"{args.loss}_test_arr{suffix}.npz"
+    np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
+    print(f"Target labels, logits, features and scores saved in: {file_path}")
+    
+    
+    
 if __name__ == "__main__":
     args = command_line_options()
     example = train(args = args)

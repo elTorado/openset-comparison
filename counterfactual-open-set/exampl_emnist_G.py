@@ -33,6 +33,7 @@ def command_line_options():
     )
 
     parser.add_argument("--approach", "-a", required=True, choices=['SoftMax', 'Garbage', 'EOS', 'Objectosphere'])
+    parser.add_argument("--task", default='train', choices=['train', 'eval', "plot"])
     parser.add_argument("--arch", default='LeNet_plus_plus', choices=['LeNet', 'LeNet_plus_plus'])
     parser.add_argument('--second_loss_weight', "-w", help='Loss weight for Objectosphere loss', type=float, default=0.0001)
     parser.add_argument('--Minimum_Knowns_Magnitude', "-m", help='Minimum Possible Magnitude for the Knowns', type=float,
@@ -583,6 +584,12 @@ def evaluate(args):
     
 if __name__ == "__main__":
     args = command_line_options()
-    example = train(args = args)
-    # example.create_png()
-    # create_fold()
+    if args.task == "train":
+        print(" TASK IS TO TRAIN")
+        example = train(args = args)
+    if args.task == "eval":
+        print(" TASK IS TO EVALUATE")
+        evaluate(args = args)
+    if args.task == "plot":
+        print(" TASK IS TO PLOT")
+        example = train(args = args)

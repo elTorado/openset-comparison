@@ -527,8 +527,8 @@ def evaluate(args):
 
     # Info on console
     print("\n========== Data ==========")
-    print(f"Val dataset len:{len(val_dataset)}, labels:{val_dataset.label_count}")
-    print(f"Test dataset len:{len(test_dataset)}, labels:{test_dataset.label_count}")
+    print(f"Val dataset len:{len(val_dataset)}")
+    print(f"Test dataset len:{len(test_dataset)}")
 
     # create data loaders
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.workers)

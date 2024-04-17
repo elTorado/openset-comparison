@@ -582,7 +582,6 @@ def evaluate(args):
     )
     
     directory = pathlib.Path(f"{args.eval_directory}")
-    directory.mkdir(parents=True, exist_ok=True)  # This creates the directory if it does not exist
     
     file_path = directory/ f"{args.approach}_val_arr{loss_suffix}.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)

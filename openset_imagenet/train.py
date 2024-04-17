@@ -209,10 +209,10 @@ def get_arrays(model, loader):
     with torch.no_grad():
         data_len = len(loader.dataset)         # dataset length
         
-        if isinstance(model, architectures.LeNet_plus_plus):
+        if isinstance(model, ResNet50):
                     logits_dim = model.logits.out_features # logits output classes
                     features_dim = model.logits.in_features  # features dimensionality
-        elif isinstance(model, ResNet50):
+        elif isinstance(model, architectures.LeNet_plus_plus):
                     logits_dim = model.fc2.out_features # logits output classes
                     features_dim = model.logits.in_features  # features dimensionality    
         

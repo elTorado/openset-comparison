@@ -512,17 +512,17 @@ def evaluate(args):
     # create datasets    
     if args.approach == "SoftMax":
         print(" ========= Using SoftMax Loss ===========")
-        val_dataset = Dataset(args, args.dataset_root, include_unknown=False)
+        val_dataset = Dataset(args, args.dataset_root, which_set="val", include_unknown=False)
         test_dataset = Dataset(args, args.dataset_root, which_set="test", include_unknown=False)
             
     elif args.approach =="Garbage":
         print(" ========= Using Garbage Loss ===========")
-        val_dataset = Dataset(args, args.dataset_root, has_garbage_class=True),
+        val_dataset = Dataset(args, args.dataset_root, which_set="val", has_garbage_class=True),
         test_dataset = Dataset(args, args.dataset_root, which_set="test", has_garbage_class=True)
                 
     elif args.approach == "EOS":
         print(" ========= Using Entropic Openset Loss ===========")
-        val_dataset=Dataset(args, args.dataset_root),
+        val_dataset=Dataset(args,  args.dataset_root, which_set="val",),
         test_dataset = Dataset(args, args.dataset_root, which_set="test")
 
     # Info on console

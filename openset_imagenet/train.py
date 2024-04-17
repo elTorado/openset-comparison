@@ -214,7 +214,7 @@ def get_arrays(model, loader):
                     features_dim = model.logits.in_features  # features dimensionality
         elif isinstance(model, architectures.LeNet_plus_plus):
                     logits_dim = model.fc2.out_features # logits output classes
-                    features_dim = model.logits.in_features  # features dimensionality    
+                    features_dim = model.fc2.in_features  # features dimensionality    
         
         
 

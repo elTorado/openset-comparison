@@ -556,7 +556,7 @@ def evaluate(args):
     
     model_path = 'LeNet_plus_plus/' + loss_suffix + '/' + loss_suffix + '.model'
     print(f"Taking model from:  {model_path}")
-    net.load_state_dict(torch.load(model_path, map_location=net.device))
+    net.load_state_dict(torch.load(model_path)) #used to have an attribute map_location=net.device
 
 
     print("========== Evaluating ==========")
@@ -566,7 +566,7 @@ def evaluate(args):
         model=net,
         loader=val_loader
     )
-    file_path = args.output_directory / f"{args.loss}_val_arr{suffix}.npz"
+    file_path = args.output_directory / f"{args.loss}_val_arr{loss_suffix}.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")
 
@@ -576,7 +576,7 @@ def evaluate(args):
         model=net,
         loader=test_loader
     )
-    file_path = args.output_directory / f"{args.loss}_test_arr{suffix}.npz"
+    file_path = args.output_directory / f"{args.loss}_test_arr{loss_suffix}.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")
     

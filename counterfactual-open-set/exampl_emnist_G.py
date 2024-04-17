@@ -391,6 +391,11 @@ def train(args):
 
     # get training data and loss function(s)
     first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
+    
+        # Info on console
+    print("\n========== Data ==========")
+    print(f"Training dataset len:{len(training_data)}")
+    print(f"Validation dataset len:{len(validation_data)}")
 
     results_dir = pathlib.Path(f"{args.arch}/{args.approach}")
     model_file = f"{results_dir}/{args.approach}.model"

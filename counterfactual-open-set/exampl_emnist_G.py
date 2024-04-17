@@ -403,7 +403,6 @@ def train(args):
     results_dir.mkdir(parents=True, exist_ok=True)
 
     # instantiate network and data loader
-    # WHY IS GARBAGE HARDCODED?
     net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
     net = tools.device(net)
     train_data_loader = torch.utils.data.DataLoader(
@@ -580,7 +579,9 @@ def evaluate(args):
         model=net,
         loader=val_loader
     )
-    file_path = args.eval_directory / f"{args.approach}_val_arr{loss_suffix}.npz"
+    
+    directory = pathlib.Path(f"{args.eval_directory}")
+    file_path = directory/ f"{args.approach}_val_arr{loss_suffix}.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")
 
@@ -590,7 +591,7 @@ def evaluate(args):
         model=net,
         loader=test_loader
     )
-    file_path = args.eval_directory / f"{args.approach}_test_arr{loss_suffix}.npz"
+    file_path = directory/ f"{args.approach}_val_arr{loss_suffix}.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")
     

@@ -42,7 +42,7 @@ def command_line_options():
     parser.add_argument("--lr", "-l", dest="lr", default=0.01, type=float)
     parser.add_argument('--batch_size', "-b", help='Batch_Size', action="store", dest="Batch_Size", type=int, default=128)
     parser.add_argument("--no_of_epochs", "-e", dest="no_of_epochs", type=int, default=70)
-    parser.add_argument("--eval_directory", "-ed", dest= "eval_directory", default ="/evaluation", help="Select the directory where evaluation details are.")
+    parser.add_argument("--eval_directory", "-ed", dest= "eval_directory", default ="evaluation", help="Select the directory where evaluation details are.")
     parser.add_argument("--dataset_root", "-d", dest= "dataset_root", default ="/tmp", help="Select the directory where datasets are stored.")
     parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
     parser.add_argument("--include_counterfactuals", "-inc_c", type=bool, default=False, dest="include_counterfactuals", help="Include counterfactual images in the dataset")

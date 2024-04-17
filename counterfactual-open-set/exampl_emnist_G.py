@@ -378,7 +378,7 @@ def get_loss_functions(args):
                 )
 
 
-def train(args):
+def train(args): 
     # setup device
     if args.gpu is not None:
         set_device_gpu(index=args.gpu)

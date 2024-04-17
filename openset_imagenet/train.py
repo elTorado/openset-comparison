@@ -11,7 +11,8 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from vast.tools import set_device_gpu, set_device_cpu, device
-import vast
+import vast 
+from vast import architectures
 from loguru import logger
 from .metrics import confidence, auc_score_binary, auc_score_multiclass
 from .dataset import ImagenetDataset
@@ -207,8 +208,16 @@ def get_arrays(model, loader):
     model.eval()
     with torch.no_grad():
         data_len = len(loader.dataset)         # dataset length
-        logits_dim = model.logits.out_features  # logits output classes
-        features_dim = model.logits.in_features  # features dimensionality
+        
+        if isinstance(model, architectures.LeNet_plus_plus):
+                    logits_dim = model.logits.out_features # logits output classes
+                    features_dim = model.logits.in_features  # features dimensionality
+        elif isinstance(model, ResNet50):
+                    logits_dim = model.fc2.out_features # logits output classes
+                    features_dim = model.logits.in_features  # features dimensionality    
+        
+        
+
         all_targets = torch.empty(data_len, device="cpu")  # store all targets
         all_logits = torch.empty((data_len, logits_dim), device="cpu")   # store all logits
         all_feat = torch.empty((data_len, features_dim), device="cpu")   # store all features

@@ -3,3 +3,7 @@ __pycache__
 checkpoints/
 images/
 runs/
+LeNet_plus_plus/
+*.pdf
+counterfactual-open-set/evaluation/
+evaluation/

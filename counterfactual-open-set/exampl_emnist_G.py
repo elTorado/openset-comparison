@@ -391,6 +391,7 @@ def train(args):
     torch.manual_seed(0)
 
     # get training data and loss function(s)
+    #ONLY for objectosphere a real second loss functions is returned, else its a tensord filled a 0
     first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
     
         # Info on console
@@ -403,7 +404,6 @@ def train(args):
     results_dir.mkdir(parents=True, exist_ok=True)
 
     # instantiate network and data loader
-    # WHY IS GARBAGE HARDCODED?
     net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
     net = tools.device(net)
     train_data_loader = torch.utils.data.DataLoader(

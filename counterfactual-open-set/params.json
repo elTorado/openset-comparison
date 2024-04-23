@@ -17,8 +17,8 @@
 
 
 
-  "dataset": "/home/user/heizmann/openset-comparison/counterfactual-open-set/emnist_split1.dataset",
-  "comparison_dataset": "/home/user/heizmann/openset-comparison/counterfactual-open-set/emnist_split2.dataset",
+  "dataset": "/home/user/heizmann/openset-comparison/counterfactual-open-set/imagenet.dataset",
+  "comparison_dataset": "/home/user/heizmann/openset-comparison/counterfactual-open-set/imagenet.dataset",
 
   "_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split1.dataset",
   "_comparison_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split2.dataset",

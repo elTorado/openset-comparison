@@ -113,7 +113,7 @@ class ImagenetDataset(Dataset):
                 jpeg_path, label = self.dataset.iloc[i]
                 # Determine whether the entry should be 'train' or 'val'
                 entry = {
-                    "filename": jpeg_path,
+                    "filename": "local/scratch/datasets/ImageNet/ILSVRC2012/" + jpeg_path,
                     "fold": "val" if i >= start_val_index else "train",
                     "label": int(label)
                 }

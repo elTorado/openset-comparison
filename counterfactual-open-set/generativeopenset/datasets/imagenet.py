@@ -122,5 +122,5 @@ class ImagenetDataset(Dataset):
 
 if __name__ == '__main__':
     #imagenet = ImagenetDataset(csv_file="/home/deanheizmann/masterthesis/openset-imagenet/protocols/p1_train.csv", imagenet_path="som
-    imagenet = ImagenetDataset(csv_file="/home/user/heizmann/openset-comparison/protocols/protocols/p1_train.csv", imagenet_path="some")
+    imagenet = ImagenetDataset(csv_file="/home/user/heizmann/openset-comparison/protocols/p1_train.csv", imagenet_path="some")
     imagenet.create_gan_training_splits()

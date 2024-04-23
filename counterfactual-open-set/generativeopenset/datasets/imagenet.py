@@ -20,8 +20,8 @@ from torch.utils.data.dataset import Dataset
 ##### TRAN AND VAL DATA IS COMBINED INTO ONE SINGLE FILE 
 
 
-DATA_DIR = '/home/deanheizmann/masterthesis/openset-imagenet/protocols'
-_DATA_DIR = '/home/user/heizmann//openset-imagenet/protocols/'
+_DATA_DIR = '/home/user/heizmann/data/'
+DATA_DIR = 'local/scratch/datasets/ImageNet/ILSVRC2012/'
 
 
 """ Code based on: Bhoumik, A. (2021). Open-set Classification on ImageNet."""
@@ -113,7 +113,7 @@ class ImagenetDataset(Dataset):
                 jpeg_path, label = self.dataset.iloc[i]
                 # Determine whether the entry should be 'train' or 'val'
                 entry = {
-                    "filename": "local/scratch/datasets/ImageNet/ILSVRC2012/" + jpeg_path,
+                    "filename": jpeg_path,
                     "fold": "val" if i >= start_val_index else "train",
                     "label": int(label)
                 }
@@ -122,5 +122,5 @@ class ImagenetDataset(Dataset):
 
 if __name__ == '__main__':
     #imagenet = ImagenetDataset(csv_file="/home/deanheizmann/masterthesis/openset-imagenet/protocols/p1_train.csv", imagenet_path="som
-    imagenet = ImagenetDataset(csv_file="/home/user/heizmann/openset-comparison/protocols/p1_train.csv", imagenet_path="some")
+    imagenet = ImagenetDataset(csv_file="/home/user/heizmann/openset-comparison/protocols/p1_train.csv", imagenet_path=DATA_DIR)
     imagenet.create_gan_training_splits()

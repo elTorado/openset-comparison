@@ -17,11 +17,11 @@
 
 
 
-  "dataset": "/home/user/heizmann/openset-comparison/imagenet.dataset",
-  "comparison_dataset": "/home/user/heizmann/openset-comparison/imagenet.dataset",
+  "Rdataset": "/home/user/heizmann/openset-comparison/imagenet.dataset",
+  "Rcomparison_dataset": "/home/user/heizmann/openset-comparison/imagenet.dataset",
 
-  "_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split1.dataset",
-  "_comparison_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split2.dataset",
+  "dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split1.dataset",
+  "comparison_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split2.dataset",
 
   "hypothesis": "Example run on tiny imagenet",
   "delete_background": false,

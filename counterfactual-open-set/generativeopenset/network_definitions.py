@@ -19,7 +19,7 @@ class encoder32(nn.Module):
         self.batch_size = batch_size
         self.num_classes = num_classes
 
-        self.conv1 = nn.Conv2d(3,       64,     3, 1, 1, bias=False)
+        self.conv1 = nn.Conv2d(1,       64,     3, 1, 1, bias=False)
         self.conv2 = nn.Conv2d(64,      64,     3, 1, 1, bias=False)
         self.conv3 = nn.Conv2d(64,     128,     3, 2, 1, bias=False)
 
@@ -141,7 +141,9 @@ class generator32(nn.Module):
         self.conv3 = nn.ConvTranspose2d(   512,      256, 4, stride=2, padding=1, bias=False)
         self.conv4_in = nn.ConvTranspose2d(latent_size, 256, 1, stride=1, padding=0, bias=False)
         self.conv4 = nn.ConvTranspose2d(   256,      128, 4, stride=2, padding=1, bias=False)
-        self.conv5 = nn.ConvTranspose2d(   128,        3, 4, stride=2, padding=1)
+        
+        #change here output channel size
+        self.conv5 = nn.ConvTranspose2d(   128,        1, 4, stride=2, padding=1)
 
         self.bn1 = nn.BatchNorm2d(512)
         self.bn2 = nn.BatchNorm2d(512)
@@ -196,7 +198,7 @@ class multiclassDiscriminator32(nn.Module):
         super(self.__class__, self).__init__()
         self.batch_size = batch_size
         self.num_classes = num_classes
-        self.conv1 = nn.Conv2d(3,       64,     3, 1, 1, bias=False)
+        self.conv1 = nn.Conv2d(1,       64,     3, 1, 1, bias=False)
         self.conv2 = nn.Conv2d(64,      64,     3, 1, 1, bias=False)
         self.conv3 = nn.Conv2d(64,     128,     3, 2, 1, bias=False)
 
@@ -281,7 +283,7 @@ class classifier32(nn.Module):
         super(self.__class__, self).__init__()
         self.batch_size = batch_size
         self.num_classes = num_classes
-        self.conv1 = nn.Conv2d(3,       64,     3, 1, 1, bias=False)
+        self.conv1 = nn.Conv2d(1,       64,     3, 1, 1, bias=False)
         self.conv2 = nn.Conv2d(64,      64,     3, 1, 1, bias=False)
         self.conv3 = nn.Conv2d(64,     128,     3, 2, 1, bias=False)
 

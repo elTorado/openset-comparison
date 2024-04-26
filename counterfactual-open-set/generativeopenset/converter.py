@@ -46,8 +46,10 @@ class ImageConverter(Converter):
         img = Image.open(filename)  # Open image using PIL
 
         # Resize operation
-        img = img.resize(self.img_shape, Image.ANTIALIAS)
+        #img = img.resize(self.img_shape, Image.ANTIALIAS)
 
+        img = pad_image_pil(img)
+        
         if self.delete_background:
             seg_filename = os.path.expanduser(example['segmentation'])
             segmentation = np.array(Image.open(seg_filename))
@@ -62,17 +64,13 @@ class ImageConverter(Converter):
         if self.normalize:
             img = img.astype(np.float32) * (1.0 / 255)
 
+        # keep the image greyscale
         if self.torch:
             # Transpose the image for PyTorch [C, H, W] format
             # Before the transpose operation
             if img.ndim == 2:  # Grayscale image, with no channel dimension
                 img = np.expand_dims(img, axis=-1)  # Add a channel dimension
-                img = np.repeat(img, 3, axis=2)  # Replicate the grayscale channel 3 times
-
-            # Ensure img is in the correct format if it's already 3D but not in [H, W, C] format
-            elif img.shape[2] not in [1, 3, 4]:
-                raise ValueError("IMAGE CHANNELS INCONSISTENT OR UNEXPECTED")# Not a typical channel dimension
-            # Handle this case, possibly with an error or a different processing path
+                # img = np.repeat(img, 3, axis=2)  Replicate the grayscale channel 3 times
 
             img = img.transpose((2, 0, 1))
 
@@ -160,3 +158,14 @@ class AttributeConverter(Converter):
     def from_array(self, array):
         return ",".join(self.attributes[i] for i in range(self.attributes) if array[i > .5])
 
+def pad_image_pil(img, target_size=(32, 32)):
+    # Create a new image with desired size and black background
+    new_img = Image.new("L", target_size, 0)  # "L" for grayscale, use "RGB" for color
+
+    # Calculate the position to paste the original image
+    left = (target_size[0] - img.width) // 2
+    top = (target_size[1] - img.height) // 2
+
+    # Paste the original image onto the new image
+    new_img.paste(img, (left, top))
+    return new_img

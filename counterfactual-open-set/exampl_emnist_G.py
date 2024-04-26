@@ -78,9 +78,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     def __init__(self, args, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False, include_counterfactuals = False, include_arpl = False, mixed_unknowns = False):
         
-        include_arpl = args.include_arpl
-        include_counterfactuals = args.include_counterfactuals
-        mixed_unknowns = args.mixed_unknowns
+        self.include_arpl = args.include_arpl
+        self.include_counterfactuals = args.include_counterfactuals
+        self.mixed_unknowns = args.mixed_unknowns
         
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
@@ -103,7 +103,20 @@ class Dataset(torch.utils.data.dataset.Dataset):
         targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
         self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
         self.has_garbage_class = has_garbage_class
-        self.synthetic_samples = list() if not include_counterfactuals else self.load_arpl() if include_arpl else self.load_counterfactuals()
+        
+        print(args.include_counterfactuals)
+        print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
+        print(" ========= INCLUDING APRL:" + str(self.include_arpl))
+        self.synthetic_samples = list()
+        if include_arpl:
+            self.synthetic_samples.extend(self.load_arpl())
+            if include_counterfactuals:
+                self.synthetic_samples.extend(self.load_counterfactuals())
+        elif include_counterfactuals:
+            self.synthetic_samples.extend(self.load_counterfactuals())
+        
+        
+        
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         print(" ========= LENGTH OF LETTER :" + str(len(self.letters)))
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
@@ -477,12 +490,14 @@ def train(args):
                 
                 val_loss += torch.tensor((torch.sum(loss), len(loss)))
                 val_accuracy += losses.accuracy(outputs[0], y)
-                val_confidence += losses.confidence(outputs[0], y)
+                val_confidence += confidence(outputs[0], y)
+                
                 if args.approach not in ("SoftMax", "Garbage"):
                     val_magnitude += losses.sphere(outputs[1], y, args.Minimum_Knowns_Magnitude if args.approach == "Objectosphere" else None)
                     
                 debug = False
-                
+        print( " ========= THIS IS VALIDATION CONFIDENC ===============")
+        print(val_confidence)       
         # log statistics
         epoch_running_loss = torch.mean(torch.tensor(loss_history))
         writer.add_scalar('Loss/train', epoch_running_loss, epoch)
@@ -512,6 +527,43 @@ def train(args):
               f"confidence {val_confidence[0] / val_confidence[1]:.5f} "
               f"magnitude {val_magnitude[0] / val_magnitude[1] if val_magnitude[1] else -1:.5f} -- "
               f"Saving Model {save_status}")
+
+
+def confidence(logits, target, negative_offset=0.1):
+    """Measures the softmax confidence of the correct class for known samples,
+    and 1 + negative_offset - max(confidence) for unknown samples.
+
+    Parameters:
+
+      logits: the output of the network, must be logits
+
+      target: the vector of true classes; can be -1 for unknown samples
+
+    Returns a tensor with two entries:
+
+      confidence: the sum of the confidence values for the samples
+
+      total: The total number of considered samples
+    """
+
+    with torch.no_grad():
+        known = target >= 0
+
+        pred = torch.nn.functional.softmax(logits, dim=1)
+        #    import ipdb; ipdb.set_trace()
+        kn_count = sum(known).item()    # Total known samples in data
+        neg_count = sum(~known).item()  # Total negative samples in data
+        kn_conf = 0.0
+        neg_conf = 0.0
+        
+        if torch.sum(known):
+            kn_conf = torch.sum(pred[known, target[known]]).item() / kn_count
+        if torch.sum(~known):
+            neg_conf += torch.sum(
+                1.0 + negative_offset - torch.max(pred[~known], dim=1)[0]
+            ).item() / neg_count
+
+    return kn_conf, kn_count, neg_conf, neg_count
 
 def evaluate(args):
     

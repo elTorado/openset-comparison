@@ -168,13 +168,17 @@ def create_datasets(letters, digits, k = 5000):
         for element in letters_AtoM + digits[train_size:train_size+val_size]:
             test_len += 1
             element["fold"] = "test"
-            file2.write(json.dumps(element, sort_keys=True) + '\n')
             
             #need label to be an int
             label = element["label"]
-            
             if isinstance(label, str):   
                 label = letter_to_index(label)
+            element["label"] = label
+            
+            file2.write(json.dumps(element, sort_keys=True) + '\n')
+            
+            #For csv files, later used for openset training, we want digits to have label -2
+            label = -2
             
             element_copy = {
                 "filename": element["filename"],
@@ -209,14 +213,18 @@ def create_datasets(letters, digits, k = 5000):
         for element in letters_PtoZ + digits[train_size:train_size+val_size]:
             test_len += 1
             element["fold"] = "test"
-            file3.write(json.dumps(element, sort_keys=True) + '\n')
             
             #need label to be an int
             label = element["label"]
-            
             if isinstance(label, str):   
                 label = letter_to_index(label)
+            element["label"] = label           
             
+            file3.write(json.dumps(element, sort_keys=True) + '\n')
+            
+            #For csv files, later used for openset training, we want digits to have label -2
+            label = -2
+                        
             element_copy = {
                 "filename": element["filename"],
                 "label": label}

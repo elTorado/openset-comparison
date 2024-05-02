@@ -86,6 +86,11 @@ def convert_emnist(images, labels, fold, category):
         print("converted all files, none were skipped")
     return examples
 
+def letter_to_index(letter):
+    """Convert a letter to its corresponding index, with 'A' as 10, 'B' as 11, ..., 'Z' as 35."""
+    return ord(letter.upper()) - ord('A') + 10
+
+
 def create_datasets(letters, digits, k = 5000):
     letters_PtoZ = [elem for elem in letters if elem["label"] in ['Z', 'Y', 'X', 'W', 'V', 'U', 'T', 'S', 'R', 'Q', 'P']]
     letters_AtoM = [elem for elem in letters if elem["label"] in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'M']]
@@ -164,9 +169,12 @@ def create_datasets(letters, digits, k = 5000):
             element["fold"] = "test"
             file2.write(json.dumps(element, sort_keys=True) + '\n')
             
+            #need label to be an int
+            label = letter_to_index(element["label"])
+            
             element_copy = {
                 "filename": element["filename"],
-                "label": element["label"]}
+                "label": label}
             writer.writerow(element_copy)
 
     print(" ==== CREATED emnist_split2.dataset with digits and letters A to M in test WITH FOLD SIZES:")
@@ -199,9 +207,12 @@ def create_datasets(letters, digits, k = 5000):
             element["fold"] = "test"
             file3.write(json.dumps(element, sort_keys=True) + '\n')
             
+            #need label to be an int
+            label = letter_to_index(element["label"])
+            
             element_copy = {
                 "filename": element["filename"],
-                "label": element["label"]}
+                "label": label}
             writer.writerow(element_copy)
 
     print(" ==== CREATED emnist_split3.dataset with digits and letters P to Z in test WITH FOLD SIZES:")

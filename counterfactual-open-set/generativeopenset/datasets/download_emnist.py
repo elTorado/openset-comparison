@@ -87,6 +87,7 @@ def convert_emnist(images, labels, fold, category):
     return examples
 
 def letter_to_index(letter):
+    print("convert label")
     """Convert a letter to its corresponding index, with 'A' as 10, 'B' as 11, ..., 'Z' as 35."""
     return ord(letter.upper()) - ord('A') + 10
 
@@ -173,7 +174,7 @@ def create_datasets(letters, digits, k = 5000):
             label = element["label"]
             
             if isinstance(label, str):   
-                label = letter_to_index(element["label"])
+                label = letter_to_index(label)
             
             element_copy = {
                 "filename": element["filename"],
@@ -214,7 +215,7 @@ def create_datasets(letters, digits, k = 5000):
             label = element["label"]
             
             if isinstance(label, str):   
-                label = letter_to_index(element["label"])
+                label = letter_to_index(label)
             
             element_copy = {
                 "filename": element["filename"],

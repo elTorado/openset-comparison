@@ -8,8 +8,8 @@ import gzip
 import struct
 import csv
 
-_DATA_DIR = '/home/user/heizmann/data/'
-DATA_DIR = '/home/deanheizmann/data/'
+DATA_DIR = '/home/user/heizmann/data/'
+_DATA_DIR = '/home/deanheizmann/data/'
 
 DATASET_NAME = 'emnist'
 DATASET_PATH = os.path.join(DATA_DIR, DATASET_NAME)

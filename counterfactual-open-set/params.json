@@ -6,19 +6,11 @@
   "cf_max_iters": 100,
   "cf_speed": 0.1,
 
-  "rdataset": "/home/deanheizmann/data/cifar10-split0a.dataset",
-  "rcomparison_dataset": "/home/deanheizmann/data/cifar10-split0b.dataset",
-
-  "Edataset": "/home/deanheizmann/data/mnist-split0a.dataset",
-  "Ecomparison_dataset": "/home/deanheizmann/data/mnist-split0b.dataset",
-
-  "Xdataset": "/home/deanheizmann/data/emnist/emnist_split1.dataset",
-  "Xcomparison_dataset": "/home/deanheizmann/data/emnist/emnist_split2.dataset",
 
 
+  "Xdataset": "/home/user/heizmann/data/emnist/emnist_split1.dataset",
+  "Xcomparison_dataset": "/home/user/heizmann/data/emnist/emnist_split2.dataset",
 
-  "Rdataset": "/home/user/heizmann/openset-comparison/imagenet.dataset",
-  "Rcomparison_dataset": "/home/user/heizmann/openset-comparison/imagenet.dataset",
 
   "dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split1.dataset",
   "comparison_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split2.dataset",

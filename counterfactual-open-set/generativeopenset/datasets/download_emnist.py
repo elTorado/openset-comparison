@@ -170,11 +170,11 @@ def create_datasets(letters, digits, k = 5000):
             file2.write(json.dumps(element, sort_keys=True) + '\n')
             
             #need label to be an int
-            label = letter_to_index(element["label"])
+            '''label = letter_to_index(element["label"])'''
             
             element_copy = {
                 "filename": element["filename"],
-                "label": label}
+                "label": element["label"]}
             writer.writerow(element_copy)
 
     print(" ==== CREATED emnist_split2.dataset with digits and letters A to M in test WITH FOLD SIZES:")
@@ -208,11 +208,11 @@ def create_datasets(letters, digits, k = 5000):
             file3.write(json.dumps(element, sort_keys=True) + '\n')
             
             #need label to be an int
-            label = letter_to_index(element["label"])
+            '''label = letter_to_index(element["label"])'''
             
             element_copy = {
                 "filename": element["filename"],
-                "label": label}
+                "label": element["label"]}
             writer.writerow(element_copy)
 
     print(" ==== CREATED emnist_split3.dataset with digits and letters P to Z in test WITH FOLD SIZES:")

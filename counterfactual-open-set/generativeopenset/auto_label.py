@@ -111,12 +111,22 @@ try: train_file_path = os.path.join(DATASET_DIR, "emnist_split1.dataset")
 except: raise FileNotFoundError("Could not access emnist_split1.dataset at " + DATASET_DIR)
 
 examples = []
+errorcount = 0
+
 for filename in ls('trajectories', '.npy'):
     grid = grid_from_filename(filename)
+    
     for image in grid:
-        filename = save_image(image)
-        examples.append({
-            'filename': filename,
-            'label': -1,
-        })
+        try:
+            saved_filename = save_image(image)  # Assuming save_image returns the filename where the image is saved
+            examples.append({
+                'filename': saved_filename,
+                'label': -1,
+            })
+        except Exception as e:  # Catching all exceptions, you might want to specify if needed
+            errorcount += 1  # Increment error count if an error occurs
+
+# After all files have been processed, print the error count
+print(f"Total errors encountered: {errorcount}")
+
 

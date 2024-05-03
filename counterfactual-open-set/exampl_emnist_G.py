@@ -85,14 +85,14 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
-            download=False,
+            download=True,
             split="mnist",
             transform=transforms.Compose([transforms.ToTensor(), transpose])
         )
         self.letters = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
-            download=False,
+            download=True,
             split='letters',
             transform=transforms.Compose([transforms.ToTensor(), transpose])
         )

@@ -46,7 +46,7 @@ assert not is_square(26)
 def save_image(pixels):
     import uuid
     from PIL import Image
-    pixels = (255 * pixels).astype(np.uint8)
+    pixels = (255 * pixels).astype(np.uint8).squeeze()
     img = Image.fromarray(pixels)
     filename = os.path.join('trajectories', uuid.uuid4().hex) + '.png'
     img.save(filename)

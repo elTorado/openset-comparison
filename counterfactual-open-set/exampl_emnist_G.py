@@ -13,14 +13,22 @@ from PIL import Image
 from vast import architectures, tools, losses
 import pathlib
 import json
-from vast.tools import set_device_gpu, set_device_cpu
-from openset_imagenet.train import get_arrays
+from torch.nn.parallel import DistributedDataParallel
+from loguru import logger
+from vast.tools import set_device_gpu, set_device_cpu, device
+from openset_imagenet.train import get_arrays, load_checkpoint
+from openset_imagenet.losses import AverageMeter, EntropicOpensetLoss
+from openset_imagenet.metrics import confidence
 import numpy as np
+from collections import OrderedDict, defaultdict
 
+#Server
 DATA_DIR = '/home/user/heizmann/data/'
-_DATA_DIR = '/home/deanheizmann/data/'
-
 GENERATED_NEGATIVES_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
+
+#Local
+_GENERATED_NEGATIVES_DIR = "/home/deanheizmann/masterthesis/openset-imagenet/counterfactual-open-set/generated_images_counterfactual.dataset"
+_DATA_DIR = '/home/deanheizmann/data/'
 
 def command_line_options():
     import argparse
@@ -85,14 +93,14 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
-            download=True,
+            download=False,
             split="mnist",
             transform=transforms.Compose([transforms.ToTensor(), transpose])
         )
         self.letters = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
-            download=True,
+            download=False,
             split='letters',
             transform=transforms.Compose([transforms.ToTensor(), transpose])
         )
@@ -108,11 +116,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(self.include_arpl))
         self.synthetic_samples = list()
-        if include_arpl:
+        if self.include_arpl:
             self.synthetic_samples.extend(self.load_arpl())
-            if include_counterfactuals:
+            if self.include_counterfactuals:
                 self.synthetic_samples.extend(self.load_counterfactuals())
-        elif include_counterfactuals:
+        elif self.include_counterfactuals:
             self.synthetic_samples.extend(self.load_counterfactuals())
         
         
@@ -156,7 +164,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 counter += 1
                 if counter%500 == 0:
                     print("ADDED "+ str(counter) +" NEGATIVE COUNTERFACTUAL SAMPLES")
-                if counter == 6400:
+                if counter == 500:
                     break
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
@@ -353,8 +361,7 @@ def create_fold():
     print(" ==== CREATED emnist_split3.dataset with digits and letters P to Z in test WITH FOLD SIZES:")
     print(" ==== TRAIN SPLIT: " + str(train_len) + " ========")
     print(" ==== VALIDATION SPLIT : " + str(val_len) + " ========")
-    print(" ==== TEST SPLIT: " + str(test_len) + " ========")      
-    
+    print(" ==== TEST SPLIT: " + str(test_len) + " ========")          
     
 def get_loss_functions(args):
     """Returns the loss function and the data for training and validation"""
@@ -377,7 +384,7 @@ def get_loss_functions(args):
     elif args.approach == "EOS":
         print(" ========= Using Entropic Openset Loss ===========")
         return dict(
-                    first_loss_func=losses.entropic_openset_loss(),
+                    first_loss_func=EntropicOpensetLoss(num_of_classes=10),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
                     training_data=Dataset(args, args.dataset_root),
                     val_data = Dataset(args, args.dataset_root, which_set="val")
@@ -385,14 +392,14 @@ def get_loss_functions(args):
     elif args.approach == "Objectosphere":
         print(" ========= Using Objectosphere Loss ===========")
         return dict(
-                    first_loss_func=losses.entropic_openset_loss(),
+                    first_loss_func=EntropicOpensetLoss(num_of_classes=10),
                     second_loss_func=losses.objectoSphere_loss(args.Minimum_Knowns_Magnitude),
                     training_data=Dataset(args, args.dataset_root),
                     val_data = Dataset(args, args.dataset_root, which_set="val")
                 )
 
 
-def train(args): 
+def training(args): 
     # setup device
     if args.gpu is not None:
         set_device_gpu(index=args.gpu)
@@ -439,97 +446,68 @@ def train(args):
 
     logs_dir = results_dir/'Logs'
     writer = SummaryWriter(logs_dir)
+    
+    t_metrics = defaultdict(AverageMeter)
+    v_metrics = defaultdict(AverageMeter)
 
     # train network
     prev_confidence = None
     for epoch in range(1, args.no_of_epochs + 1, 1):  # loop over the dataset multiple times
         print ("======== TRAINING EPOCH: " + str(epoch) +" ===============")
         
-        loss_history = []
+        '''loss_history = []
         train_accuracy = torch.zeros(2, dtype=int)
         train_magnitude = torch.zeros(2, dtype=float)
-        train_confidence = torch.zeros(2, dtype=float)
-        net.train()
+        train_confidence = torch.zeros(2, dtype=float)'''
         
-        debug = True
+        train(
+            net=net,
+            train_data_loader=train_data_loader,
+            optimizer=optimizer, loss_func=first_loss_func,
+            t_metrics=t_metrics,
+            args=args
+        )
         
-        for x, y in train_data_loader:
-          
-            x = tools.device(x)
-            y = tools.device(y)    
-                    
-            optimizer.zero_grad()
-            logits, features = net(x)
-            
-            # first loss is always computed, second loss only for some loss functions
-            loss = first_loss_func(logits, y) + args.second_loss_weight * second_loss_func(features, y)
-
-            # metrics on training set
-            train_accuracy += losses.accuracy(logits, y)
-            train_confidence += losses.confidence(logits, y)
-            if args.approach not in ("SoftMax", "Garbage"):
-                train_magnitude += losses.sphere(features, y, args.Minimum_Knowns_Magnitude if args.approach in args.approach == "Objectosphere" else None)
-
-            loss_history.extend(loss.tolist())
-            loss.mean().backward()
-            optimizer.step()
-
-        # metrics on validation set
-        with torch.no_grad():
-            val_loss = torch.zeros(2, dtype=float)
-            val_accuracy = torch.zeros(2, dtype=int)
-            val_magnitude = torch.zeros(2, dtype=float)
-            val_confidence = torch.zeros(2, dtype=float)
-            net.eval()
-            
-            for x,y in val_data_loader:                
-                x = tools.device(x)          
-                y = tools.device(y)
-                outputs = net(x)             
-                loss = first_loss_func(outputs[0], y) + args.second_loss_weight * second_loss_func(outputs[1], y)               
-                
-                val_loss += torch.tensor((torch.sum(loss), len(loss)))
-                val_accuracy += losses.accuracy(outputs[0], y)
-                val_confidence += confidence(outputs[0], y)
-                
-                if args.approach not in ("SoftMax", "Garbage"):
-                    val_magnitude += losses.sphere(outputs[1], y, args.Minimum_Knowns_Magnitude if args.approach == "Objectosphere" else None)
-                    
-                debug = False
-        print( " ========= THIS IS VALIDATION CONFIDENC ===============")
-        print(val_confidence)       
+        validate(
+            net=net,
+            val_data_loader=val_data_loader,
+            optimizer=optimizer, loss_func=first_loss_func,
+            v_metrics=v_metrics,
+            args=args
+        )
+        
+                                  
         # log statistics
-        epoch_running_loss = torch.mean(torch.tensor(loss_history))
-        writer.add_scalar('Loss/train', epoch_running_loss, epoch)
-        writer.add_scalar('Loss/val', val_loss[0] / val_loss[1], epoch)
-        writer.add_scalar('Acc/train', float(train_accuracy[0]) / float(train_accuracy[1]), epoch)
-        writer.add_scalar('Acc/val', float(val_accuracy[0]) / float(val_accuracy[1]), epoch)
-        writer.add_scalar('Conf/train', float(train_confidence[0]) / float(train_confidence[1]), epoch)
-        writer.add_scalar('Conf/val', float(val_confidence[0]) / float(val_confidence[1]), epoch)
-        writer.add_scalar('Mag/train', train_magnitude[0] / train_magnitude[1] if train_magnitude[1] else 0, epoch)
-        writer.add_scalar('Mag/val', val_magnitude[0] / val_magnitude[1], epoch)
-
-        # save network based on confidence metric of validation set
-        save_status = "NO"
-        if prev_confidence is None or (val_confidence[0] > prev_confidence):
-            torch.save(net.state_dict(), model_file)
-            prev_confidence = val_confidence[0]
-            save_status = "YES"
-
-        # print some statistics
-        print(f"Epoch {epoch} "
-              f"train loss {epoch_running_loss:.10f} "
-              f"accuracy {float(train_accuracy[0]) / float(train_accuracy[1]):.5f} "
-              f"confidence {train_confidence[0] / train_confidence[1]:.5f} "
-              f"magnitude {train_magnitude[0] / train_magnitude[1] if train_magnitude[1] else -1:.5f} -- "
-              f"val loss {float(val_loss[0]) / float(val_loss[1]):.10f} "
-              f"accuracy {float(val_accuracy[0]) / float(val_accuracy[1]):.5f} "
-              f"confidence {val_confidence[0] / val_confidence[1]:.5f} "
-              f"magnitude {val_magnitude[0] / val_magnitude[1] if val_magnitude[1] else -1:.5f} -- "
-              f"Saving Model {save_status}")
+        curr_score = v_metrics["conf_kn"].avg + v_metrics["conf_unk"].avg
 
 
-def confidence(logits, target, negative_offset=0.1):
+        # Logging metrics to tensorboard object
+        writer.add_scalar("train/loss", t_metrics["j"].avg, epoch)
+        writer.add_scalar("val/loss", v_metrics["j"].avg, epoch)
+        # Validation metrics
+        writer.add_scalar("val/conf_kn", v_metrics["conf_kn"].avg, epoch)
+        writer.add_scalar("val/conf_unk", v_metrics["conf_unk"].avg, epoch)
+
+        ''' # save network based on confidence metric of validation set
+            save_status = "NO"
+            if prev_confidence is None or (val_confidence[0] > prev_confidence):
+                torch.save(net.state_dict(), model_file)
+                prev_confidence = val_confidence[0]
+                save_status = "YES" '''
+
+        logger.info(f"Saving  model {model_file} at epoch: {epoch}")
+        save_checkpoint(model_file, net, epoch, optimizer, curr_score, scheduler=None)
+
+        def pretty_print(d):
+                #return ",".join(f'{k}: {float(v):1.3f}' for k,v in dict(d).items())
+                return dict(d)
+
+        logger.info(
+                f"ep:{epoch} "
+                f"train:{pretty_print(t_metrics)} "
+                f"val:{pretty_print(v_metrics)} ")
+
+'''def confidence(logits, target, negative_offset=0.1):
     """Measures the softmax confidence of the correct class for known samples,
     and 1 + negative_offset - max(confidence) for unknown samples.
 
@@ -563,7 +541,75 @@ def confidence(logits, target, negative_offset=0.1):
                 1.0 + negative_offset - torch.max(pred[~known], dim=1)[0]
             ).item() / neg_count
 
-    return kn_conf, kn_count, neg_conf, neg_count
+    return kn_conf, kn_count, neg_conf, neg_count'''
+
+
+def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
+    
+    # Reset dictionary of training metrics
+    for metric in t_metrics.values():
+        metric.reset()
+
+    loss = None
+    net.train()
+    
+    for images, labels in train_data_loader:
+        
+        images = tools.device(images)
+        labels = tools.device(labels)    
+        batch_len = labels.shape[0]  # Samples in current batch
+        optimizer.zero_grad()
+        logits, features = net(images)
+        
+        # first loss is always computed, second loss only for some loss functions
+        loss = loss_func(logits, labels)
+        t_metrics["j"].update(loss.item(), batch_len)     
+
+        loss.backward()
+        optimizer.step()      
+
+
+def validate(net, val_data_loader, optimizer, loss_func, v_metrics, args):
+    # Reset all validation metrics
+    for metric in v_metrics.values():
+        metric.reset()
+    
+    num_classes = 10
+    net.eval()
+    with torch.no_grad():
+        data_len = len(val_data_loader.dataset)  # size of dataset
+        all_targets = device(torch.empty((data_len,), dtype=torch.int64, requires_grad=False))
+        all_scores = device(torch.empty((data_len, num_classes), requires_grad=False))
+        
+        
+        # might not be necessary to enumare as we have no batches
+        for i, (x,y) in enumerate(val_data_loader): 
+            batch_len = y.shape[0]  # current batch size, last batch has different value               
+            x = tools.device(x)          
+            y = tools.device(y)
+            logits, features = net(x)             
+            scores = torch.nn.functional.softmax(logits, dim=1)
+            loss = loss_func(logits, y) 
+            v_metrics["j"].update(loss.item(), batch_len)
+            
+            
+            start_ix = i * args.Batch_Size
+            all_targets[start_ix: start_ix + batch_len] = y
+            all_scores[start_ix: start_ix + batch_len] = scores
+            
+                
+        kn_conf, kn_count, neg_conf, neg_count = confidence(
+        scores=all_scores,
+        target_labels=all_targets,
+        offset= 1. /  num_classes,
+        unknown_class = -1,
+        last_valid_class = None)
+            
+        if kn_count:
+                v_metrics["conf_kn"].update(kn_conf, kn_count)
+        if neg_count:
+                v_metrics["conf_unk"].update(neg_conf, neg_count)
+
 
 def evaluate(args):
     
@@ -606,24 +652,20 @@ def evaluate(args):
     else:
         print("No GPU device selected, evaluation will be slow")
         set_device_cpu()
-
-    '''
-    if args.loss == "garbage":
-        n_classes = val_dataset.label_count # we use one class for the negatives
-    else:
-        n_classes = val_dataset.label_count - 1  # number of classes - 1 when training with unknowns
-    '''
     
     # create model
     loss_suffix = str(args.approach)
-    
+    model_path = 'LeNet_plus_plus/' + loss_suffix + '/' + loss_suffix + '.pth'
+
     net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
+    start_epoch, best_score = load_checkpoint(net, model_path)
+    print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     net = tools.device(net)
     
-    model_path = 'LeNet_plus_plus/' + loss_suffix + '/' + loss_suffix + '.model'
-    print(f"Taking model from:  {model_path}")
-    net.load_state_dict(torch.load(model_path)) #used to have an attribute map_location=net.device
 
+    '''
+    net.load_state_dict(torch.load(model_path)) #used to have an attribute map_location=net.device
+    '''
 
     print("========== Evaluating ==========")
     print("Validation data:")
@@ -649,17 +691,39 @@ def evaluate(args):
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")
     
-    
-    
+def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
+    """ Saves a training checkpoint.
+
+    Args:
+        f_name(str): File name.
+        model(torch module): Pytorch model.
+        epoch(int): Current epoch.
+        opt(torch optimizer): Current optimizer.
+        best_score_(float): Current best score.
+        scheduler(torch lr_scheduler): Pytorch scheduler.
+    """
+    # If model is DistributedDataParallel extracts the module.
+    if isinstance(model, DistributedDataParallel):
+        state = model.module.state_dict()
+    else:
+        state = model.state_dict()
+
+    data = {"epoch": epoch + 1,
+            "model_state_dict": state,
+            "opt_state_dict": opt.state_dict(),
+            "best_score": best_score_}
+    if scheduler is not None:
+        data["scheduler"] = scheduler.state_dict()
+    torch.save(data, f_name)   
     
 if __name__ == "__main__":
     args = command_line_options()
     if args.task == "train":
         print(" TASK IS TO TRAIN")
-        example = train(args = args)
+        example = training(args = args)
     if args.task == "eval":
         print(" TASK IS TO EVALUATE")
         evaluate(args = args)
     if args.task == "plot":
         print(" TASK IS TO PLOT")
-        example = train(args = args)
+        example = training(args = args)

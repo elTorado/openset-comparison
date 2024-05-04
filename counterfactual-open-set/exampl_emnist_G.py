@@ -291,13 +291,14 @@ def create_dataset_files(args):
     )
     
     
-    with open('emnist_classifier_labels.dataset', 'w') as train:
+    with open('emnist_classifier_labels.dataset', 'w') as file:
+        from collections import Counter
         train_labels = []
         val_labels = []
         test_labels = []
         # Collect labels from the train data loader
         for _, l in train_data_loader:
-            train_labels.extend(l.tolist())
+            train_labels.extend(l.tolist())  # Assuming l is a tensor or similar structure that needs to be converted to a list
 
         # Collect labels from the validation data loader
         for _, l in val_data_loader:
@@ -307,10 +308,15 @@ def create_dataset_files(args):
         for _, l in test_loader:
             test_labels.extend(l.tolist())
 
-        # Write unique labels to file
-        train.write(f"train labels: {sorted(set(train_labels))}\n")
-        train.write(f"val labels: {sorted(set(val_labels))}\n")
-        train.write(f"test labels: {sorted(set(test_labels))}\n")       
+        # Count the occurrences of each label and write to file
+        train_label_counts = Counter(train_labels)
+        val_label_counts = Counter(val_labels)
+        test_label_counts = Counter(test_labels)
+
+        # Writing the counts in a sorted manner by label
+        file.write(f"train labels: {sorted(train_label_counts.items())}\n")
+        file.write(f"val labels: {sorted(val_label_counts.items())}\n")
+        file.write(f"test labels: {sorted(test_label_counts.items())}\n")  
         
 def create_fold():
     

@@ -216,55 +216,6 @@ class Dataset(torch.utils.data.dataset.Dataset):
         with open(dataset_path, 'a') as file:
             file.write(json.dumps(data) + "\n")
 
-def create_dataset_files(args):
-    
-    first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
-    test_dataset = Dataset(args, args.dataset_root, which_set="test")
-
-
-    test_loader = torch.utils.data.DataLoader(
-    test_dataset,
-    batch_size=args.Batch_Size,
-    pin_memory=True
-    )
-    
-    train_data_loader = torch.utils.data.DataLoader(
-    training_data,
-    batch_size=args.Batch_Size,
-    shuffle=True,
-    num_workers=5,
-    pin_memory=True
-        )
-    val_data_loader = torch.utils.data.DataLoader(
-    validation_data,
-    batch_size=args.Batch_Size,
-    pin_memory=True
-    )
-    
-    
-    with open('emnist_classifier_labels.dataset', 'w') as train:
-        train_labels = []
-        val_labels = []
-        test_labels = []
-    # Collect labels from the train data loader
-    for _, l in train_data_loader:
-        train_labels.extend(l.tolist())
-
-    # Collect labels from the validation data loader
-    for _, l in val_data_loader:
-        val_labels.extend(l.tolist())
-
-    # Collect labels from the test data loader
-    for _, l in test_loader:
-        test_labels.extend(l.tolist())
-
-    # Write unique labels to file
-    train.write(f"train labels: {sorted(set(train_labels))}\n")
-    train.write(f"val labels: {sorted(set(val_labels))}\n")
-    train.write(f"test labels: {sorted(set(test_labels))}\n")   
-                    
-        
-
           
     def __getitem__(self, index):
         total_mnist = len(self.mnist)
@@ -311,7 +262,56 @@ def create_dataset_files(args):
     def __len__(self):
         return len(self.mnist) + len(self.letter_indexes) + len(self.synthetic_samples)
     
+##################################################################################################################################################
+##################################################################################################################################################
     
+def create_dataset_files(args):
+    
+    first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
+    test_dataset = Dataset(args, args.dataset_root, which_set="test")
+
+
+    test_loader = torch.utils.data.DataLoader(
+    test_dataset,
+    batch_size=args.Batch_Size,
+    pin_memory=True
+    )
+    
+    train_data_loader = torch.utils.data.DataLoader(
+    training_data,
+    batch_size=args.Batch_Size,
+    shuffle=True,
+    num_workers=5,
+    pin_memory=True
+        )
+    val_data_loader = torch.utils.data.DataLoader(
+    validation_data,
+    batch_size=args.Batch_Size,
+    pin_memory=True
+    )
+    
+    
+    with open('emnist_classifier_labels.dataset', 'w') as train:
+        train_labels = []
+        val_labels = []
+        test_labels = []
+    # Collect labels from the train data loader
+    for _, l in train_data_loader:
+        train_labels.extend(l.tolist())
+
+    # Collect labels from the validation data loader
+    for _, l in val_data_loader:
+        val_labels.extend(l.tolist())
+
+    # Collect labels from the test data loader
+    for _, l in test_loader:
+        test_labels.extend(l.tolist())
+
+    # Write unique labels to file
+    train.write(f"train labels: {sorted(set(train_labels))}\n")
+    train.write(f"val labels: {sorted(set(val_labels))}\n")
+    train.write(f"test labels: {sorted(set(test_labels))}\n")       
+       
 def create_fold():
     
     # We read through all letters and digits and create three different distributions.

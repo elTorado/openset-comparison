@@ -24,6 +24,8 @@ from collections import OrderedDict, defaultdict
 
 #Server
 DATA_DIR = '/home/user/heizmann/data/'
+
+#created by grid labeler
 GENERATED_NEGATIVES_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
 
 #Local
@@ -265,7 +267,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 ##################################################################################################################################################
 ##################################################################################################################################################
     
-def create_dataset_files(args):
+def create_labels_files(args):
     
     first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
     test_dataset = Dataset(args, args.dataset_root, which_set="test")
@@ -788,4 +790,4 @@ if __name__ == "__main__":
         example = training(args = args)
     if args.task == "show":
         print("creating labels file")
-        create_dataset_files(args=args)
+        create_labels_files(args=args)

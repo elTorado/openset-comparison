@@ -54,16 +54,18 @@ def save_image(pixels):
 
 # This function does two things related to generated images. First it writes the paths and labels into a simples text file.
 # Then it creates a csv file that contains the positive train and validation closed-set samples combined with the generated negative samples
-'''def write_dataset(examples, filename):
-    split1_path = os.path.join(DATASET_DIR, "emnist_split1.dataset")
-    aux_split1 = DATASET_DIR + "/aux_emnist_split1.csv"
-    with open(filename, 'w') as fp:
+def write_dataset(examples, filename):
+    train_file_path = os.path.join(DATASET_DIR, "emnist_split1.dataset")
+    with open(filename, 'w') as fp, open(train_file_path, 'a', newline='') as trainfile:
+        fieldnames = examples[0].keys()
+        writer = csv.DictWriter(trainfile, fieldnames=fieldnames)
         for e in examples:
             fp.write(json.dumps(e))
             fp.write('\n')
+            writer.writerow(e)
     
     
-        
+    '''    
     train_path = os.path.join(DATASET_DIR, "emnist_train.csv")   
     val_path = os.path.join(DATASET_DIR, "emnist_val.csv")    
     with open(train_path, 'a+') as train, open(val_path, "a+") as val:
@@ -129,4 +131,4 @@ for filename in ls('trajectories', '.npy'):
 # After all files have been processed, print the error count
 print(f"Total errors encountered: {errorcount}")
 
-
+write_dataset(examples, options['output_filename'])

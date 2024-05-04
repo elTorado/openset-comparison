@@ -85,7 +85,7 @@ def transpose(x):
 """
 class Dataset(torch.utils.data.dataset.Dataset):
 
-    def __init__(self, args, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False, include_counterfactuals = False, include_arpl = False, mixed_unknowns = False):
+    def __init__(self, args, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False):
         
         self.include_arpl = args.include_arpl
         self.include_counterfactuals = args.include_counterfactuals

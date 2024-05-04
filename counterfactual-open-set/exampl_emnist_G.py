@@ -56,6 +56,7 @@ def command_line_options():
     parser.add_argument("--include_counterfactuals", "-inc_c", type=bool, default=False, dest="include_counterfactuals", help="Include counterfactual images in the dataset")
     parser.add_argument("--include_arpl", "-inc_a", type=bool, default=False, dest="include_arpl", help="Include ARPL samples in the dataset")
     parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
+    parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
 
     return parser.parse_args()
 
@@ -93,14 +94,14 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
-            download=False,
+            download=args.download,
             split="mnist",
             transform=transforms.Compose([transforms.ToTensor(), transpose])
         )
         self.letters = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
-            download=False,
+            download=args.download,
             split='letters',
             transform=transforms.Compose([transforms.ToTensor(), transpose])
         )

@@ -41,7 +41,7 @@ def command_line_options():
     )
 
     parser.add_argument("--approach", "-a", required=True, choices=['SoftMax', 'Garbage', 'EOS', 'Objectosphere'])
-    parser.add_argument("--task", default='train', choices=['train', 'eval', "plot"])
+    parser.add_argument("--task", default='train', choices=['train', 'eval', "plot", "show"])
     parser.add_argument("--arch", default='LeNet_plus_plus', choices=['LeNet', 'LeNet_plus_plus'])
     parser.add_argument('--second_loss_weight', "-w", help='Loss weight for Objectosphere loss', type=float, default=0.0001)
     parser.add_argument('--Minimum_Knowns_Magnitude', "-m", help='Minimum Possible Magnitude for the Knowns', type=float,
@@ -154,8 +154,10 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 item = json.loads(item.strip())
                 image = Image.open(item["filename"])    
                 image_tensor = transforms.Compose([
-                    transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
-                    transforms.Resize((28, 28)),  # Resize to 28x28
+                    
+                    # transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
+                    # transforms.Resize((28, 28)),  # Resize to 28x28
+                    
                     transforms.ToTensor(),
                     transpose # IS THIS STILL NECESSARY?
                 ])(image)
@@ -212,7 +214,57 @@ class Dataset(torch.utils.data.dataset.Dataset):
         # Open the file in append mode and write the dictionary as a JSON line
         with open(dataset_path, 'a') as file:
             file.write(json.dumps(data) + "\n")
-            
+
+def create_dataset_files(args):
+    
+    first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
+    test_dataset = Dataset(args, args.dataset_root, which_set="test")
+
+
+    test_loader = torch.utils.data.DataLoader(
+    test_dataset,
+    batch_size=args.Batch_Size,
+    pin_memory=True
+    )
+    
+    train_data_loader = torch.utils.data.DataLoader(
+    training_data,
+    batch_size=args.Batch_Size,
+    shuffle=True,
+    num_workers=5,
+    pin_memory=True
+        )
+    val_data_loader = torch.utils.data.DataLoader(
+    validation_data,
+    batch_size=args.Batch_Size,
+    pin_memory=True
+    )
+    
+    
+    with open('emnist_classifier_labels.dataset', 'w') as train:
+        train_labels = []
+        val_labels = []
+        test_labels = []
+    # Collect labels from the train data loader
+    for _, l in train_data_loader:
+        train_labels.extend(l.tolist())
+
+    # Collect labels from the validation data loader
+    for _, l in val_data_loader:
+        val_labels.extend(l.tolist())
+
+    # Collect labels from the test data loader
+    for _, l in test_loader:
+        test_labels.extend(l.tolist())
+
+    # Write unique labels to file
+    train.write(f"train labels: {sorted(set(train_labels))}\n")
+    train.write(f"val labels: {sorted(set(val_labels))}\n")
+    train.write(f"test labels: {sorted(set(test_labels))}\n")   
+                    
+        
+
+          
     def __getitem__(self, index):
         total_mnist = len(self.mnist)
         total_letters = len(self.letter_indexes)  # Use the length of letter_indexes, not self.letters
@@ -727,3 +779,6 @@ if __name__ == "__main__":
     if args.task == "plot":
         print(" TASK IS TO PLOT")
         example = training(args = args)
+    if args.task == "show":
+        print("creating labels file")
+        create_dataset_files(args=args)

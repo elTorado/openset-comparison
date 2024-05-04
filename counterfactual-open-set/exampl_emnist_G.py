@@ -295,23 +295,23 @@ def create_dataset_files(args):
         train_labels = []
         val_labels = []
         test_labels = []
-    # Collect labels from the train data loader
-    for _, l in train_data_loader:
-        train_labels.extend(l.tolist())
+        # Collect labels from the train data loader
+        for _, l in train_data_loader:
+            train_labels.extend(l.tolist())
 
-    # Collect labels from the validation data loader
-    for _, l in val_data_loader:
-        val_labels.extend(l.tolist())
+        # Collect labels from the validation data loader
+        for _, l in val_data_loader:
+            val_labels.extend(l.tolist())
 
-    # Collect labels from the test data loader
-    for _, l in test_loader:
-        test_labels.extend(l.tolist())
+        # Collect labels from the test data loader
+        for _, l in test_loader:
+            test_labels.extend(l.tolist())
 
-    # Write unique labels to file
-    train.write(f"train labels: {sorted(set(train_labels))}\n")
-    train.write(f"val labels: {sorted(set(val_labels))}\n")
-    train.write(f"test labels: {sorted(set(test_labels))}\n")       
-       
+        # Write unique labels to file
+        train.write(f"train labels: {sorted(set(train_labels))}\n")
+        train.write(f"val labels: {sorted(set(val_labels))}\n")
+        train.write(f"test labels: {sorted(set(test_labels))}\n")       
+        
 def create_fold():
     
     # We read through all letters and digits and create three different distributions.

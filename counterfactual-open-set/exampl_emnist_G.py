@@ -159,14 +159,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 label = item["label"]
                 samples.append((image_tensor, label))
                 counter += 1
-                if counter%500 == 0:
-                    print("ADDED "+ str(counter) +" NEGATIVE COUNTERFACTUAL SAMPLES")
                 if counter == 6400:
                     break
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
         
-        print("======= ADDED "+ str(counter) +" NEGATIVE COUNTERFACTUAL SAMPLES TO EMNIST DATSET =========")
         return samples
     
     def load_arpl(self):

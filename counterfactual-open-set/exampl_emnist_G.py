@@ -113,11 +113,12 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.which_set = which_set
         self.has_garbage_class = has_garbage_class
         
-        print(" ++++++++++++++++++" + which_set + " DATASET LOADING +++++++++++++++++++ ")
+        print(" ++++++++++++++++++ " + which_set.upper() + " DATASET LOADING +++++++++++++++++++ ")
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(self.include_arpl))
         print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(self.mixed_unknowns))
-        print("                          ++++++++++++++++++                      " )
+        
+
         if self.includes_synthetic_samples:           
             # if we mix letters with synthetic samples in train and validation
             if self.mixed_unknowns:
@@ -145,7 +146,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)))
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
-    
+        print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", end='\n')
 
         
         
@@ -172,9 +173,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 label = item["label"]
                 samples.append((image_tensor, label))
                 counter += 1
-                if counter == 20800 and self.which_set == "val":
+                
+                # hardcode amount of negative samples to be equal to letters used for negative samples
+                if counter == 8800 and self.which_set == "val":
                     break
-                if counter == 124800 and self.which_set == "train":
+                if counter == 52800 and self.which_set == "train":
                     break
             except Exception as e:
                 print(f"Error processing item {item}: {e}")

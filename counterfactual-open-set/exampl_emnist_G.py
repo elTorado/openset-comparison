@@ -93,6 +93,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.include_counterfactuals = args.include_counterfactuals
         self.mixed_unknowns = args.mixed_unknowns
         
+        self.includes_synthetic_samples = self.include_arpl * self.include_counterfactuals
+        
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
             train=which_set == "train",
@@ -108,31 +110,35 @@ class Dataset(torch.utils.data.dataset.Dataset):
             transform=transforms.Compose([transforms.ToTensor(), transpose])
         )
         self.which_set = which_set
-        
-        #If no unknowns, then  targets is empty.
-        #If we have unknowns, then train & val targets are A - M / Test O - Z or so
-        if self.mixed_unknowns:
-            targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
-        else: 
-            targets = list()
-            
-        self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
         self.has_garbage_class = has_garbage_class
         
         print(args.include_counterfactuals)
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(self.include_arpl))
         
-        # Test set does not include synthetic samples
-        if not self.which_set == "test":
-            self.synthetic_samples = list()
-            if self.include_arpl:
-                self.synthetic_samples.extend(self.load_arpl())
-                if self.include_counterfactuals:
+        if self.includes_synthetic_samples:           
+            # if we mix letters with synthetic samples in train and validation
+            if self.mixed_unknowns:
+                targets = [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+            else: 
+                targets = list() if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+            
+            # Test set does not include synthetic samples
+            if not self.which_set == "test":
+                self.synthetic_samples = list()
+                if self.include_arpl:
+                    self.synthetic_samples.extend(self.load_arpl())
+                    if self.include_counterfactuals:
+                        self.synthetic_samples.extend(self.load_counterfactuals())
+                elif self.include_counterfactuals:
                     self.synthetic_samples.extend(self.load_counterfactuals())
-            elif self.include_counterfactuals:
-                self.synthetic_samples.extend(self.load_counterfactuals())
-        
+                                     
+        # In case no synthetic negative samples are used, letters are unknowns
+        else: 
+            targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+            
+        self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
+
         
         print(" ++++++++++++++++++" + which_set + " DATASET LOADING +++++++++++++++++++ ")
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))

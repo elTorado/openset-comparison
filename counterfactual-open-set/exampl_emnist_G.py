@@ -113,9 +113,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.which_set = which_set
         self.has_garbage_class = has_garbage_class
         
-        print(args.include_counterfactuals)
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(self.include_arpl))
+        print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(self.mixed_unknowns))
         
         if self.includes_synthetic_samples:           
             # if we mix letters with synthetic samples in train and validation
@@ -142,7 +142,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         print(" ++++++++++++++++++" + which_set + " DATASET LOADING +++++++++++++++++++ ")
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
-        print(" ========= LENGTH OF LETTER :" + str(len(self.letters)))
+        print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)))
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
     
 

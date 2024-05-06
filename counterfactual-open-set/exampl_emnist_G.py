@@ -158,8 +158,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 image = Image.open(item["filename"])    
                 image_tensor = transforms.Compose([
                     
-                    # transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
-                    # transforms.Resize((28, 28)),  # Resize to 28x28
+                    transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
+                    transforms.Resize((28, 28)),  # Resize to 28x28
                     
                     transforms.ToTensor(),
                     transpose # IS THIS STILL NECESSARY?

@@ -127,19 +127,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
             self.synthetic_samples.extend(self.load_counterfactuals())
         
         
-        
+        print(" ============== " + which_set + " + DATASET LOADING ============== ")
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         print(" ========= LENGTH OF LETTER :" + str(len(self.letters)))
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
-        print(" ========= LENGTH OF CLASS ITSELF :" + str(len(self)))
-        
-        # Print tensor sizes for each dataset sample
-        if len(self.mnist) > 0:
-            print(f"MNIST sample tensor size: {self.mnist[0][0].size()}")
-        if len(self.letter_indexes) > 0:
-            print(f"Letters sample tensor size: {self.letters[self.letter_indexes[0]][0].size()}")
-        if len(self.synthetic_samples) > 0:
-            print(f"Synthetic sample tensor size: {self.synthetic_samples[0][0].size()}")
+    
 
         
         
@@ -169,7 +161,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 counter += 1
                 if counter%500 == 0:
                     print("ADDED "+ str(counter) +" NEGATIVE COUNTERFACTUAL SAMPLES")
-                if counter == 500:
+                if counter == 6400:
                     break
             except Exception as e:
                 print(f"Error processing item {item}: {e}")

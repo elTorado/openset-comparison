@@ -93,7 +93,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.include_counterfactuals = args.include_counterfactuals
         self.mixed_unknowns = args.mixed_unknowns
         
-        self.includes_synthetic_samples = self.include_arpl * self.include_counterfactuals
+        self.includes_synthetic_samples = self.include_arpl or self.include_counterfactuals
         self.synthetic_samples = list()
         
         self.mnist = torchvision.datasets.EMNIST(

@@ -111,23 +111,30 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         #If no unknowns, then  targets is empty.
         #If we have unknowns, then train & val targets are A - M / Test O - Z or so
-        targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+        if self.mixed_unknowns:
+            targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+        else: 
+            targets = list()
+            
         self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
         self.has_garbage_class = has_garbage_class
         
         print(args.include_counterfactuals)
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(self.include_arpl))
-        self.synthetic_samples = list()
-        if self.include_arpl:
-            self.synthetic_samples.extend(self.load_arpl())
-            if self.include_counterfactuals:
+        
+        # Test set does not include synthetic samples
+        if not self.which_set == "test":
+            self.synthetic_samples = list()
+            if self.include_arpl:
+                self.synthetic_samples.extend(self.load_arpl())
+                if self.include_counterfactuals:
+                    self.synthetic_samples.extend(self.load_counterfactuals())
+            elif self.include_counterfactuals:
                 self.synthetic_samples.extend(self.load_counterfactuals())
-        elif self.include_counterfactuals:
-            self.synthetic_samples.extend(self.load_counterfactuals())
         
         
-        print(" ============== " + which_set + " + DATASET LOADING ============== ")
+        print(" ++++++++++++++++++" + which_set + " DATASET LOADING +++++++++++++++++++ ")
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         print(" ========= LENGTH OF LETTER :" + str(len(self.letters)))
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
@@ -159,7 +166,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 label = item["label"]
                 samples.append((image_tensor, label))
                 counter += 1
-                if counter == 6400:
+                if counter == 20800 and self.which_set == "val":
+                    break
+                if counter == 124800 and self.which_set == "train":
                     break
             except Exception as e:
                 print(f"Error processing item {item}: {e}")

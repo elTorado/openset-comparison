@@ -94,6 +94,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.mixed_unknowns = args.mixed_unknowns
         
         self.includes_synthetic_samples = self.include_arpl * self.include_counterfactuals
+        self.synthetic_samples = list()
         
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
@@ -125,7 +126,6 @@ class Dataset(torch.utils.data.dataset.Dataset):
             
             # Test set does not include synthetic samples
             if not self.which_set == "test":
-                self.synthetic_samples = list()
                 if self.include_arpl:
                     self.synthetic_samples.extend(self.load_arpl())
                     if self.include_counterfactuals:

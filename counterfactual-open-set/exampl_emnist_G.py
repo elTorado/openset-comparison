@@ -155,7 +155,6 @@ class Dataset(torch.utils.data.dataset.Dataset):
         # Read the whole file at once
         with open(data_path, 'r') as file:
             file_content = file.readlines()
-            print(len(file_content))
 
         for item in file_content:
             try:

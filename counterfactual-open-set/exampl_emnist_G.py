@@ -146,7 +146,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
   
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
-        print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)) " , FROM LETTERS: " + self.which_letters)
+        print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)) + " , FROM LETTERS: " + self.which_letters)
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
         print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", end='\n')
 

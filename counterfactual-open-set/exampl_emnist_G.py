@@ -693,7 +693,7 @@ def evaluate(args):
     directory = pathlib.Path(f"{args.eval_directory}")
 
     file_path = directory / f"{args.approach}_val_arr{loss_suffix}.npz"
-    np.savez(file_path, gt=val_targets, logits=logits, features=features, scores=scores)
+    np.savez(file_path, gt=val_targets, logits=logits, features=val_features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
     # extracting arrays for test
@@ -721,7 +721,7 @@ def evaluate(args):
         print(f"Accuracy on test data: {accuracy:.4f}")
 
     file_path = directory / f"{args.approach}_test_arr{loss_suffix}.npz"
-    np.savez(file_path, gt=test_targets, logits=logits, features=features, scores=scores)
+    np.savez(file_path, gt=test_targets, logits=logits, features=test_features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
     

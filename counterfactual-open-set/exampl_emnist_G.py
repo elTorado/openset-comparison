@@ -113,6 +113,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
         )
         self.which_set = which_set
         self.has_garbage_class = has_garbage_class
+        self.classes = self.mnist.classes().append(-1.) 
+        
         
         print(" ++++++++++++++++++ " + which_set.upper() + " DATASET LOADING +++++++++++++++++++ ")
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
@@ -481,9 +483,13 @@ def training(args):
     results_dir = pathlib.Path(f"{args.arch}/{args.approach}")
     model_file = f"{results_dir}/{args.approach}.pth"
     results_dir.mkdir(parents=True, exist_ok=True)
+    
+    num_classes = len(training_data.classes)
+    print(len(training_data.classes))
+    print(num_classes)
 
     # instantiate network and data loader
-    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
+    net = architectures.LeNet_plus_plus(num_classes=num_classes)
     net = tools.device(net)
     train_data_loader = torch.utils.data.DataLoader(
         training_data,
@@ -643,6 +649,9 @@ def evaluate(args):
     eval_metrics = defaultdict(AverageMeter)
     v_metrics = defaultdict(AverageMeter)
 
+    num_classes = len(val_dataset.classes)
+    print(len(val_dataset.classes))
+    print(num_classes)
 
     # create data loaders
     val_loader = torch.utils.data.DataLoader(
@@ -667,7 +676,7 @@ def evaluate(args):
     loss_suffix = str(args.approach)
     model_path = 'LeNet_plus_plus/' + loss_suffix + '/' + loss_suffix + '.pth'
 
-    net = architectures.__dict__[args.arch](use_BG=args.approach == "Garbage")
+    net = architectures.LeNet_plus_plus(num_classes=num_classes)
     start_epoch, best_score = load_checkpoint(net, model_path)
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     net = tools.device(net)

@@ -575,41 +575,6 @@ def training(args):
                 f"train:{pretty_print(t_metrics)} "
                 f"val:{pretty_print(v_metrics)} ")
 
-'''def confidence(logits, target, negative_offset=0.1):
-    """Measures the softmax confidence of the correct class for known samples,
-    and 1 + negative_offset - max(confidence) for unknown samples.
-
-    Parameters:
-
-      logits: the output of the network, must be logits
-
-      target: the vector of true classes; can be -1 for unknown samples
-
-    Returns a tensor with two entries:
-
-      confidence: the sum of the confidence values for the samples
-
-      total: The total number of considered samples
-    """
-
-    with torch.no_grad():
-        known = target >= 0
-
-        pred = torch.nn.functional.softmax(logits, dim=1)
-        #    import ipdb; ipdb.set_trace()
-        kn_count = sum(known).item()    # Total known samples in data
-        neg_count = sum(~known).item()  # Total negative samples in data
-        kn_conf = 0.0
-        neg_conf = 0.0
-        
-        if torch.sum(known):
-            kn_conf = torch.sum(pred[known, target[known]]).item() / kn_count
-        if torch.sum(~known):
-            neg_conf += torch.sum(
-                1.0 + negative_offset - torch.max(pred[~known], dim=1)[0]
-            ).item() / neg_count
-
-    return kn_conf, kn_count, neg_conf, neg_count'''
 
 
 def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
@@ -735,6 +700,8 @@ def evaluate(args):
     net.load_state_dict(torch.load(model_path)) #used to have an attribute map_location=net.device
     '''
 
+    import numpy as np
+
     print("========== Evaluating ==========")
     print("Validation data:")
     # extracting arrays for validation
@@ -742,12 +709,21 @@ def evaluate(args):
         model=net,
         loader=val_loader
     )
-    
+
+    # Print summary statistics for validation data
+    print(f"Number of validation samples: {len(gt)}")
+    if scores is not None:
+        print(f"Average score on validation data: {np.mean(scores):.4f}")
+    if logits is not None:
+        predicted_classes = np.argmax(logits, axis=1)
+        accuracy = np.mean(predicted_classes == gt)
+        print(f"Accuracy on validation data: {accuracy:.4f}")
+
     directory = pathlib.Path(f"{args.eval_directory}")
-    
-    file_path = directory/ f"{args.approach}_val_arr{loss_suffix}.npz"
+
+    file_path = directory / f"{args.approach}_val_arr{loss_suffix}.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
-    print(f"Target labels, logits, features and scores saved in: {file_path}")
+    print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
     # extracting arrays for test
     print("Test data:")
@@ -755,9 +731,20 @@ def evaluate(args):
         model=net,
         loader=test_loader
     )
-    file_path = directory/ f"{args.approach}_test_arr{loss_suffix}.npz"
+
+    # Print summary statistics for test data
+    print(f"Number of test samples: {len(gt)}")
+    if scores is not None:
+        print(f"Average score on test data: {np.mean(scores):.4f}")
+    if logits is not None:
+        predicted_classes = np.argmax(logits, axis=1)
+        accuracy = np.mean(predicted_classes == gt)
+        print(f"Accuracy on test data: {accuracy:.4f}")
+
+    file_path = directory / f"{args.approach}_test_arr{loss_suffix}.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
-    print(f"Target labels, logits, features and scores saved in: {file_path}")
+    print(f"Target labels, logits, features, and scores saved in: {file_path}")
+
     
 def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
     """ Saves a training checkpoint.

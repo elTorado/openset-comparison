@@ -704,7 +704,7 @@ def evaluate(args):
         dataset= "TEST"
     )
 
-    if val_targets != test_targets:
+    if np.array_equal(val_targets, test_targets):
         raise AssertionError("SOMETHING IS WRONG WITH THE RETRIEVED TARGES", print(val_targets), print(test_targets))
     
     print("VALIDATION TARGETS:", val_targets[:10], test_targets[-10:])

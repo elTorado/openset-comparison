@@ -511,6 +511,9 @@ def training(args):
 
     # train network
     prev_confidence = None
+    
+    BEST_SCORE = 0.0
+    
     for epoch in range(1, args.no_of_epochs + 1, 1):  # loop over the dataset multiple times
         print ("======== TRAINING EPOCH: " + str(epoch) +" ===============")
         
@@ -533,6 +536,8 @@ def training(args):
                                   
         # log statistics
         curr_score = v_metrics["conf_kn"].avg + v_metrics["conf_unk"].avg
+        if BEST_SCORE <= curr_score:
+            BEST_SCORE = curr_score
 
 
         # Logging metrics to tensorboard object
@@ -556,6 +561,8 @@ def training(args):
                 f"ep:{epoch} "
                 f"train:{pretty_print(t_metrics)} "
                 f"val:{pretty_print(v_metrics)} ")
+    
+    print(" ====== TRAINING FINISHED WITH BEST SCORE: ", BEST_SCORE)
 
 
 

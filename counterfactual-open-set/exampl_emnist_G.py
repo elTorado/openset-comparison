@@ -491,8 +491,6 @@ def training(args):
     results_dir.mkdir(parents=True, exist_ok=True)
     
     num_classes = len(training_data.classes)
-    print(len(training_data.classes))
-    print(num_classes)
 
     # instantiate network and data loader
     net = architectures.LeNet_plus_plus(num_classes=num_classes)
@@ -542,6 +540,7 @@ def training(args):
             val_data_loader=val_data_loader,
             optimizer=optimizer, loss_func=first_loss_func,
             v_metrics=v_metrics,
+            num_classes=num_classes
             args=args
         )
         
@@ -602,12 +601,11 @@ def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
         optimizer.step()      
 
 
-def validate(net, val_data_loader, optimizer, loss_func, v_metrics, args):
+def validate(net, val_data_loader, optimizer, num_classes, loss_func, v_metrics, args):
     # Reset all validation metrics
     for metric in v_metrics.values():
         metric.reset()
     
-    num_classes = 10
     net.eval()
     with torch.no_grad():
         data_len = len(val_data_loader.dataset)  # size of dataset

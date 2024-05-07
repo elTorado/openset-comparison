@@ -229,6 +229,7 @@ def get_arrays(model, loader):
         i = 0 
         for images, labels in tqdm.tqdm(loader):
             i += 1
+            print(images.shape)
             curr_b_size = labels.shape[0]  # current batch size, very last batch has different value
             images = device(images)
             labels = device(labels)

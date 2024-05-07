@@ -712,7 +712,7 @@ def evaluate(args):
         print(f"Accuracy on test data: {accuracy:.4f}")
 
     file_path = directory / f"{args.approach}_test_arr{loss_suffix}.npz"
-    np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
+    np.savez(file_path, gt=targets, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
     

@@ -209,6 +209,8 @@ def get_arrays(model, loader):
     with torch.no_grad():
         data_len = len(loader.dataset)         # dataset length
         
+        print(" LEN OF THE EVALUATION DATA: ", data_len)
+        
         if isinstance(model, ResNet50):
                     print( " Evaluating ResNet50 Model")
                     logits_dim = model.logits.out_features # logits output classes
@@ -229,7 +231,6 @@ def get_arrays(model, loader):
         i = 0 
         for images, labels in tqdm.tqdm(loader):
             i += 1
-            print(images.shape)
             curr_b_size = labels.shape[0]  # current batch size, very last batch has different value
             images = device(images)
             labels = device(labels)
@@ -241,7 +242,7 @@ def get_arrays(model, loader):
             all_feat[index:index + curr_b_size] = feature.detach().cpu()
             all_scores[index:index + curr_b_size] = score.detach().cpu()
             index += curr_b_size
-        print( " ITERATIONS IN EVALUATION LOOP: ", i)
+        print( " BATCHES EVALUATED IN EVALUATION LOOP: ", i)
         return(
             all_targets.numpy(),
             all_logits.numpy(),

@@ -707,7 +707,7 @@ def evaluate(args):
     if np.array_equal(val_features, test_features):
         raise AssertionError("FEATURES ARE THE SAME!")
     
-    print("VALIDATION TARGETS:", val_targets[:10], test_targets[-10]:, np.unique(val_targets))
+    print("VALIDATION TARGETS:", val_targets[:10], test_targets[-10:], np.unique(val_targets))
     print("TEST TARGETS:", val_targets[:10], test_targets[-10:], np.unique(val_targets))
     
     

@@ -97,6 +97,7 @@ def load_checkpoint(model, checkpoint, opt=None, scheduler=None):
 
         start_epoch = checkpoint["epoch"]
         best_score = checkpoint["best_score"]
+        print(checkpoint)
         return start_epoch, best_score
     else:
         raise Exception(f"Checkpoint file '{checkpoint}' not found")
@@ -210,9 +211,11 @@ def get_arrays(model, loader):
         data_len = len(loader.dataset)         # dataset length
         
         if isinstance(model, ResNet50):
+                    print( " Evaluating ResNet50 Model")
                     logits_dim = model.logits.out_features # logits output classes
                     features_dim = model.logits.in_features  # features dimensionality
         elif isinstance(model, architectures.LeNet_plus_plus):
+                    print( " Evaluating LeNet_Plus Model")
                     logits_dim = model.fc2.out_features # logits output classes
                     features_dim = model.fc2.in_features  # features dimensionality    
         

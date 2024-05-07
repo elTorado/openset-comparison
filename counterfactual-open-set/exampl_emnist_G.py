@@ -628,27 +628,12 @@ def validate(net, val_data_loader, optimizer, loss_func, v_metrics, args):
 
 def evaluate(args):
     
-    # create datasets    
-    if args.approach == "SoftMax":
-        print(" ========= Using SoftMax Loss ===========")
-        val_dataset = Dataset(args, args.dataset_root, which_set="val", include_unknown=False)
-        test_dataset = Dataset(args, args.dataset_root, which_set="test", include_unknown=False)
-            
-    elif args.approach =="Garbage":
-        print(" ========= Using Garbage Loss ===========")
-        val_dataset = Dataset(args, args.dataset_root, which_set="val", has_garbage_class=True)
-        test_dataset = Dataset(args, args.dataset_root, which_set="test", has_garbage_class=True)
-                
-    elif args.approach == "EOS":
-        print(" ========= Using Entropic Openset Loss ===========")
-        val_dataset = Dataset(args,  args.dataset_root, which_set="val",)
-        test_dataset = Dataset(args, args.dataset_root, which_set="test")
 
-    # Info on console
-    print("\n========== Data ==========")
-    print(f"Val dataset len:{len(val_dataset)}")
-    print(f"Test dataset len:{len(test_dataset)}")
     
+    print(" ========= Using Entropic Openset Loss ===========")
+    val_dataset = Dataset(args,  args.dataset_root, which_set="val",)
+    test_dataset = Dataset(args, args.dataset_root, which_set="test")
+
     eval_metrics = defaultdict(AverageMeter)
     v_metrics = defaultdict(AverageMeter)
 

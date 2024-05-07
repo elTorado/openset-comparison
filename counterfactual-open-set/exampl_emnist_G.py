@@ -475,7 +475,11 @@ def training(args):
 
     # get training data and loss function(s)
     #ONLY for objectosphere a real second loss functions is returned, else its a tensord filled a 0
-    first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
+    
+    training_data=Dataset(args, args.dataset_root)
+    first_loss_func=EntropicOpensetLoss(num_of_classes=len(training_data.classes))
+    validation_data = Dataset(args, args.dataset_root, which_set="val")
+
     
         # Info on console
     print("\n========== Data ==========")

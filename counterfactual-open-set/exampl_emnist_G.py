@@ -92,6 +92,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.include_arpl = args.include_arpl
         self.include_counterfactuals = args.include_counterfactuals
         self.mixed_unknowns = args.mixed_unknowns
+        self.which_letters = ""
         
         self.includes_synthetic_samples = self.include_arpl or self.include_counterfactuals
         self.synthetic_samples = list()
@@ -122,9 +123,10 @@ class Dataset(torch.utils.data.dataset.Dataset):
         if self.includes_synthetic_samples:           
             # if we mix letters with synthetic samples in train and validation
             if self.mixed_unknowns:
-                targets = [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+                targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
+
             else: 
-                targets = list() if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+                targets, self.which_letters = (list(), "None") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
             
             # Test set does not include synthetic samples
             if not self.which_set == "test":
@@ -137,7 +139,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                                      
         # In case no synthetic negative samples are used, letters are unknowns
         else: 
-            targets = list() if not include_unknown else [1,2,3,4,5,6,8,10,11,13,14] if which_set != "test" else [16,17,18,19,20,21,22,23,24,25,26]
+            targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
             
         self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
 
@@ -255,18 +257,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
         return data            
             
-    '''def __getitem__(self, index):
-        if index < len(self.mnist):
-            return self.mnist[index] 
-        elif index < len(self.mnist) + len(self.letters):
-            # index provided as input is based on the combined length of both datasets, but each dataset needs to be accessed independently.
-            # [0] extracts the image data
-            print("------------- INDEX: "+ str(index)+"  ---------------")
-            print("------------- LENGTH OF LETTER INDEXES: "+ str(len(self.letter_indexes))+"  ---------------")
 
-            return self.letters[self.letter_indexes[index - len(self.mnist)]][0], 10 if self.has_garbage_class else -1 
-        else: 
-            return self.synthetic_samples[index - len(self.mnist) + len(self.letters)], 10 if self.has_garbage_class else -1 '''
 
     def __len__(self):
         return len(self.mnist) + len(self.letter_indexes) + len(self.synthetic_samples)
@@ -523,11 +514,6 @@ def training(args):
     for epoch in range(1, args.no_of_epochs + 1, 1):  # loop over the dataset multiple times
         print ("======== TRAINING EPOCH: " + str(epoch) +" ===============")
         
-        '''loss_history = []
-        train_accuracy = torch.zeros(2, dtype=int)
-        train_magnitude = torch.zeros(2, dtype=float)
-        train_confidence = torch.zeros(2, dtype=float)'''
-        
         train(
             net=net,
             train_data_loader=train_data_loader,
@@ -556,13 +542,9 @@ def training(args):
         writer.add_scalar("val/conf_kn", v_metrics["conf_kn"].avg, epoch)
         writer.add_scalar("val/conf_unk", v_metrics["conf_unk"].avg, epoch)
 
-        ''' # save network based on confidence metric of validation set
-            save_status = "NO"
-            if prev_confidence is None or (val_confidence[0] > prev_confidence):
-                torch.save(net.state_dict(), model_file)
-                prev_confidence = val_confidence[0]
-                save_status = "YES" '''
-
+        
+        # !!! t_metrics carries only a j value, val metrics -> j, conf_known, conf_unknown
+                
         logger.info(f"Saving  model {model_file} at epoch: {epoch}")
         save_checkpoint(model_file, net, epoch, optimizer, curr_score, scheduler=None)
 
@@ -666,6 +648,10 @@ def evaluate(args):
     print("\n========== Data ==========")
     print(f"Val dataset len:{len(val_dataset)}")
     print(f"Test dataset len:{len(test_dataset)}")
+    
+    eval_metrics = defaultdict(AverageMeter)
+    v_metrics = defaultdict(AverageMeter)
+
 
     # create data loaders
     val_loader = torch.utils.data.DataLoader(
@@ -694,13 +680,6 @@ def evaluate(args):
     start_epoch, best_score = load_checkpoint(net, model_path)
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     net = tools.device(net)
-    
-
-    '''
-    net.load_state_dict(torch.load(model_path)) #used to have an attribute map_location=net.device
-    '''
-
-    import numpy as np
 
     print("========== Evaluating ==========")
     print("Validation data:")

@@ -120,6 +120,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(self.include_arpl))
         print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(self.mixed_unknowns))
+        print("- - - - - - - - - - - - - - - - - - - - ", end='\n')
         
 
         if self.includes_synthetic_samples:           
@@ -149,7 +150,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
   
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)) + " , FROM LETTERS: " + self.which_letters)
-        print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))       
+        print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))
+        print(" ========= CLASSES IN OVERALL DATASET :", self.classes )       
         print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", end='\n')
 
         
@@ -650,8 +652,6 @@ def evaluate(args):
     v_metrics = defaultdict(AverageMeter)
 
     num_classes = len(val_dataset.classes)
-    print(len(val_dataset.classes))
-    print(num_classes)
 
     # create data loaders
     val_loader = torch.utils.data.DataLoader(

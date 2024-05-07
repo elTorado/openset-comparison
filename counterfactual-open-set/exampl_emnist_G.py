@@ -565,7 +565,6 @@ def training(args):
     print(" ====== TRAINING FINISHED WITH BEST SCORE: ", BEST_SCORE)
 
 
-
 def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
     
     # Reset dictionary of training metrics
@@ -676,40 +675,40 @@ def evaluate(args):
     print("========== Evaluating ==========")
     print("Validation data:")
     # extracting arrays for validation
-    gt, logits, features, scores = get_arrays(
+    targets, logits, features, scores = get_arrays(
         model=net,
         loader=val_loader
     )
 
     # Print summary statistics for validation data
-    print(f"Number of validation samples: {len(gt)}")
+    print(f"Number of validation samples: {len(targets)}")
     if scores is not None:
         print(f"Average score on validation data: {np.mean(scores):.4f}")
     if logits is not None:
         predicted_classes = np.argmax(logits, axis=1)
-        accuracy = np.mean(predicted_classes == gt)
+        accuracy = np.mean(predicted_classes == targets)
         print(f"Accuracy on validation data: {accuracy:.4f}")
 
     directory = pathlib.Path(f"{args.eval_directory}")
 
     file_path = directory / f"{args.approach}_val_arr{loss_suffix}.npz"
-    np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
+    np.savez(file_path, gt=targets, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
     # extracting arrays for test
     print("Test data:")
-    gt, logits, features, scores = get_arrays(
+    targets, logits, features, scores = get_arrays(
         model=net,
         loader=test_loader
     )
 
     # Print summary statistics for test data
-    print(f"Number of test samples: {len(gt)}")
+    print(f"Number of test samples: {len(targets)}")
     if scores is not None:
         print(f"Average score on test data: {np.mean(scores):.4f}")
     if logits is not None:
         predicted_classes = np.argmax(logits, axis=1)
-        accuracy = np.mean(predicted_classes == gt)
+        accuracy = np.mean(predicted_classes == targets)
         print(f"Accuracy on test data: {accuracy:.4f}")
 
     file_path = directory / f"{args.approach}_test_arr{loss_suffix}.npz"

@@ -675,7 +675,7 @@ def evaluate(args):
     print("========== Evaluating ==========")
     print("Validation data:")
     # extracting arrays for validation
-    val_targets, logits, features, scores = get_arrays(
+    val_targets, logits, val_features, scores = get_arrays(
         model=net,
         loader=val_loader,
         dataset= "VAL"
@@ -698,14 +698,14 @@ def evaluate(args):
 
     # extracting arrays for test
     print("Test data:")
-    test_targets, logits, features, scores = get_arrays(
+    test_targets, logits, test_features, scores = get_arrays(
         model=net,
         loader=test_loader,
         dataset= "TEST"
     )
 
-    if np.array_equal(val_targets, test_targets):
-        raise AssertionError("SOMETHING IS WRONG WITH THE RETRIEVED TARGES", print(val_targets), print(test_targets))
+    if np.array_equal(val_features, test_features):
+        raise AssertionError("FEATURES ARE THE SAME!")
     
     print("VALIDATION TARGETS:", val_targets[:10], test_targets[-10:])
     print("TEST TARGETS:", val_targets[:10], test_targets[-10:])

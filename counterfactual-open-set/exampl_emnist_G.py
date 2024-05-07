@@ -540,7 +540,7 @@ def training(args):
             val_data_loader=val_data_loader,
             optimizer=optimizer, loss_func=first_loss_func,
             v_metrics=v_metrics,
-            num_classes=num_classes
+            num_classes=num_classes,
             args=args
         )
         

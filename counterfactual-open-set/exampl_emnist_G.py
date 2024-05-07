@@ -675,44 +675,53 @@ def evaluate(args):
     print("========== Evaluating ==========")
     print("Validation data:")
     # extracting arrays for validation
-    targets, logits, features, scores = get_arrays(
+    val_targets, logits, features, scores = get_arrays(
         model=net,
-        loader=val_loader
+        loader=val_loader,
+        dataset= "VAL"
     )
 
     # Print summary statistics for validation data
-    print(f"Number of validation samples: {len(targets)}")
+    print(f"Number of validation samples: {len(val_targets)}")
     if scores is not None:
         print(f"Average score on validation data: {np.mean(scores):.4f}")
     if logits is not None:
         predicted_classes = np.argmax(logits, axis=1)
-        accuracy = np.mean(predicted_classes == targets)
+        accuracy = np.mean(predicted_classes == val_targets)
         print(f"Accuracy on validation data: {accuracy:.4f}")
 
     directory = pathlib.Path(f"{args.eval_directory}")
 
     file_path = directory / f"{args.approach}_val_arr{loss_suffix}.npz"
-    np.savez(file_path, gt=targets, logits=logits, features=features, scores=scores)
+    np.savez(file_path, gt=val_targets, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
     # extracting arrays for test
     print("Test data:")
-    targets, logits, features, scores = get_arrays(
+    test_targets, logits, features, scores = get_arrays(
         model=net,
-        loader=test_loader
+        loader=test_loader,
+        dataset= "TEST"
     )
 
+    if val_targets != test_targets:
+        raise AssertionError("SOMETHING IS WRONG WITH THE RETRIEVED TARGES", print(val_targets), print(test_targets))
+    
+    print("VALIDATION TARGETS:", val_targets[:10], test_targets[-10:])
+    print("TEST TARGETS:", val_targets[:10], test_targets[-10:])
+    
+    
     # Print summary statistics for test data
-    print(f"Number of test samples: {len(targets)}")
+    print(f"Number of test samples: {len(test_targets)}")
     if scores is not None:
         print(f"Average score on test data: {np.mean(scores):.4f}")
     if logits is not None:
         predicted_classes = np.argmax(logits, axis=1)
-        accuracy = np.mean(predicted_classes == targets)
+        accuracy = np.mean(predicted_classes == test_targets)
         print(f"Accuracy on test data: {accuracy:.4f}")
 
     file_path = directory / f"{args.approach}_test_arr{loss_suffix}.npz"
-    np.savez(file_path, gt=targets, logits=logits, features=features, scores=scores)
+    np.savez(file_path, gt=test_targets, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
     

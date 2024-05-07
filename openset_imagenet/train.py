@@ -198,7 +198,7 @@ def validate(model, data_loader, loss_fn, n_classes, trackers, cfg):
 
 
 
-def get_arrays(model, loader):
+def get_arrays(model, loader, dataset = "Default"):
     """ Extract deep features, logits and targets for all dataset. Returns numpy arrays
 
     Args:
@@ -209,7 +209,7 @@ def get_arrays(model, loader):
     with torch.no_grad():
         data_len = len(loader.dataset)         # dataset length
         
-        print(" LEN OF THE EVALUATION DATA: ", data_len)
+        print(" LEN OF THE " + dataset + " EVALUATION DATA: ", data_len)
         
         if isinstance(model, ResNet50):
                     print( " Evaluating ResNet50 Model")

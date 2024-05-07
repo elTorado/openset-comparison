@@ -1,3 +1,4 @@
+
 from pathlib import Path
 import argparse
 import multiprocessing
@@ -117,76 +118,84 @@ def get_args():
 #returns model 
 
 def load_scores(args):
-    # collect all result files and evalaute, WE DONT NEEED THIS
-    approach = args.approach
-    
-    model_directory = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
-    model_file = model_directory / f"{approach}" / f"{approach}.pth"
-    
-    eval_directory = pathlib.Path(f"{args.eval_directory}")
-    eval_val_file = eval_directory / f"{approach}_val_arr{approach}.npz"
-    eval_test_file = eval_directory / f"{approach}_test_arr{approach}.npz"
-    score_files = [eval_val_file, eval_test_file]
-
-    print("Extracting scores of", model_file)           
-            
-    # remember files
-    scores = openset_imagenet.util.read_array_list(score_files) 
-    model = torch.load(model_file, map_location="cpu")
-    return scores, model
   
-def convert_scores_to_df(scores):
-    print(scores)
-    data_dict = {}
-    
-    # Iterate through the defaultdict to extract 'scores' from npz files
-    for key, npz_file in scores.items():
-        if 'scores' in npz_file:
-            # Assuming 'scores' is stored and it is an array; flatten to ensure 1D if necessary
-            scores_array = npz_file['scores'].flatten()
-            data_dict[key] = scores_array
+  args.protocols = ["1"]
+  loss = "EOS"
+  scores = {p:{} for p in args.protocols}
+  epoch = {p:{} for p in args.protocols}
+# collect all result files and evalaute, WE DONT NEEED THIS
+  approach = args.approach
+  
+  model_directory = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
+  model_file = model_directory / f"{approach}" / f"{approach}.pth"
+  
+  eval_directory = pathlib.Path(f"{args.eval_directory}")
+  eval_val_file = eval_directory / f"{approach}_val_arr{approach}.npz"
+  eval_test_file = eval_directory / f"{approach}_test_arr{approach}.npz"
+  score_files = {"val":eval_val_file, "test": eval_test_file}
 
-    # Check if data_dict is not empty to proceed with DataFrame creation
-    if data_dict:
-        # Create DataFrame from the dictionary
-        df = pd.DataFrame(data_dict)
-        # Generate a 'Date' column assuming equal length for all score arrays
-        df['Date'] = pd.date_range(start='2022-01-01', periods=df.shape[0])
-        return df
-    else:
-        print("No scores data available to construct the DataFrame.")
-        return pd.DataFrame()  # Return an empty DataFrame if no data is available
+  print("Extracting scores of", model_file)           
+          
+  # remember files
+  scores["1"][loss] = openset_imagenet.util.read_array_list(score_files) 
+  checkpoint = torch.load(model_file, map_location="cpu")
+  
+  epoch["1"][loss] = (checkpoint["epoch"],checkpoint["best_score"])
 
-def inspect_npz_contents(npz_data):
-    print("Contents of the NPZ data:")
-    for key in npz_data:
-        array = npz_data[key]
-        print(f"Key: {key}")
-        print(f"  Data type: {array.dtype}")
-        print(f"  Shape: {array.shape}")
-        print(f"  First few elements: {array.flat[:10]}")  # prints the first few elements safely
-        
-def plot_oscr_scores(npz_data):
-    scores = npz_data['scores']  # Extract the 'scores' array from the NPZ file
-    num_samples, num_classes = scores.shape
+  
+  return scores, epoch
 
-    # Set up the plot
-    plt.figure(figsize=(10, 6))
-    for class_idx in range(num_classes):
-        plt.plot(scores[:, class_idx], label=f'Class {class_idx} Scores')
+def plot_OSCR(args, scores):
+  args.loss_functions = ["EOS"]
+  args.protocols = ["1"]
 
-    plt.title('OSCR Scores by Class')
-    plt.xlabel('Sample Index')
-    plt.ylabel('Score')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # plot OSCR
+  P = len(args.protocols)
+  fig = pyplot.figure(figsize=(5*P,6))
+  gs = fig.add_gridspec(2, P, hspace=0.2, wspace=0.05)
+  axs = gs.subplots(sharex=True, sharey=True)
+  axs = axs.flat
+  font = 15
+  scale = 'linear' if args.linear else 'semilog'
 
-   
+  if args.sort_by_loss:
+    print(" ENTER SORT BY LOSS")
+    for index, l in enumerate(args.loss_functions):
+#        val = [scores[p][l]["val"] if scores[p][l] is not None else None for p in args.protocols]
+      test = [scores[p][l]["test"] if scores[p][l] is not None else None for p in args.protocols]
+      openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Negative',
+                    ax_label_font=font, ax=axs[index], unk_label=-1,)
+      openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Unknown',
+                    ax_label_font=font, ax=axs[index+P], unk_label=-2,)
+    # Manual legend
+    axs[-P].legend([f"$P_{p}$" for p in args.protocols], frameon=False,
+              fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
+  else:
+    print(" DO NOT ENTER SORT BY LOSS")
 
+    for index, p in enumerate(args.protocols):
+#        val = [scores[p][l]["val"] if scores[p][l] is not None else None for l in args.loss_functions]
+      test = [scores[p][l]["test"] if scores[p][l] is not None else None for l in args.loss_functions]
+      openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Negative',
+                    ax_label_font=font, ax=axs[index], unk_label=-1,)
+      openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Unknown',
+                    ax_label_font=font, ax=axs[index+P], unk_label=-2,)
+    # Manual legend
+    axs[-P].legend(args.labels, frameon=False,
+              fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
+  # Axis properties
+  for ax in axs:
+      ax.label_outer()
+      ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+      ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+  # Figure labels
+  fig.text(0.5, 0.03, 'FPR', ha='center', fontsize=font)
+  
 
 def plot_confidences(args):
-
+  args.loss_functions = ["EOS"]
+  args.protocols = ["1"]
+  
   # locate event paths
   event_files = {p:collections.defaultdict(list) for p in args.protocols}
   for protocol in args.protocols:
@@ -267,77 +276,75 @@ def plot_confidences(args):
   # X label
   fig.text(0.5, 0.05, 'Epoch', ha='center', fontsize=font_size)
 
-
-
 def plot_softmax(args, scores):
+  args.loss_functions = ["EOS"]
+  args.protocols = ["1"]
+  font_size = 15
+  bins = 30
+  unk_label = -2
+  P = len(args.protocols)
+  N = len(args.loss_functions)
 
-    font_size = 15
-    bins = 30
-    unk_label = -2
-    P = len(args.protocols)
-    N = len(args.loss_functions)
+  fig = pyplot.figure(figsize=(3*P+1, 2*N))
+  gs = fig.add_gridspec(N, P, hspace=0.2, wspace=0.08)
+  axs = gs.subplots(sharex=True, sharey=False)
+  axs = axs.flat
+  # Manual colors
+  edge_unk = colors.to_rgba('indianred', 1)
+  fill_unk = colors.to_rgba('firebrick', 0.04)
+  edge_kn = colors.to_rgba('tab:blue', 1)
+  fill_kn = colors.to_rgba('tab:blue', 0.04)
 
-    fig = pyplot.figure(figsize=(3*P+1, 2*N))
-    gs = fig.add_gridspec(N, P, hspace=0.2, wspace=0.08)
-    axs = gs.subplots(sharex=True, sharey=False)
-    axs = axs.flat
-    # Manual colors
-    edge_unk = colors.to_rgba('indianred', 1)
-    fill_unk = colors.to_rgba('firebrick', 0.04)
-    edge_kn = colors.to_rgba('tab:blue', 1)
-    fill_kn = colors.to_rgba('tab:blue', 0.04)
+  index = 0
+  for protocol in args.protocols:
+    for l, loss in enumerate(args.loss_functions):
+      # Calculate histogram
+      drop_bg = loss == "garbage"  #  Drop the background class
+      if scores[protocol][loss] is not None:
+        kn_hist, kn_edges, unk_hist, unk_edges = openset_imagenet.util.get_histogram(
+            scores[protocol][loss]["test"],
+            unk_label=unk_label,
+            metric='score',
+            bins=bins,
+            drop_bg=drop_bg
+        )
+      else:
+        kn_hist, kn_edges, unk_hist, unk_edges = [], [0], [], [0]
+      # Plot histograms
+      axs[index].stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
+      axs[index].stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
 
-    index = 0
-    for protocol in args.protocols:
-      for l, loss in enumerate(args.loss_functions):
-        # Calculate histogram
-        drop_bg = loss == "garbage"  #  Drop the background class
-        if scores[protocol][loss] is not None:
-          kn_hist, kn_edges, unk_hist, unk_edges = openset_imagenet.util.get_histogram(
-              scores[protocol][loss]["test"],
-              unk_label=unk_label,
-              metric='score',
-              bins=bins,
-              drop_bg=drop_bg
-          )
-        else:
-          kn_hist, kn_edges, unk_hist, unk_edges = [], [0], [], [0]
-        # Plot histograms
-        axs[index].stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
-        axs[index].stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
+      # axs[ix].set_yscale('log')
+      axs[index].set_title(f"$P_{{{protocol}}}$ {args.labels[l]}")
+      index += 1
 
-        # axs[ix].set_yscale('log')
-        axs[index].set_title(f"$P_{{{protocol}}}$ {args.labels[l]}")
-        index += 1
+  # Share y axis of the histograms of the same protocol
+  for p in range(P):
+    for l in range(1,N):
+      axs[N*p+l-1].sharey(axs[N*p+l])
 
-    # Share y axis of the histograms of the same protocol
-    for p in range(P):
-      for l in range(1,N):
-        axs[N*p+l-1].sharey(axs[N*p+l])
+  for ax in axs:
+      # set the tick parameters for the current axis handler
+      ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
+      ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
+      ax.yaxis.set_major_locator(MaxNLocator(6))
+      ax.label_outer()
 
-    for ax in axs:
-        # set the tick parameters for the current axis handler
-        ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
-        ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
-        ax.yaxis.set_major_locator(MaxNLocator(6))
-        ax.label_outer()
+  # Manual legend
+  axs[-2].legend(['Known', 'Unknown'],
+                frameon=False,
+                fontsize=font_size-1,
+                bbox_to_anchor=(0.2, -0.08),
+                ncol=2,
+                handletextpad=0.3,
+                columnspacing=1,
+                markerscale=1)
+  # X label
+  fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font_size)
 
-    # Manual legend
-    axs[-2].legend(['Known', 'Unknown'],
-                  frameon=False,
-                  fontsize=font_size-1,
-                  bbox_to_anchor=(0.2, -0.08),
-                  ncol=2,
-                  handletextpad=0.3,
-                  columnspacing=1,
-                  markerscale=1)
-    # X label
-    fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font_size)
-
-
-# plots OSCR
 def conf_and_ccr_table(args, scores, epochs):
-
+  args.loss_functions = ["EOS"]
+  args.protocols = ["1"]
   def find_nearest(array, value):
       """Get the closest element in array to value"""
       array = numpy.asarray(array)
@@ -351,10 +358,15 @@ def conf_and_ccr_table(args, scores, epochs):
     for p, protocol in enumerate(args.protocols):
       for l, loss in enumerate(args.loss_functions):
         for which in ["test"]:
+          
+          print(p, protocol)
+          print(l, loss)
+          print(which)
+          
           array = scores[protocol][loss][which]
           gt = array['gt']
           values = array['scores']
-
+          
           ccr_, fpr_ = openset_imagenet.util.calculate_oscr(gt, values, unk_label=unk_label)
 
           # get confidences on test set
@@ -381,28 +393,16 @@ def conf_and_ccr_table(args, scores, epochs):
       if p < len(args.protocols)-1:
         table.write("\\midrule\n")
 
-
 if __name__ == "__main__":
   args = get_args()
   print("loaded args")
 
 
   print("Extracting and loading scores")
-  scores, model = load_scores(args)
-  val_scores = list(scores.items())[0]
-  test_scores = list(scores.items())[1]
-  
-  npz_file = scores['EOS_val_ar']
-  
-  model_name = list(scores.keys())[0]
-  inspect_npz_contents(npz_file)
-  
-  
+  scores, epoch = load_scores(args)  
+    
   print("Writing file", args.plots)
   pdf = PdfPages(args.plots)
-
-  plot_oscr_scores(npz_file)
-  
   
   try:
     # plot OSCR (actually not required for best case)
@@ -416,11 +416,11 @@ if __name__ == "__main__":
       plot_confidences(args)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
 
-    if not args.linear and not args.sort_by_loss:
+    '''if not args.linear and not args.sort_by_loss:
       # plot histograms
       print("Plotting softmax histograms")
       plot_softmax(args, scores)
-      pdf.savefig(bbox_inches='tight', pad_inches = 0)
+      pdf.savefig(bbox_inches='tight', pad_inches = 0)'''
 
   finally:
     pdf.close()

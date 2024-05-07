@@ -113,7 +113,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         )
         self.which_set = which_set
         self.has_garbage_class = has_garbage_class
-        self.classes = self.mnist.classes().append(-1.) 
+        self.classes = self.mnist.classes + [-1]
         
         
         print(" ++++++++++++++++++ " + which_set.upper() + " DATASET LOADING +++++++++++++++++++ ")

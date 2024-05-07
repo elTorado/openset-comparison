@@ -166,7 +166,7 @@ def plot_OSCR(args, scores):
       openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Negative',
                     ax_label_font=font, ax=axs[index], unk_label=-1,)
       openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Unknown',
-                    ax_label_font=font, ax=axs[index+P], unk_label=-2,)
+                    ax_label_font=font, ax=axs[index+P], unk_label=-1,)
     # Manual legend
     axs[-P].legend([f"$P_{p}$" for p in args.protocols], frameon=False,
               fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
@@ -179,7 +179,7 @@ def plot_OSCR(args, scores):
       openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Negative',
                     ax_label_font=font, ax=axs[index], unk_label=-1,)
       openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Unknown',
-                    ax_label_font=font, ax=axs[index+P], unk_label=-2,)
+                    ax_label_font=font, ax=axs[index+P], unk_label=-1,)
     # Manual legend
     axs[-P].legend(args.labels, frameon=False,
               fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
@@ -281,7 +281,7 @@ def plot_softmax(args, scores):
   args.protocols = ["1"]
   font_size = 15
   bins = 30
-  unk_label = -2
+  unk_label = -1
   P = len(args.protocols)
   N = len(args.loss_functions)
 
@@ -352,7 +352,7 @@ def conf_and_ccr_table(args, scores, epochs):
       return idx, array[idx]
 
   query = [1e-3, 1e-2, 0.1,1.0]
-  unk_label = -2
+  unk_label = -1
 
   with open(args.table, "w") as table:
     for p, protocol in enumerate(args.protocols):
@@ -375,7 +375,7 @@ def conf_and_ccr_table(args, scores, epochs):
           c = openset_imagenet.metrics.confidence(
               torch.tensor(values),
               torch.tensor(gt, dtype=torch.long),
-              offset = offset, unknown_class=-2, last_valid_class=last_valid_class
+              offset = offset, unknown_class=-1, last_valid_class=last_valid_class
           )
 
 

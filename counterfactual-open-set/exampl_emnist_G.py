@@ -461,6 +461,22 @@ def get_loss_functions(args):
                     val_data = Dataset(args, args.dataset_root, which_set="val")
                 )
 
+def get_experiment_suffix(args):
+    suffix = ""
+    letters = True
+    if args.args.include_arpl:
+        suffix + "_counterfactuals"
+        letters = False
+    if args.include_arpl:
+        suffix + "_arpl"
+        letters = False
+    if args.mixed_unknowns:
+        suffix + "_mixed"
+        letters = False
+    if letters:
+        suffix + "_letters"
+
+
 
 def training(args): 
     # setup device
@@ -487,7 +503,7 @@ def training(args):
     print(f"Validation dataset len:{len(validation_data)}")
 
     results_dir = pathlib.Path(f"{args.arch}/{args.approach}")
-    model_file = f"{results_dir}/{args.approach}.pth"
+    model_file = f"{results_dir}/{args.approach}/{args.approach}.pth"
     results_dir.mkdir(parents=True, exist_ok=True)
     
     num_classes = len(training_data.classes)

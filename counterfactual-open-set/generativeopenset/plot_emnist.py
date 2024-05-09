@@ -119,6 +119,9 @@ def get_args():
 
 def load_scores(args):
   
+  
+
+  
   args.protocols = ["1"]
   loss = "EOS"
   scores = {p:{} for p in args.protocols}
@@ -126,12 +129,21 @@ def load_scores(args):
 # collect all result files and evalaute, WE DONT NEEED THIS
   approach = args.approach
   
+  # LOCCAL TESTING
+  directory = pathlib.Path("PLOT_IT")
+  model_file = directory / f"{approach}.pth"
+  eval_val_file = directory / f"{approach}_val_arr{approach}.npz"
+  eval_test_file = directory / f"{approach}_test_arr{approach}.npz"
+  
+  '''
   model_directory = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
   model_file = model_directory / f"{approach}" / f"{approach}.pth"
   
   eval_directory = pathlib.Path(f"{args.eval_directory}")
   eval_val_file = eval_directory / f"{approach}_val_arr{approach}.npz"
-  eval_test_file = eval_directory / f"{approach}_test_arr{approach}.npz"
+  eval_test_file = eval_directory / f"{approach}_test_arr{approach}.npz"'''
+  
+  
   score_files = {"val":eval_val_file, "test": eval_test_file}
 
   print("Extracting scores of", model_file)           
@@ -141,6 +153,8 @@ def load_scores(args):
   checkpoint = torch.load(model_file, map_location="cpu")
   
   epoch["1"][loss] = (checkpoint["epoch"],checkpoint["best_score"])
+  
+  print(epoch)
 
   
   return scores, epoch
@@ -150,46 +164,33 @@ def plot_OSCR(args, scores):
   args.protocols = ["1"]
 
     # plot OSCR
-  P = len(args.protocols)
-  fig = pyplot.figure(figsize=(5*P,6))
-  gs = fig.add_gridspec(2, P, hspace=0.2, wspace=0.05)
-  axs = gs.subplots(sharex=True, sharey=True)
-  axs = axs.flat
+  # Only create one subplot directly
+  fig, ax = pyplot.subplots(figsize=(5, 6))
   font = 15
   scale = 'linear' if args.linear else 'semilog'
+  
+  index = 0
+  p = '1'
 
-  if args.sort_by_loss:
-    print(" ENTER SORT BY LOSS")
-    for index, l in enumerate(args.loss_functions):
-#        val = [scores[p][l]["val"] if scores[p][l] is not None else None for p in args.protocols]
-      test = [scores[p][l]["test"] if scores[p][l] is not None else None for p in args.protocols]
-      openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Negative',
-                    ax_label_font=font, ax=axs[index], unk_label=-1,)
-      openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Unknown',
-                    ax_label_font=font, ax=axs[index+P], unk_label=-1,)
-    # Manual legend
-    axs[-P].legend([f"$P_{p}$" for p in args.protocols], frameon=False,
-              fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
-  else:
-    print(" DO NOT ENTER SORT BY LOSS")
+  val = [scores[p][l]["val"] if scores[p][l] is not None else None for l in args.loss_functions]
+  test = [scores[p][l]["test"] if scores[p][l] is not None else None for l in args.loss_functions]
+  
+  '''openset_imagenet.util.plot_oscr(arrays=val, methods=args.loss_functions, scale=scale, title=f'EMNIST val Negative',
+                ax_label_font=font, ax=ax, unk_label=-1,)'''
+  
+  openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'EMNIST test Negative',
+                ax_label_font=font, ax=ax, unk_label=-1,)
 
-    for index, p in enumerate(args.protocols):
-#        val = [scores[p][l]["val"] if scores[p][l] is not None else None for l in args.loss_functions]
-      test = [scores[p][l]["test"] if scores[p][l] is not None else None for l in args.loss_functions]
-      openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Negative',
-                    ax_label_font=font, ax=axs[index], unk_label=-1,)
-      openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Unknown',
-                    ax_label_font=font, ax=axs[index+P], unk_label=-1,)
-    # Manual legend
-    axs[-P].legend(args.labels, frameon=False,
-              fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
-  # Axis properties
-  for ax in axs:
-      ax.label_outer()
-      ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
-      ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+  ax.legend(args.labels, frameon=False, fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
+  ax.label_outer()
+  ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+  ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+  fig.text(0.5, 0.03, 'FPR', ha='center', fontsize=font)
+  fig.text(0.08, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
+  
   # Figure labels
   fig.text(0.5, 0.03, 'FPR', ha='center', fontsize=font)
+  fig.text(0.08, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
   
 
 def plot_confidences(args):
@@ -410,13 +411,13 @@ if __name__ == "__main__":
     plot_OSCR(args, scores)
     pdf.savefig(bbox_inches='tight', pad_inches = 0)
 
-    if not args.linear and not args.use_best and not args.sort_by_loss:
+    '''if not args.linear and not args.use_best and not args.sort_by_loss:
       # plot confidences
       print("Plotting confidence plots")
       plot_confidences(args)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
 
-    '''if not args.linear and not args.sort_by_loss:
+    if not args.linear and not args.sort_by_loss:
       # plot histograms
       print("Plotting softmax histograms")
       plot_softmax(args, scores)

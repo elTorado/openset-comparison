@@ -99,6 +99,7 @@ def calculate_oscr(gt, scores, unk_label=-1):
     # Change the unk_label to calculate for kn_unknown or unk_unknown
     gt = gt.astype(int)
     kn = gt >= 0
+
     unk = gt == unk_label
 
     # Get total number of samples of each type
@@ -119,10 +120,12 @@ def calculate_oscr(gt, scores, unk_label=-1):
 
     ccr = np.array(ccr)
     fpr = np.array(fpr)
+    
     return ccr, fpr
 
 
 def plot_single_oscr(x, y, ax, exp_name, color, baseline, scale):
+    print("================ plot single ocscr ===========")
     linestyle = 'solid'
     linewidth = 1
     if baseline:  # The baseline is always the first array
@@ -141,8 +144,8 @@ def plot_single_oscr(x, y, ax, exp_name, color, baseline, scale):
     elif scale == 'semilog':
         ax.set_xscale('log')
         # Manual limits
-        ax.set_ylim(0.0, 0.8)
-        ax.set_xlim(8 * 1e-5, 1.4)
+        ax.set_ylim(0.0, 1.2)
+        ax.set_xlim(8 * 1e-3, 1.4)
         # Manual ticks
         ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))  # MaxNLocator(7))  #, prune='lower'))
         ax.xaxis.set_major_locator(LogLocator(base=10, numticks=10))
@@ -169,28 +172,26 @@ def plot_single_oscr(x, y, ax, exp_name, color, baseline, scale):
 
 def plot_oscr(arrays, methods, scale='linear', title=None, ax_label_font=13,
               ax=None, unk_label=-1,):
+    
+    print("================ plot_oscr called !! =================")
 
-    color_palette = cm.get_cmap('tab10', 10).colors
+    color_palette = cm.get_cmap('tab10', 10).colors[0]
+    
+    assert len(arrays) == 1
+    assert len(methods) == 1
+    
+    method = methods[0] 
+    array = arrays[0]
 
-    assert len(arrays) == len(methods)
+    gt = array['gt']
+    scores = array['scores']
 
-    for idx, array in enumerate(arrays):
-        has_bg = methods[idx] == "garbage"
+    ccr, fpr = calculate_oscr(gt, scores, unk_label)
 
-        if array is None:
-            ccr, fpr = [], []
-        else:
-            gt = array['gt']
-            scores = array['scores']
-
-            if has_bg:    # If the loss is BGsoftmax then removes the background class
-                scores = scores[:, :-1]
-            ccr, fpr = calculate_oscr(gt, scores, unk_label)
-
-        ax = plot_single_oscr(x=fpr, y=ccr,
-                              ax=ax, exp_name=methods[idx],
-                              color=color_palette[idx], baseline=False,
-                              scale=scale)
+    ax = plot_single_oscr(x=fpr, y=ccr,
+                            ax=ax, exp_name=method,
+                            color=color_palette, baseline=False,
+                            scale=scale)
     if title is not None:
         ax.set_title(title, fontsize=ax_label_font)
     ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')

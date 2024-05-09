@@ -769,9 +769,6 @@ if __name__ == "__main__":
     if args.task == "eval":
         print(" TASK IS TO EVALUATE")
         evaluate(args = args)
-    if args.task == "plot":
-        print(" TASK IS TO PLOT")
-        example = training(args = args)
     if args.task == "show":
         print("creating labels file")
         create_labels_files(args=args)

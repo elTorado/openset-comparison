@@ -79,8 +79,8 @@ def load_scores(args):
 # collect all result files and evalaute, WE DONT NEEED THIS
   
   suffix = get_experiment_suffix(args=args)
-  directory = "evaluation"
-  results_dir = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
+  directory =  pathlib.Path("evaluation")
+  results_dir = pathlib.Path("LeNet_plus_plus") 
   model_file = f"{results_dir}/{suffix}.pth"
   
   eval_val_file = directory / f"validation_{suffix}.npz"

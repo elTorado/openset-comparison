@@ -56,13 +56,13 @@ def command_line_options():
       help = "Select the file where to write the Confidences (gamma) and CCR into"
     )
 
+    args = parser.parse_args()
 
-    suffix = get_experiment_suffix( args = parser.parse_args())
-
+    suffix = get_experiment_suffix( args = args)
     args.plots = args.plots or f"Results_{suffix}.pdf"
     args.table = args.table or f"Results_{suffix}.tex"
 
-    return parser.parse_args()
+    return args
 
 
 

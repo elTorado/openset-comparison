@@ -46,10 +46,33 @@ def command_line_options():
     parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
     parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
 
+    parser.add_argument("--approach", "-a", required=True, choices=['SoftMax', 'Garbage', 'EOS', 'Objectosphere'])
+    parser.add_argument(
+        "--labels",
+        nargs="+",
+        choices = ("S", "BG", "EOS"),
+        default = ("S", "BG", "EOS"),
+        help = "Select the labels for the plots"
+    )
+    parser.add_argument(
+        "--use-best",
+        action = "store_true",
+        help = "If selected, the best model is selected from the validation set. Otherwise, the last model is used"
+    )
+    parser.add_argument(
+        "--force", "-f",
+        action = "store_true",
+        help = "If set, score files will be recomputed even if they already exist"
+    )
     parser.add_argument(
       "--linear",
       action="store_true",
       help = "If set, OSCR curves will be plot with linear FPR axis"
+    )
+    parser.add_argument(
+      "--sort-by-loss", "-s",
+      action = "store_true",
+      help = "If selected, the plots will compare across protocols and not across algorithms"
     )
     parser.add_argument(
       "--plots",

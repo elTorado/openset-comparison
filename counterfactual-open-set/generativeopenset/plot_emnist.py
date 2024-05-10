@@ -339,7 +339,7 @@ def conf_and_ccr_table(args, scores, epochs):
         table.write("\\midrule\n")
 
 if __name__ == "__main__":
-  args = get_args()
+  args = command_line_options()
   print("loaded args")
 
 

@@ -464,7 +464,7 @@ def get_loss_functions(args):
 def get_experiment_suffix(args):
     suffix = ""
     letters = True
-    if args.args.include_arpl:
+    if args.include_arpl:
         suffix + "_counterfactuals"
         letters = False
     if args.include_arpl:

@@ -17,6 +17,7 @@ from matplotlib.ticker import MaxNLocator, LogLocator
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from exampl_emnist_G import get_experiment_suffix
 
 def get_args():
     """ Arguments handler.
@@ -129,19 +130,14 @@ def load_scores(args):
 # collect all result files and evalaute, WE DONT NEEED THIS
   approach = args.approach
   
-  # LOCCAL TESTING
-  directory = pathlib.Path("PLOT_IT")
-  model_file = directory / f"{approach}.pth"
-  eval_val_file = directory / f"{approach}_val_arr{approach}.npz"
-  eval_test_file = directory / f"{approach}_test_arr{approach}.npz"
-  
-  '''
+  directory = "evaluation"
   model_directory = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
   model_file = model_directory / f"{approach}" / f"{approach}.pth"
   
   eval_directory = pathlib.Path(f"{args.eval_directory}")
-  eval_val_file = eval_directory / f"{approach}_val_arr{approach}.npz"
-  eval_test_file = eval_directory / f"{approach}_test_arr{approach}.npz"'''
+  eval_val_file = directory / f"validation_{get_experiment_suffix(args=args)}.npz"
+  eval_test_file = directory / f"test_{get_experiment_suffix(args=args)}.npz"
+  
   
   
   score_files = {"val":eval_val_file, "test": eval_test_file}

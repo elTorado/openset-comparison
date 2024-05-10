@@ -504,7 +504,7 @@ def training(args):
     print(f"Validation dataset len:{len(validation_data)}")
 
     results_dir = pathlib.Path(f"{args.arch}/{args.approach}")
-    model_file = f"{results_dir}/{args.approach}/{args.approach}{get_experiment_suffix(args=args)}.pth"
+    model_file = f"{results_dir}/{get_experiment_suffix(args=args)}.pth"
     results_dir.mkdir(parents=True, exist_ok=True)
     
     num_classes = len(training_data.classes)
@@ -693,7 +693,8 @@ def evaluate(args):
     
     # create model
     loss_suffix = str(args.approach)
-    model_path = 'LeNet_plus_plus/' + loss_suffix + '/' + loss_suffix + get_experiment_suffix(args=args) + '.pth'
+    results_dir = pathlib.Path(f"{args.arch}/{args.approach}")
+    model_path = f"{results_dir}/{get_experiment_suffix(args=args)}.pth"
 
     net = architectures.LeNet_plus_plus(num_classes=num_classes)
     start_epoch, best_score = load_checkpoint(net, model_path)
@@ -720,7 +721,7 @@ def evaluate(args):
 
     directory = pathlib.Path(f"{args.eval_directory}")
 
-    file_path = directory / f"{args.approach}_val_arr{loss_suffix}{get_experiment_suffix(args=args)}.npz"
+    file_path = directory / f"validation_{get_experiment_suffix(args=args)}.npz"
     np.savez(file_path, gt=val_targets, logits=logits, features=val_features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
@@ -748,7 +749,7 @@ def evaluate(args):
         accuracy = np.mean(predicted_classes == test_targets)
         print(f"Accuracy on test data: {accuracy:.4f}")
 
-    file_path = directory / f"{args.approach}_test_arr{loss_suffix}.npz"
+    file_path = directory / f"test_{get_experiment_suffix(args=args)}.npz"
     np.savez(file_path, gt=test_targets, logits=logits, features=test_features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 

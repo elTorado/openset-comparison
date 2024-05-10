@@ -17,7 +17,6 @@ from matplotlib.ticker import MaxNLocator, LogLocator
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from counterfactual_open_set.exampl_emnist_G import get_suffix
 
 def get_args():
     """ Arguments handler.
@@ -117,7 +116,21 @@ def get_args():
 
 #returns scores, which is a dictionary of arrays containing various data such as logits, scores, target labels, and feature norms,
 #returns model 
-
+def get_experiment_suffix(args):
+    suffix = ""
+    letters = True
+    if args.include_arpl:
+        suffix += "_counterfactuals"
+        letters = False
+    if args.include_arpl:
+        suffix += "_arpl"
+        letters = False
+    if args.mixed_unknowns:
+        suffix += "_mixed"
+        letters = False
+    if letters:
+        suffix += "_letters"
+    return suffix
 def load_scores(args):
   
   

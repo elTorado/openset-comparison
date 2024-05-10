@@ -17,7 +17,7 @@ from matplotlib.ticker import MaxNLocator, LogLocator
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from exampl_emnist_G import get_experiment_suffix
+from counterfactual_open_set.exampl_emnist_G import get_suffix
 
 def get_args():
     """ Arguments handler.

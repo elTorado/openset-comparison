@@ -502,9 +502,12 @@ def training(args):
     print("\n========== Data ==========")
     print(f"Training dataset len:{len(training_data)}")
     print(f"Validation dataset len:{len(validation_data)}")
-
-    results_dir = pathlib.Path(f"{args.arch}/{args.approach}")
-    model_file = f"{results_dir}/{get_experiment_suffix(args=args)}.pth"
+    
+    suffix = get_experiment_suffix(args=args)
+    print(suffix)
+    
+    results_dir = pathlib.Path(f"{args.arch}")
+    model_file = f"{results_dir}/{suffix}.pth"
     results_dir.mkdir(parents=True, exist_ok=True)
     
     num_classes = len(training_data.classes)

@@ -45,6 +45,9 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
 
         # Classify sampled images as fake
         noise = make_noise(batch_size, latent_size, sample_scale)
+        
+        print("size of noise: ")
+        
         fake_images = netG(noise, sample_scale)
         logits = netD(fake_images)[:,0]
         loss_fake_sampled = F.softplus(logits).mean()

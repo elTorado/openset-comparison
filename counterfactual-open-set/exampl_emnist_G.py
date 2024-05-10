@@ -465,16 +465,17 @@ def get_experiment_suffix(args):
     suffix = ""
     letters = True
     if args.include_arpl:
-        suffix + "_counterfactuals"
+        suffix += "_counterfactuals"
         letters = False
     if args.include_arpl:
-        suffix + "_arpl"
+        suffix += "_arpl"
         letters = False
     if args.mixed_unknowns:
-        suffix + "_mixed"
+        suffix += "_mixed"
         letters = False
     if letters:
-        suffix + "_letters"
+        print("YEAH BOAY")
+        suffix += "_letters"
     return suffix
 
 
@@ -497,12 +498,6 @@ def training(args):
     first_loss_func=EntropicOpensetLoss(num_of_classes=len(training_data.classes))
     validation_data = Dataset(args, args.dataset_root, which_set="val")
 
-    
-        # Info on console
-    print("\n========== Data ==========")
-    print(f"Training dataset len:{len(training_data)}")
-    print(f"Validation dataset len:{len(validation_data)}")
-    
     suffix = get_experiment_suffix(args=args)
     print(suffix)
     

@@ -46,7 +46,11 @@ def command_line_options():
     parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
     parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
 
-
+    parser.add_argument(
+      "--linear",
+      action="store_true",
+      help = "If set, OSCR curves will be plot with linear FPR axis"
+    )
     parser.add_argument(
       "--plots",
       help = "Select where to write the plots into"

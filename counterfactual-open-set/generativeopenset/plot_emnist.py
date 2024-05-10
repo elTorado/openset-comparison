@@ -18,100 +18,36 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-def get_args():
-    """ Arguments handler.
+def command_line_options():
+    import argparse
 
-    Returns:
-        parser: arguments structure
-    """
-    parser = argparse.ArgumentParser("Imagenet Plotting", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        "--protocols",
-        type=int,
-        choices = (1,2,3),
-        nargs="+",
-        default = (1,2,3),
-        help="Select the protocols that should be evaluated"
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='This is the main training script for all MNIST experiments. \
+                    Where applicable roman letters are used as negatives. \
+                    During training model with best performance on validation set in the no_of_epochs is used.'
     )
-    parser.add_argument(
-        "--loss-functions", "-l",
-        nargs = "+",
-        choices = ('softmax', 'garbage', 'entropic'),
-        default = ('softmax', 'garbage', 'entropic'),
-        help = "Select the loss functions that should be evaluated"
-    )
+
     parser.add_argument("--approach", "-a", required=True, choices=['SoftMax', 'Garbage', 'EOS', 'Objectosphere'])
-    parser.add_argument(
-        "--labels",
-        nargs="+",
-        choices = ("S", "BG", "EOS"),
-        default = ("S", "BG", "EOS"),
-        help = "Select the labels for the plots"
-    )
-    parser.add_argument(
-        "--use-best",
-        action = "store_true",
-        help = "If selected, the best model is selected from the validation set. Otherwise, the last model is used"
-    )
-    parser.add_argument(
-        "--force", "-f",
-        action = "store_true",
-        help = "If set, score files will be recomputed even if they already exist"
-    )
-    parser.add_argument(
-      "--linear",
-      action="store_true",
-      help = "If set, OSCR curves will be plot with linear FPR axis"
-    )
-    parser.add_argument(
-      "--sort-by-loss", "-s",
-      action = "store_true",
-      help = "If selected, the plots will compare across protocols and not across algorithms"
-    )
-    parser.add_argument(
-        "--output-directory", "-o",
-        type=pathlib.Path,
-        default="experiments",
-        help="Directory where the models are saved"
-    )
-    parser.add_argument(
-        "--imagenet-directory",
-        type=pathlib.Path,
-        default=pathlib.Path("/local/scratch/datasets/ImageNet/ILSVRC2012/"),
-        help="Imagenet root directory"
-    )
-    parser.add_argument(
-        "--protocol-directory",
-        type=pathlib.Path,
-        default = "protocols",
-        help = "Where are the protocol files stored"
-    )
-    parser.add_argument(
-        "--gpu", "-g",
-        type = int,
-        nargs="?",
-        default = None,
-        const = 0,
-        help = "Select the GPU index that you have. You can specify an index or not. If not, 0 is assumed. If not selected, we will train on CPU only (not recommended)"
-    )
-    parser.add_argument(
-      "--plots",
-      help = "Select where to write the plots into"
-    )
-    parser.add_argument(
-      "--table",
-      help = "Select the file where to write the Confidences (gamma) and CCR into"
-    )
+    parser.add_argument("--task", default='train', choices=['train', 'eval', "plot", "show"])
+    parser.add_argument("--arch", default='LeNet_plus_plus', choices=['LeNet', 'LeNet_plus_plus'])
+    parser.add_argument('--second_loss_weight', "-w", help='Loss weight for Objectosphere loss', type=float, default=0.0001)
+    parser.add_argument('--Minimum_Knowns_Magnitude', "-m", help='Minimum Possible Magnitude for the Knowns', type=float,
+                        default=50.)
+    parser.add_argument("--solver", dest="solver", default='sgd',choices=['sgd','adam'])
+    parser.add_argument("--lr", "-l", dest="lr", default=0.01, type=float)
+    parser.add_argument('--batch_size', "-b", help='Batch_Size', action="store", dest="Batch_Size", type=int, default=128)
+    parser.add_argument("--no_of_epochs", "-e", dest="no_of_epochs", type=int, default=70)
     parser.add_argument("--eval_directory", "-ed", dest= "eval_directory", default ="evaluation", help="Select the directory where evaluation details are.")
+    parser.add_argument("--dataset_root", "-d", dest= "dataset_root", default ="/tmp", help="Select the directory where datasets are stored.")
+    parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
+    parser.add_argument("--include_counterfactuals", "-inc_c", type=bool, default=False, dest="include_counterfactuals", help="Include counterfactual images in the dataset")
+    parser.add_argument("--include_arpl", "-inc_a", type=bool, default=False, dest="include_arpl", help="Include ARPL samples in the dataset")
+    parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
+    parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    suffix = 'linear' if args.linear else 'best' if args.use_best else 'last'
-    if args.sort_by_loss:
-      suffix += "_by_loss"
-    args.plots = args.plots or f"Results_{suffix}.pdf"
-    args.table = args.table or f"Results_{suffix}.tex"
-    return args
 
 
 #returns scores, which is a dictionary of arrays containing various data such as logits, scores, target labels, and feature norms,

@@ -83,8 +83,8 @@ def load_scores(args):
   results_dir = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
   model_file = f"{results_dir}/{suffix}.pth"
   
-  eval_val_file = directory / f"validation_{get_experiment_suffix(args=args)}.npz"
-  eval_test_file = directory / f"test_{get_experiment_suffix(args=args)}.npz"
+  eval_val_file = directory / f"validation_{suffix}.npz"
+  eval_test_file = directory / f"test_{suffix}.npz"
   
   
   

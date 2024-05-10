@@ -474,7 +474,6 @@ def get_experiment_suffix(args):
         suffix += "_mixed"
         letters = False
     if letters:
-        print("YEAH BOAY")
         suffix += "_letters"
     return suffix
 
@@ -499,7 +498,6 @@ def training(args):
     validation_data = Dataset(args, args.dataset_root, which_set="val")
 
     suffix = get_experiment_suffix(args=args)
-    print(suffix)
     
     results_dir = pathlib.Path(f"{args.arch}")
     model_file = f"{results_dir}/{suffix}.pth"
@@ -689,10 +687,14 @@ def evaluate(args):
         print("No GPU device selected, evaluation will be slow")
         set_device_cpu()
     
+    
+    
+  
+    
     # create model
-    loss_suffix = str(args.approach)
-    results_dir = pathlib.Path(f"{args.arch}/{args.approach}")
-    model_path = f"{results_dir}/{get_experiment_suffix(args=args)}.pth"
+    suffix = get_experiment_suffix(args=args)
+    results_dir = pathlib.Path(f"{args.arch}")
+    model_path = f"{results_dir}/{suffix}.pth"
 
     net = architectures.LeNet_plus_plus(num_classes=num_classes)
     start_epoch, best_score = load_checkpoint(net, model_path)

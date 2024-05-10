@@ -128,13 +128,12 @@ def load_scores(args):
   scores = {p:{} for p in args.protocols}
   epoch = {p:{} for p in args.protocols}
 # collect all result files and evalaute, WE DONT NEEED THIS
-  approach = args.approach
   
+  suffix = get_experiment_suffix(args=args)
   directory = "evaluation"
-  model_directory = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
-  model_file = model_directory / f"{approach}" / f"{approach}.pth"
+  results_dir = pathlib.Path("LeNet_plus_plus") # Can later be implemented dynamically
+  model_file = f"{results_dir}/{suffix}.pth"
   
-  eval_directory = pathlib.Path(f"{args.eval_directory}")
   eval_val_file = directory / f"validation_{get_experiment_suffix(args=args)}.npz"
   eval_test_file = directory / f"test_{get_experiment_suffix(args=args)}.npz"
   

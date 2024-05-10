@@ -764,6 +764,11 @@ def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
         best_score_(float): Current best score.
         scheduler(torch lr_scheduler): Pytorch scheduler.
     """
+    
+    # Create directory if it does not exist
+    os.makedirs(os.path.dirname(f_name), exist_ok=True)    
+    
+    
     # If model is DistributedDataParallel extracts the module.
     if isinstance(model, DistributedDataParallel):
         state = model.module.state_dict()

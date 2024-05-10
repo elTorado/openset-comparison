@@ -96,7 +96,8 @@ def command_line_options():
 def get_experiment_suffix(args):
     suffix = ""
     letters = True
-    if args.include_arpl:
+    if args.include_counterfactuals:
+        print("YYYEEES")
         suffix += "_counterfactuals"
         letters = False
     if args.include_arpl:
@@ -108,11 +109,9 @@ def get_experiment_suffix(args):
     if letters:
         suffix += "_letters"
     return suffix
+  
+  
 def load_scores(args):
-  
-  
-
-  
   args.protocols = ["1"]
   loss = "EOS"
   scores = {p:{} for p in args.protocols}
@@ -383,6 +382,9 @@ if __name__ == "__main__":
   args = command_line_options()
   print("loaded args")
 
+  suffix = get_experiment_suffix(args=args)
+  print(args.include_counterfactuals)
+  print(suffix)
 
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)  

@@ -464,7 +464,7 @@ def get_loss_functions(args):
 def get_experiment_suffix(args):
     suffix = ""
     letters = True
-    if args.include_arpl:
+    if args.include_counterfactuals:
         suffix += "_counterfactuals"
         letters = False
     if args.include_arpl:
@@ -786,6 +786,11 @@ def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
     
 if __name__ == "__main__":
     args = command_line_options()
+    
+    suffix = get_experiment_suffix(args=args)
+    print(args.include_counterfactuals)
+    print(suffix)
+    
     if args.task == "train":
         print(" TASK IS TO TRAIN")
         example = training(args = args)

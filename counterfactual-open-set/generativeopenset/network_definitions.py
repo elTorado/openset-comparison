@@ -166,52 +166,48 @@ class generator32(nn.Module):
 
     def forward(self, x, input_scale=1):
         batch_size = x.shape[0]
-        print(f'Initial input shape: {x.size()}')
 
         if input_scale <= 1:
             x = self.fc1(x)
             x = x.view(batch_size, 512, 2, 2)
-            print(f'After fc1 and reshape: {x.size()}')
 
         # 512 x 2 x 2
         if input_scale == 2:
+            
+            # RESHAPING AS THIS CAUSED AN ERROR -> LOOK AT IT EVENTUALLY AGAIn
             x = x.view(batch_size, self.latent_size, 2, 2)
             x = self.conv2_in(x)
-            print(f'After conv2_in: {x.size()}')
+            
         if input_scale <= 2:
             x = self.conv2(x)
             x = nn.LeakyReLU()(x)
             x = self.bn2(x)
-            print(f'After conv2 and batch norm: {x.size()}')
 
         # 512 x 4 x 4
         if input_scale == 4:
             x = x.view(batch_size, self.latent_size, 4, 4)
             x = self.conv3_in(x)
-            print(f'After conv3_in: {x.size()}')
+            
         if input_scale <= 4:
             x = self.conv3(x)
             x = nn.LeakyReLU()(x)
             x = self.bn3(x)
-            print(f'After conv3 and batch norm: {x.size()}')
 
         # 256 x 8 x 8
         if input_scale == 8:
             x = x.view(batch_size, self.latent_size, 8, 8)
             x = self.conv4_in(x)
-            print(f'After conv4_in: {x.size()}')
+            
         if input_scale <= 8:
             x = self.conv4(x)
             x = nn.LeakyReLU()(x)
             x = self.bn4(x)
-            print(f'After conv4 and batch norm: {x.size()}')
 
         # 128 x 16 x 16
         x = self.conv5(x)
-        print(f'After conv5: {x.size()}')
+        
         # 1 x 32 x 32
         x = nn.Sigmoid()(x)
-        print(f'Final output shape: {x.size()}')
         return x
 
 

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from vector import clamp_to_unit_sphere
-
+import torch.nn.functional as F
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -129,21 +129,31 @@ class encoder32(nn.Module):
         return x
 
 
+
+
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+
 class generator32(nn.Module):
     def __init__(self, latent_size=100, batch_size=64, **kwargs):
-        super(self.__class__, self).__init__()
+        super(generator32, self).__init__()
         self.latent_size = latent_size
         self.fc1 = nn.Linear(latent_size, 512*2*2, bias=False)
 
         self.conv2_in = nn.ConvTranspose2d(latent_size, 512, 1, stride=1, padding=0, bias=False)
-        self.conv2 = nn.ConvTranspose2d(   512,      512, 4, stride=2, padding=1, bias=False)
+        self.conv2 = nn.ConvTranspose2d(512, 512, 4, stride=2, padding=1, bias=False)
         self.conv3_in = nn.ConvTranspose2d(latent_size, 512, 1, stride=1, padding=0, bias=False)
-        self.conv3 = nn.ConvTranspose2d(   512,      256, 4, stride=2, padding=1, bias=False)
+        self.conv3 = nn.ConvTranspose2d(512, 256, 4, stride=2, padding=1, bias=False)
         self.conv4_in = nn.ConvTranspose2d(latent_size, 256, 1, stride=1, padding=0, bias=False)
-        self.conv4 = nn.ConvTranspose2d(   256,      128, 4, stride=2, padding=1, bias=False)
+        self.conv4 = nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1, bias=False)
         
-        #change here output channel size
-        self.conv5 = nn.ConvTranspose2d(   128,        1, 4, stride=2, padding=1)
+        # Change here output channel size
+        self.conv5 = nn.ConvTranspose2d(128, 1, 4, stride=2, padding=1)
 
         self.bn1 = nn.BatchNorm2d(512)
         self.bn2 = nn.BatchNorm2d(512)
@@ -155,45 +165,53 @@ class generator32(nn.Module):
         self.cuda()
 
     def forward(self, x, input_scale=1):
-        
-        print(x.size())
-        
         batch_size = x.shape[0]
+        print(f'Initial input shape: {x.size()}')
+
         if input_scale <= 1:
             x = self.fc1(x)
-            x = x.resize(batch_size, 512, 2, 2)
+            x = x.view(batch_size, 512, 2, 2)
+            print(f'After fc1 and reshape: {x.size()}')
 
         # 512 x 2 x 2
         if input_scale == 2:
-            print(x.size())
             x = x.view(batch_size, self.latent_size, 2, 2)
             x = self.conv2_in(x)
+            print(f'After conv2_in: {x.size()}')
         if input_scale <= 2:
             x = self.conv2(x)
             x = nn.LeakyReLU()(x)
             x = self.bn2(x)
+            print(f'After conv2 and batch norm: {x.size()}')
 
         # 512 x 4 x 4
         if input_scale == 4:
             x = x.view(batch_size, self.latent_size, 4, 4)
             x = self.conv3_in(x)
+            print(f'After conv3_in: {x.size()}')
         if input_scale <= 4:
             x = self.conv3(x)
             x = nn.LeakyReLU()(x)
             x = self.bn3(x)
+            print(f'After conv3 and batch norm: {x.size()}')
 
         # 256 x 8 x 8
         if input_scale == 8:
             x = x.view(batch_size, self.latent_size, 8, 8)
             x = self.conv4_in(x)
+            print(f'After conv4_in: {x.size()}')
         if input_scale <= 8:
             x = self.conv4(x)
             x = nn.LeakyReLU()(x)
             x = self.bn4(x)
+            print(f'After conv4 and batch norm: {x.size()}')
+
         # 128 x 16 x 16
         x = self.conv5(x)
-        # 3 x 32 x 32
+        print(f'After conv5: {x.size()}')
+        # 1 x 32 x 32
         x = nn.Sigmoid()(x)
+        print(f'Final output shape: {x.size()}')
         return x
 
 

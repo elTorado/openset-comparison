@@ -155,6 +155,9 @@ class generator32(nn.Module):
         self.cuda()
 
     def forward(self, x, input_scale=1):
+        
+        print(x.size())
+        
         batch_size = x.shape[0]
         if input_scale <= 1:
             x = self.fc1(x)
@@ -162,6 +165,7 @@ class generator32(nn.Module):
 
         # 512 x 2 x 2
         if input_scale == 2:
+            print(x.size())
             x = x.view(batch_size, self.latent_size, 2, 2)
             x = self.conv2_in(x)
         if input_scale <= 2:

@@ -26,7 +26,8 @@ from collections import OrderedDict, defaultdict
 DATA_DIR = '/home/user/heizmann/data/'
 
 #created by grid labeler
-GENERATED_NEGATIVES_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
+GENERATED_COUNTERFACTUALS_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
+GENERATED_ARPL_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
 
 #Local
 _GENERATED_NEGATIVES_DIR = "/home/deanheizmann/masterthesis/openset-imagenet/counterfactual-open-set/generated_images_counterfactual.dataset"

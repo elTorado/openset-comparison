@@ -21,6 +21,7 @@ from openset_imagenet.losses import AverageMeter, EntropicOpensetLoss
 from openset_imagenet.metrics import confidence
 import numpy as np
 from collections import OrderedDict, defaultdict
+import random
 
 #Server
 DATA_DIR = '/home/user/heizmann/data/'
@@ -164,7 +165,14 @@ class Dataset(torch.utils.data.dataset.Dataset):
         # Read the whole file at once
         with open(data_path, 'r') as file:
             file_content = file.readlines()
-
+        
+        # hardcode amount of negative samples to be equal to letters used for negative samples
+        # first 52800 images for trainn split, last 8800 images for val split
+        if self.which_set == "train":
+            file_content = file_content[:52800]
+        else:
+            file_content = file_content[-8800:]
+                        
         for item in file_content:
             try:
                 item = json.loads(item.strip())
@@ -180,12 +188,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 label = item["label"]
                 samples.append((image_tensor, label))
                 counter += 1
-                
-                # hardcode amount of negative samples to be equal to letters used for negative samples
-                if counter == 8800 and self.which_set == "val":
-                    break
-                if counter == 52800 and self.which_set == "train":
-                    break
+
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
         
@@ -197,6 +200,13 @@ class Dataset(torch.utils.data.dataset.Dataset):
         # Read the whole file at once
         with open(data_path, 'r') as file:
             file_content = file.readlines()
+        
+        # hardcode amount of negative samples to be equal to letters used for negative samples
+        # first 52800 images for trainn split, last 8800 images for val split
+        if self.which_set == "train":
+            file_content = file_content[:52800]
+        else:
+            file_content = file_content[-8800:]                       
 
         for item in file_content:
             try:
@@ -213,12 +223,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 label = item["label"]
                 samples.append((image_tensor, label))
                 counter += 1
-                
-                # hardcode amount of negative samples to be equal to letters used for negative samples
-                if counter == 8800 and self.which_set == "val":
-                    break
-                if counter == 52800 and self.which_set == "train":
-                    break
+
             except Exception as e:
                 print(f"Error processing item {item}: {e}")
         

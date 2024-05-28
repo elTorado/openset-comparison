@@ -170,12 +170,12 @@ def plot_single_oscr(x, y, ax, exp_name, color, baseline, scale):
     return ax
 
 
-def plot_oscr(arrays, methods, scale='linear', title=None, ax_label_font=13,
-              ax=None, unk_label=-1,):
+def plot_oscr(arrays, methods, color, scale='linear', title=None, ax_label_font=13,
+              ax=None, unk_label=-1):
     
     print("================ plot_oscr called !! =================")
 
-    color_palette = cm.get_cmap('tab10', 10).colors[0]
+    color_palette = color
     
     assert len(arrays) == 1
     assert len(methods) == 1

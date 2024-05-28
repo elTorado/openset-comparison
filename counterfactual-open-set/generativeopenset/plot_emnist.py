@@ -97,7 +97,6 @@ def get_experiment_suffix(args):
     suffix = ""
     letters = True
     if args.include_counterfactuals:
-        print("YYYEEES")
         suffix += "_counterfactuals"
         letters = False
     if args.include_arpl:
@@ -137,10 +136,7 @@ def load_scores(args):
   checkpoint = torch.load(model_file, map_location="cpu")
   
   epoch["1"][loss] = (checkpoint["epoch"],checkpoint["best_score"])
-  
-  print(epoch)
-
-  
+    
   return scores, epoch
 
 def plot_OSCR(args, scores):
@@ -159,8 +155,8 @@ def plot_OSCR(args, scores):
   val = [scores[p][l]["val"] if scores[p][l] is not None else None for l in args.loss_functions]
   test = [scores[p][l]["test"] if scores[p][l] is not None else None for l in args.loss_functions]
   
-  '''openset_imagenet.util.plot_oscr(arrays=val, methods=args.loss_functions, scale=scale, title=f'EMNIST val Negative',
-                ax_label_font=font, ax=ax, unk_label=-1,)'''
+  openset_imagenet.util.plot_oscr(arrays=val, methods=args.loss_functions, scale=scale, title=f'EMNIST val Negative',
+                ax_label_font=font, ax=ax, unk_label=-1,)
   
   openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'EMNIST test Negative',
                 ax_label_font=font, ax=ax, unk_label=-1,)

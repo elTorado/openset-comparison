@@ -45,7 +45,7 @@ def command_line_options():
 
     parser.add_argument("--approach", "-a", required=True, choices=['SoftMax', 'Garbage', 'EOS', 'Objectosphere'])
     parser.add_argument("--task", default='train', choices=['train', 'eval', "plot", "show"])
-    parser.add_argument("--arch", default='LeNet_plus_plus', choices=['LeNet', 'LeNet_plus_plus'])
+    parser.add_argument("--arch", default='LeNet', choices=['LeNet', 'LeNet_plus_plus'])
     parser.add_argument('--second_loss_weight', "-w", help='Loss weight for Objectosphere loss', type=float, default=0.0001)
     parser.add_argument('--Minimum_Knowns_Magnitude', "-m", help='Minimum Possible Magnitude for the Knowns', type=float,
                         default=50.)

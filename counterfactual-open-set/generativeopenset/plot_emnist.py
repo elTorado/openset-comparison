@@ -119,7 +119,7 @@ def load_scores(args):
   
   suffix = get_experiment_suffix(args=args)
   directory =  pathlib.Path("evaluation")
-  results_dir = pathlib.Path("LeNet_plus_plus") 
+  results_dir = pathlib.Path("LeNet") 
   model_file = f"{results_dir}/{suffix}.pth"
   
   eval_val_file = directory / f"validation_{suffix}.npz"

@@ -728,7 +728,7 @@ def evaluate(args):
     results_dir = pathlib.Path(f"{args.arch}")
     model_path = f"{results_dir}/{suffix}.pth"
 
-    net = architectures.LeNet_plus_plus(num_classes=num_classes)
+    net = architectures.LeNet(num_classes=num_classes)
     start_epoch, best_score = load_checkpoint(net, model_path)
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     net = tools.device(net)

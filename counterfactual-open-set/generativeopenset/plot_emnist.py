@@ -152,11 +152,14 @@ def plot_OSCR(args, scores):
   index = 0
   p = '1'
 
+  ############ FINAL PREPARATIONS ##############
   val = [scores[p][l]["val"] if scores[p][l] is not None else None for l in args.loss_functions]
   test = [scores[p][l]["test"] if scores[p][l] is not None else None for l in args.loss_functions]
   
   red = cm.get_cmap('tab10', 10).colors[3]
   blue = cm.get_cmap('tab10', 10).colors[0]
+  
+  args.labels = ["Val", "Test"] 
   
   openset_imagenet.util.plot_oscr(arrays=val, methods=args.loss_functions, color=blue, scale=scale, title=f'EMNIST val Negative',
                 ax_label_font=font, ax=ax, unk_label=-1,)

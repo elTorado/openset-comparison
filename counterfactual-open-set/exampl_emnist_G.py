@@ -27,7 +27,7 @@ DATA_DIR = '/home/user/heizmann/data/'
 
 #created by grid labeler
 GENERATED_COUNTERFACTUALS_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
-GENERATED_ARPL_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
+GENERATED_ARPL_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/emnist_arpl.dataset"
 
 #Local
 _GENERATED_NEGATIVES_DIR = "/home/deanheizmann/masterthesis/openset-imagenet/counterfactual-open-set/generated_images_counterfactual.dataset"
@@ -88,7 +88,7 @@ def transpose(x):
 """
 class Dataset(torch.utils.data.dataset.Dataset):
 
-    def __init__(self, args, dataset_root, which_set="train", include_unknown=True, has_garbage_class=False):
+    def __init__(self, args, dataset_root, which_set="train", has_garbage_class=False):
         
         self.include_arpl = args.include_arpl
         self.include_counterfactuals = args.include_counterfactuals
@@ -157,7 +157,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
         
         
-    def load_counterfactuals(self, data_path=GENERATED_NEGATIVES_DIR):
+    def load_counterfactuals(self, data_path=GENERATED_COUNTERFACTUALS_DIR):
         
         samples = []
         counter = 0
@@ -191,8 +191,39 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         return samples
     
-    def load_arpl(self):
-        return
+    def load_arpl(self, data_path = GENERATED_ARPL_DIR):
+        samples = []
+        counter = 0
+        # Read the whole file at once
+        with open(data_path, 'r') as file:
+            file_content = file.readlines()
+
+        for item in file_content:
+            try:
+                item = json.loads(item.strip())
+                image = Image.open(item["filename"])    
+                image_tensor = transforms.Compose([
+                    
+                    transforms.Grayscale(num_output_channels=1),  # Convert to grayscale
+                    transforms.Resize((28, 28)),  # Resize to 28x28
+                    
+                    transforms.ToTensor(),
+                    transpose # IS THIS STILL NECESSARY?
+                ])(image)
+                label = item["label"]
+                samples.append((image_tensor, label))
+                counter += 1
+                
+                # hardcode amount of negative samples to be equal to letters used for negative samples
+                if counter == 8800 and self.which_set == "val":
+                    break
+                if counter == 52800 and self.which_set == "train":
+                    break
+            except Exception as e:
+                print(f"Error processing item {item}: {e}")
+        
+        return samples
+    
 
     def create_png(self):
         images_path = os.path.join(DATA_DIR, "emnist")
@@ -507,7 +538,7 @@ def training(args):
     num_classes = len(training_data.classes)
 
     # instantiate network and data loader
-    net = architectures.LeNet_plus_plus(num_classes=num_classes)
+    net = architectures.LeNet(num_classes=num_classes)
     net = tools.device(net)
     train_data_loader = torch.utils.data.DataLoader(
         training_data,

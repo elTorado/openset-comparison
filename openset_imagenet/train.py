@@ -215,7 +215,7 @@ def get_arrays(model, loader, dataset = "Default"):
                     print( " Evaluating ResNet50 Model")
                     logits_dim = model.logits.out_features # logits output classes
                     features_dim = model.logits.in_features  # features dimensionality
-        elif isinstance(model, architectures.LeNet_plus_plus):
+        else:
                     print( " Evaluating LeNet_Plus Model")
                     logits_dim = model.fc2.out_features # logits output classes
                     features_dim = model.fc2.in_features  # features dimensionality    

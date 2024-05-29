@@ -573,7 +573,8 @@ def training(args):
     prev_confidence = None
     
     BEST_SCORE = 0.0
-    
+    EARLY_STOPPING_COUNTER = 0
+    LIMIT = args["early-stopping"]
     for epoch in range(1, args.no_of_epochs + 1, 1):  # loop over the dataset multiple times
         print ("======== TRAINING EPOCH: " + str(epoch) +" ===============")
         
@@ -597,8 +598,15 @@ def training(args):
                                   
         # log statistics
         curr_score = v_metrics["conf_kn"].avg + v_metrics["conf_unk"].avg
-        if BEST_SCORE <= curr_score:
+        if BEST_SCORE < curr_score:
             BEST_SCORE = curr_score
+            
+        # If there is no improvement for n epochs, stop training
+        else: 
+            EARLY_STOPPING_COUNTER += 1
+            if EARLY_STOPPING_COUNTER == LIMIT:
+                logger.info(f"STOPPED TRAINING DUE TO TRRIGGERED EARLY STOPPING AT EPOCH: {epoch}")
+                break
 
 
         # Logging metrics to tensorboard object

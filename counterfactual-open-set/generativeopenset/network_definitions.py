@@ -208,8 +208,6 @@ class multiclassDiscriminator32(nn.Module):
 
         self.conv7 = nn.Conv2d(128,    128,     3, 1, 1, bias=False)
         self.conv8 = nn.Conv2d(128,    128,     3, 1, 1, bias=False)
-        self.conv9 = nn.Conv2d(128,    128,     3, 2, 1, bias=False)
-
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(64)
         self.bn3 = nn.BatchNorm2d(128)

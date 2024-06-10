@@ -74,6 +74,10 @@ def transpose(x):
     Particularly, the 11 letters will be used as negatives (for training and validation), and the 11 other letters will serve as unknowns (for testing only) -- 
     we removed letters `g`, `l`, `i` and `o` due to large overlap to the digits.
     The MNIST test set is used both in the validation and test split of this dataset.
+    
+    The dataset can be extended with synthetic negative samples from counterfactual image generation and 
+    artificial reciprocal points learning. to activate this set the parameters 'include_arpl' and / or 
+    'include_counterfactuals' to True.
 
     For the test set, you should consider to leave the parameters `include_unknown` and `has_garbage_class` at their respective defaults -- this might make things easier.
 
@@ -86,17 +90,23 @@ def transpose(x):
     include_unknown: Include unknown samples at all (might not be required in some cases, such as training with plain softmax)
 
     has_garbage_class: Set this to True when training softmax with background class. This way, unknown samples will get class label 10. If False (the default), unknown samples will get label -1.
+
+    include_arpl: Set to true to load synthetic negative samples generated with artificial reciprocal point learing
+    
+    include_counterfactuals: Set to true to load synthetic negative samples generated with counterfactual imge generation
+
+    mixed_unknowns: set to true to mix letters with synthetic samples 
 """
+
+
 class Dataset(torch.utils.data.dataset.Dataset):
 
-    def __init__(self, args, dataset_root, which_set="train", has_garbage_class=False):
+    def __init__(self, args, dataset_root, which_set="train", has_garbage_class=False, include_arpl = False, include_counterfactuals = False, mixed_unknowns = False):
         
-        self.include_arpl = args.include_arpl
-        self.include_counterfactuals = args.include_counterfactuals
-        self.mixed_unknowns = args.mixed_unknowns
         self.which_letters = ""
+        self.includes_synthetic_samples = include_arpl or include_counterfactuals
         
-        self.includes_synthetic_samples = self.include_arpl or self.include_counterfactuals
+        # synthetic negative samples are stored in this list
         self.synthetic_samples = list()
         
         self.mnist = torchvision.datasets.EMNIST(
@@ -119,36 +129,36 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         
         print(" ++++++++++++++++++ " + which_set.upper() + " DATASET LOADING +++++++++++++++++++ ")
-        print(" ========= INCLUDING COUNTERFACTUALS :" + str(self.include_counterfactuals))
-        print(" ========= INCLUDING APRL:" + str(self.include_arpl))
-        print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(self.mixed_unknowns))
+        print(" ========= INCLUDING COUNTERFACTUALS :" + str(include_counterfactuals))
+        print(" ========= INCLUDING APRL:" + str(include_arpl))
+        print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(mixed_unknowns))
         print("- - - - - - - - - - - - - - - - - - - - ", end='\n')
         
-
-        if self.includes_synthetic_samples:           
-            # if we mix letters with synthetic samples in train and validation
+        # check if synthtic samples are included
+        if self.includes_synthetic_samples: 
+                      
             if self.mixed_unknowns:
+                # letters are mixed with synthetic samples in train and validation set
                 targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
 
             else: 
                 targets, self.which_letters = (list(), "None") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
             
-            # Test set does not include synthetic samples
-            if not self.which_set == "test":
-                if self.include_arpl:
+            # fill synthetic samples list with samples, test set does not include synthetic samples
+            if not which_set == "test":
+                if include_arpl:
                     self.synthetic_samples.extend(self.load_arpl())
-                    if self.include_counterfactuals:
+                    if include_counterfactuals:
                         self.synthetic_samples.extend(self.load_counterfactuals())
-                elif self.include_counterfactuals:
+                elif include_counterfactuals:
                     self.synthetic_samples.extend(self.load_counterfactuals())
                                      
-        # In case no synthetic negative samples are used, letters are unknowns
+        # In case no synthetic negative samples are used, use letters as unknowns
+        # Letters A to N in train and val set, P to Z in test set
         else: 
             targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
             
         self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
-
-        
   
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)) + " , FROM LETTERS: " + self.which_letters)
@@ -156,8 +166,12 @@ class Dataset(torch.utils.data.dataset.Dataset):
         print(" ========= CLASSES IN OVERALL DATASET :", self.classes )       
         print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", end='\n')
 
+    ''' Function to load counterfactual images. It reads a .dataset file from data_path which is
+        hardcoded in this file. The dataset file contains the path to each image, which is read line by line.
+        Each image is read in and necessary transformation is applied.
         
-        
+        Return: A list with image tensors and labels (-1)
+    '''        
     def load_counterfactuals(self, data_path=GENERATED_COUNTERFACTUALS_DIR):
         
         samples = []
@@ -194,6 +208,14 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         return samples
     
+    
+    
+    ''' Function to load arpl images. It reads a .dataset file from data_path which is
+        hardcoded in this file. The dataset file contains the path to each image, which is read line by line.
+        Each image is read in and necessary transformation is applied.
+        
+        Return: A list with image tensors and labels (-1)
+    ''' 
     def load_arpl(self, data_path = GENERATED_ARPL_DIR):
         samples = []
         counter = 0
@@ -228,47 +250,13 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 print(f"Error processing item {item}: {e}")
         
         return samples
-    
 
-    def create_png(self):
-        images_path = os.path.join(DATA_DIR, "emnist")
-        if not os.path.exists(images_path):
-            os.makedirs(images_path)
-            
-        for i in range(len(self.mnist)):
-            image, label = self.mnist[i]
-            image = transforms.ToPILImage()(image)  # This line converts the image tensor to a PIL Image
-            filename = os.path.join(images_path, f'digits_{i:06d}.png')
-            image.save(filename)  
-            self.write_dataset(img=filename, label=label, category="digits")
-            
-        for i in range(len(self.letters)):
-            image, label = self.letters[i]
-            image = transforms.ToPILImage()(image)  # Convert tensor to PIL Image
-            filename = os.path.join(images_path, f'letters_{i:06d}.png')
-            image.save(filename)  
-            self.write_dataset(img=filename, label=label, category="letters")
     
-    #write two dataset file for each the digits and the letters, containing disctopnaries for each img with path, fold=train and label            
-    def write_dataset(self, img, label, category):
-        if not os.path.exists(DATA_DIR):
-            os.makedirs(DATA_DIR)
-        
-        # Path to the .dataset file
-        dataset_path = os.path.join(DATA_DIR, f'{category}.dataset')
-        
-        # Dictionary to write
-        data = {
-            "filename": img,
-            "fold": "train",
-            "label": label
-        }
-        
-        # Open the file in append mode and write the dictionary as a JSON line
-        with open(dataset_path, 'a') as file:
-            file.write(json.dumps(data) + "\n")
-
-          
+    '''The getter handles all images as a big list of image tensors. 
+        If letters or synthetic images are available, their list is
+        conceptually appended to the list of all image tensors.
+        (Not really appended but when iterating it behaves like it)
+    '''
     def __getitem__(self, index):
         total_mnist = len(self.mnist)
         total_letters = len(self.letter_indexes)  # Use the length of letter_indexes, not self.letters
@@ -276,40 +264,32 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
         if index < total_mnist:
             data = self.mnist[index]
-            data_kind = 'mnist'
         elif index < total_mnist + total_letters:
             letter_index = index - total_mnist
             data = self.letters[self.letter_indexes[letter_index]][0], 10 if self.has_garbage_class else -1
-            data_kind = 'letter'
         else:
             synthetic_index = index - (total_mnist + total_letters)
             data = self.synthetic_samples[synthetic_index][0], 10 if self.has_garbage_class else -1
-            data_kind = 'synthetic'
-
-        # Check if the first element of the tuple (should be the image data) is a tensor
-        if not isinstance(data[0], torch.Tensor):
-            print(f"Non-tensor data found: {data_kind} data at index {index}")
-            print(f"Data element: {data[0]}")  # Print the problematic data
-
-        # Similarly, check the label if necessary, assuming it might not be a tensor and is an int or similar
-        if not isinstance(data[1], (torch.Tensor, int)):
-            print(f"Label data is not int or tensor: {data_kind} label at index {index}")
-            print(f"Label element: {data[1]}")  # Print the problematic label data
 
         return data            
             
 
-
+    '''
+        len of all image tensor lists combined
+    '''
     def __len__(self):
         return len(self.mnist) + len(self.letter_indexes) + len(self.synthetic_samples)
     
 ##################################################################################################################################################
 ##################################################################################################################################################
     
+    '''
+    TO BE DELETED!!
+    '''
 def create_labels_files(args):
     
     first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
-    test_dataset = Dataset(args, args.dataset_root, which_set="test")
+    test_dataset = Dataset(args, args.dataset_root, which_set="test", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
 
 
     test_loader = torch.utils.data.DataLoader(
@@ -358,7 +338,12 @@ def create_labels_files(args):
         file.write(f"train labels: {sorted(train_label_counts.items())}\n")
         file.write(f"val labels: {sorted(val_label_counts.items())}\n")
         file.write(f"test labels: {sorted(test_label_counts.items())}\n")  
-        
+     
+     
+'''
+    Is this still used???
+    ??
+'''   
 def create_fold():
     
     # We read through all letters and digits and create three different distributions.
@@ -463,41 +448,46 @@ def create_fold():
     print(" ==== VALIDATION SPLIT : " + str(val_len) + " ========")
     print(" ==== TEST SPLIT: " + str(test_len) + " ========")          
     
+    
+""" Returns the loss function and the data for training and validation
+    The code supports SoftMax, Garbage, EOS and Objectosphere, 
+    In this implementation, only EOS was focused and tested
+"""
 def get_loss_functions(args):
-    """Returns the loss function and the data for training and validation"""
     if args.approach == "SoftMax":
         print(" ========= Using SoftMax Loss ===========")
         return dict(
                     first_loss_func=nn.CrossEntropyLoss(reduction='none'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
-                    training_data = Dataset(args, args.dataset_root, include_unknown=False),
-                    val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=False),
+                    training_data = Dataset(args, args.dataset_root, include_unknown=False , include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=False, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
                 )
     elif args.approach =="Garbage":
         print(" ========= Using Garbage Loss ===========")
         return dict(
                     first_loss_func=nn.CrossEntropyLoss(reduction='none'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
-                    training_data = Dataset(args, args.dataset_root, has_garbage_class=True),
-                    val_data = Dataset(args, args.dataset_root, which_set="val", has_garbage_class=True)
+                    training_data = Dataset(args, args.dataset_root, has_garbage_class=True, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", has_garbage_class=True, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
                 )
     elif args.approach == "EOS":
         print(" ========= Using Entropic Openset Loss ===========")
         return dict(
                     first_loss_func=EntropicOpensetLoss(num_of_classes=10),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
-                    training_data=Dataset(args, args.dataset_root),
-                    val_data = Dataset(args, args.dataset_root, which_set="val")
+                    training_data=Dataset(args, args.dataset_root, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
                 )
     elif args.approach == "Objectosphere":
         print(" ========= Using Objectosphere Loss ===========")
         return dict(
                     first_loss_func=EntropicOpensetLoss(num_of_classes=10),
                     second_loss_func=losses.objectoSphere_loss(args.Minimum_Knowns_Magnitude),
-                    training_data=Dataset(args, args.dataset_root),
-                    val_data = Dataset(args, args.dataset_root, which_set="val")
+                    training_data=Dataset(args, args.dataset_root, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
                 )
 
+'''Creates a string suffix that can be used when writing files'''
 def get_experiment_suffix(args):
     suffix = ""
     letters = True
@@ -527,15 +517,13 @@ def training(args):
     
     torch.manual_seed(0)
 
-    # get training data and loss function(s)
-    #ONLY for objectosphere a real second loss functions is returned, else its a tensord filled a 0
-    
-    training_data=Dataset(args, args.dataset_root)
+    # get training and validation data and Entropic OpenSet Loss function    
+    training_data=Dataset(args, args.dataset_root , include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
     first_loss_func=EntropicOpensetLoss(num_of_classes=len(training_data.classes))
-    validation_data = Dataset(args, args.dataset_root, which_set="val")
+    validation_data = Dataset(args, args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
 
+    # Create .pth file to store the training result and the directory to store it if necessary
     suffix = get_experiment_suffix(args=args)
-    
     results_dir = pathlib.Path(f"{args.arch}")
     model_file = f"{results_dir}/{suffix}.pth"
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -572,10 +560,12 @@ def training(args):
     # train network
     prev_confidence = None
     
+    # Training loop uses an early stopping mechanism that looks at the confidence score
+    # If confidence score is not improving over n iterations, training is terminated
     BEST_SCORE = 0.0
     EARLY_STOPPING_COUNTER = 0
     LIMIT = args["early-stopping"]
-    for epoch in range(1, args.no_of_epochs + 1, 1):  # loop over the dataset multiple times
+    for epoch in range(1, args.no_of_epochs + 1, 1): 
         print ("======== TRAINING EPOCH: " + str(epoch) +" ===============")
         
         train(
@@ -594,14 +584,13 @@ def training(args):
             num_classes=num_classes,
             args=args
         )
-        
-                                  
+                                        
         # log statistics
         curr_score = v_metrics["conf_kn"].avg + v_metrics["conf_unk"].avg
         if BEST_SCORE < curr_score:
             BEST_SCORE = curr_score
             
-        # If there is no improvement for n epochs, stop training
+        # If there is no score improvement for n epochs, stop training
         else: 
             EARLY_STOPPING_COUNTER += 1
             if EARLY_STOPPING_COUNTER == LIMIT:
@@ -617,7 +606,7 @@ def training(args):
         writer.add_scalar("val/conf_unk", v_metrics["conf_unk"].avg, epoch)
 
         
-        # !!! t_metrics carries only a j value, val metrics -> j, conf_known, conf_unknown
+        # t_metrics carries only a loss value, val metrics -> loss, conf_known, conf_unknown
                 
         logger.info(f"Saving  model {model_file} at epoch: {epoch}")
         save_checkpoint(model_file, net, epoch, optimizer, curr_score, scheduler=None)
@@ -645,9 +634,10 @@ def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
     
     for images, labels in train_data_loader:
         
+        # load tensors and labels to device
         images = tools.device(images)
         labels = tools.device(labels)    
-        batch_len = labels.shape[0]  # Samples in current batch
+        batch_len = labels.shape[0]  
         optimizer.zero_grad()
         logits, features = net(images)
         
@@ -670,18 +660,17 @@ def validate(net, val_data_loader, optimizer, num_classes, loss_func, v_metrics,
         all_targets = device(torch.empty((data_len,), dtype=torch.int64, requires_grad=False))
         all_scores = device(torch.empty((data_len, num_classes), requires_grad=False))
         
-        
-        # might not be necessary to enumare as we have no batches
         for i, (x,y) in enumerate(val_data_loader): 
-            batch_len = y.shape[0]  # current batch size, last batch has different value               
+            batch_len = y.shape[0]  # current batch size, last batch has different value 
+            
+            # load image tensor and label to device              
             x = tools.device(x)          
             y = tools.device(y)
             logits, features = net(x)             
             scores = torch.nn.functional.softmax(logits, dim=1)
             loss = loss_func(logits, y) 
             v_metrics["j"].update(loss.item(), batch_len)
-            
-            
+                        
             start_ix = i * args.Batch_Size
             all_targets[start_ix: start_ix + batch_len] = y
             all_scores[start_ix: start_ix + batch_len] = scores
@@ -702,11 +691,9 @@ def validate(net, val_data_loader, optimizer, num_classes, loss_func, v_metrics,
 
 def evaluate(args):
     
-
-    
     print(" ========= Using Entropic Openset Loss ===========")
-    val_dataset = Dataset(args,  args.dataset_root, which_set="val",)
-    test_dataset = Dataset(args, args.dataset_root, which_set="test")
+    val_dataset = Dataset(args,  args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
+    test_dataset = Dataset(args, args.dataset_root, which_set="test", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
 
     eval_metrics = defaultdict(AverageMeter)
     v_metrics = defaultdict(AverageMeter)
@@ -731,10 +718,6 @@ def evaluate(args):
     else:
         print("No GPU device selected, evaluation will be slow")
         set_device_cpu()
-    
-    
-    
-  
     
     # create model
     suffix = get_experiment_suffix(args=args)
@@ -777,13 +760,9 @@ def evaluate(args):
         loader=test_loader,
         dataset= "TEST"
     )
-
-    if np.array_equal(val_features, test_features):
-        raise AssertionError("FEATURES ARE THE SAME!")
     
     print("VALIDATION TARGETS:", val_targets[:10], test_targets[-10:], np.unique(val_targets))
     print("TEST TARGETS:", val_targets[:10], test_targets[-10:], np.unique(val_targets))
-    
     
     # Print summary statistics for test data
     print(f"Number of test samples: {len(test_targets)}")
@@ -798,9 +777,9 @@ def evaluate(args):
     np.savez(file_path, gt=test_targets, logits=logits, features=test_features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
-    
-def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
-    """ Saves a training checkpoint.
+
+
+""" Saves a training checkpoint.
 
     Args:
         f_name(str): File name.
@@ -809,7 +788,8 @@ def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
         opt(torch optimizer): Current optimizer.
         best_score_(float): Current best score.
         scheduler(torch lr_scheduler): Pytorch scheduler.
-    """
+"""    
+def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
     
     # Create directory if it does not exist
     os.makedirs(os.path.dirname(f_name), exist_ok=True)    

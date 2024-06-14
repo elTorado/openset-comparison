@@ -125,8 +125,6 @@ def load_scores(args):
   eval_val_file = directory / f"validation_{suffix}.npz"
   eval_test_file = directory / f"test_{suffix}.npz"
   
-  
-  
   score_files = {"val":eval_val_file, "test": eval_test_file}
 
   print("Extracting scores of", model_file)           
@@ -143,18 +141,21 @@ def plot_OSCR(args, scores):
   args.loss_functions = ["EOS"]
   args.protocols = ["1"]
 
-    # plot OSCR
+  # plot OSCR
   # Only create one subplot directly
   fig, ax = pyplot.subplots(figsize=(5, 6))
   font = 15
   scale = 'linear' if args.linear else 'semilog'
   
   index = 0
-  p = '1'
+  protocol = '1'
 
   ############ FINAL PREPARATIONS ##############
-  val = [scores[p][l]["val"] if scores[p][l] is not None else None for l in args.loss_functions]
-  test = [scores[p][l]["test"] if scores[p][l] is not None else None for l in args.loss_functions]
+  val = [scores[protocol]["EOS"]["val"]]
+  test = [scores[protocol]["EOS"]["test"]]
+  
+  print(val)
+  print(test)
   
   red = cm.get_cmap('tab10', 10).colors[3]
   blue = cm.get_cmap('tab10', 10).colors[0]

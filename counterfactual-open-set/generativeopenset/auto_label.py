@@ -59,39 +59,7 @@ def write_dataset(examples, filename):
         for e in examples:
             fp.write(json.dumps(e))
             fp.write('\n')
-    
-    
-    '''    
-    train_path = os.path.join(DATASET_DIR, "emnist_train.csv")   
-    val_path = os.path.join(DATASET_DIR, "emnist_val.csv")    
-    with open(train_path, 'a+') as train, open(val_path, "a+") as val:
-        #First, get the proportions of train and val split and apply it to the generated samples
-        # Set pointers to start to count lines
-        train.seek(0)
-        val.seek(0)
-        train_size = len(train.readlines())
-        val_size = len(val.readlines())
-        example_size = len(examples)
-        
-        total_size = train_size + val_size
-        train_fraction = train_size / total_size
-        val_fraction = val_size / total_size
-        examples_to_train = round(example_size * train_fraction)
-        examples_to_val = example_size - examples_to_train
-        
-        assert(examples_to_train + examples_to_val <= len(examples), "Combined distribution exceeds total number of examples: Examples to train: {examples_to_train}, Examples to validation: {examples_to_val}")
-        
-        
-        for e in examples[:examples_to_train]: 
-            fieldnames = examples[0].keys()   
-            writer_train = csv.DictWriter(train, fieldnames=fieldnames)  
-            writer_train.writerow(e)
-        for e in examples[-examples_to_val:]: 
-            fieldnames = examples[0].keys()   
-            writer_val = csv.DictWriter(val, fieldnames=fieldnames) 
-            writer_val.writerow(e)'''
-            
-            
+                
 
 
 def grid_from_filename(filename):
@@ -128,3 +96,13 @@ for filename in ls('trajectories', '.npy'):
 print(f"Total errors encountered: {errorcount}")
 
 write_dataset(examples, options['output_filename'])
+
+def write_dataset_manually(filename = "generated_counterfactuals_imagenet.dataset"):
+    with open(filename, 'w') as fp:
+        for imagepath in ls('trajectories', '.jpg'):
+            line = {
+                'filename': imagepath,
+                'label': -1,
+            }
+            fp.write(json.dumps(line))
+            fp.write('\n')

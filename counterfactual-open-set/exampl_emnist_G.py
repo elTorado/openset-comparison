@@ -55,6 +55,7 @@ def command_line_options():
     parser.add_argument("--lr", "-l", dest="lr", default=0.01, type=float)
     parser.add_argument('--batch_size', "-b", help='Batch_Size', action="store", dest="Batch_Size", type=int, default=128)
     parser.add_argument("--no_of_epochs", "-e", dest="no_of_epochs", type=int, default=70)
+    parser.add_argument("--early_stopping", "-s", dest="early_stopping", type=int, default=3)
     parser.add_argument("--eval_directory", "-ed", dest= "eval_directory", default ="evaluation", help="Select the directory where evaluation details are.")
     parser.add_argument("--dataset_root", "-d", dest= "dataset_root", default ="/tmp", help="Select the directory where datasets are stored.")
     parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
@@ -106,7 +107,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
            
         self.which_letters = ""
         self.includes_synthetic_samples = include_arpl or include_counterfactuals
-        assert((which_set == "test") != self.includes_synthetic_samples, "TEST SET CANNOT INCLUDE SYNTHETIC SAMPLES!")
+        assert not (which_set == "test" and self.includes_synthetic_samples), "TEST SET CANNOT INCLUDE SYNTHETIC SAMPLES!"
+
         
         # synthetic negative samples are stored in this list
         self.synthetic_samples = list()
@@ -612,7 +614,7 @@ def training(args):
     # If confidence score is not improving over n iterations, training is terminated
     BEST_SCORE = 0.0
     EARLY_STOPPING_COUNTER = 0
-    LIMIT = args["early-stopping"]
+    LIMIT = args.early_stopping
     for epoch in range(1, args.no_of_epochs + 1, 1): 
         print ("======== TRAINING EPOCH: " + str(epoch) +" ===============")
         

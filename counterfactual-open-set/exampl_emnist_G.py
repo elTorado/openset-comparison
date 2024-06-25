@@ -63,7 +63,7 @@ def command_line_options():
     parser.add_argument("--include_arpl", "-inc_a", type=bool, default=False, dest="include_arpl", help="Include ARPL samples in the dataset")
     parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
     parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
-    parser.add_argument("--include_unknown", "-iu", action='store_true', dest="include_unknown", help="Exclude unknowns")
+    parser.add_argument("--include_unknown", "-iu", action='store_false', dest="include_unknown", help="Exclude unknowns")
 
 
     return parser.parse_args()

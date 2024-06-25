@@ -653,6 +653,9 @@ def training(args):
         if BEST_SCORE < curr_score:
             BEST_SCORE = curr_score
             
+            #reset counter:
+            EARLY_STOPPING_COUNTER = 0
+            
         # If there is no score improvement for n epochs, stop training
         else: 
             EARLY_STOPPING_COUNTER += 1

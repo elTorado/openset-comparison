@@ -167,7 +167,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 if self.mixed_unknowns:
                     # letters are mixed with synthetic samples in train and validation set
                     self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
-                    self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
+                    self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
                     
                     # shuffle the indices as we will need splits
                     random.shuffle(self.letter_indexes)
@@ -871,6 +871,7 @@ def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
     
 if __name__ == "__main__":
     args = command_line_options()
+    print(args)
     
     suffix = get_experiment_suffix(args=args)
     print(args.include_counterfactuals)

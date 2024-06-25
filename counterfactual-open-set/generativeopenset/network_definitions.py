@@ -260,9 +260,6 @@ class multiclassDiscriminator32(nn.Module):
         x = self.conv8(x)
         x = self.bn8(x)
         x = nn.LeakyReLU(0.2)(x)
-        x = self.conv9(x)
-        x = self.bn9(x)
-        x = nn.LeakyReLU(0.2)(x)
 
         x = x.view(batch_size, -1)
         if return_features:

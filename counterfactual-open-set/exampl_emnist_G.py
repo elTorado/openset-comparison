@@ -63,6 +63,7 @@ def command_line_options():
     parser.add_argument("--include_arpl", "-inc_a", type=bool, default=False, dest="include_arpl", help="Include ARPL samples in the dataset")
     parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
     parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
+    parser.add_argument("--include_unknown", "-iu", type=bool, default=True, dest="include_unknown", help="Include unknwons")
 
     return parser.parse_args()
 
@@ -103,8 +104,9 @@ def transpose(x):
 
 class Dataset(torch.utils.data.dataset.Dataset):
 
-    def __init__(self, args, dataset_root, which_set="train", has_garbage_class=False, include_arpl = False, include_counterfactuals = False, mixed_unknowns = False):
-           
+    def __init__(self, args, dataset_root, which_set="train", include_unknown = True, has_garbage_class=False, include_arpl = False, include_counterfactuals = False, mixed_unknowns = False):
+        
+        
         self.which_letters = ""
         self.includes_synthetic_samples = include_arpl or include_counterfactuals
         assert not (which_set == "test" and self.includes_synthetic_samples), "TEST SET CANNOT INCLUDE SYNTHETIC SAMPLES!"
@@ -114,6 +116,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.synthetic_samples = list()
         self.counterfactual_samples = list()
         self.arpl_samples = list()
+        self.targets = list()
         
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,
@@ -140,70 +143,71 @@ class Dataset(torch.utils.data.dataset.Dataset):
         print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(mixed_unknowns))
         print("- - - - - - - - - - - - - - - - - - - - ", end='\n')
         
-        # check if synthtic samples are included
-        if self.includes_synthetic_samples: 
-                      
-            # fill synthetic samples list with samples, test set does not include synthetic samples
-            if include_arpl:
-                self.arpl_samples = self.load_arpl()
-                if include_counterfactuals:
-                    self.counterfactual_samples = self.load_counterfactuals()
-            elif include_counterfactuals:
-                self.counterfactual_samples = self.load_counterfactuals()
-            
-            random.shuffle(self.counterfactual_samples)
-            random.shuffle(self.arpl_samples)
-            
-            if self.mixed_unknowns:
-                # letters are mixed with synthetic samples in train and validation set
-                targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
-                self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
-                
-                # shuffle the indices as we will need splits
-                random.shuffle(self.letter_indexes)
-                self.nr_letters = len(self.letter_indexes)
-                    
-                    # depending on setup we will need to half or third the used letters as we want even distribution of samples for comparison
-                if include_arpl: 
-                        if include_counterfactuals:
-                            self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 3))]
-                            self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 3))]
-                            self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 3))]
-                            
-                        else:
-                            self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2))]
-                            self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 2))]
-                            
+        if include_unknown:
+            # check if synthtic samples are included
+            if self.includes_synthetic_samples: 
+                        
+                # fill synthetic samples list with samples, test set does not include synthetic samples
+                if include_arpl:
+                    self.arpl_samples = self.load_arpl()
+                    if include_counterfactuals:
+                        self.counterfactual_samples = self.load_counterfactuals()
                 elif include_counterfactuals:
-                        self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2))]
-                        self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 2))]
+                    self.counterfactual_samples = self.load_counterfactuals()
                 
+                random.shuffle(self.counterfactual_samples)
+                random.shuffle(self.arpl_samples)
+                
+                if self.mixed_unknowns:
+                    # letters are mixed with synthetic samples in train and validation set
+                    self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
+                    self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
+                    
+                    # shuffle the indices as we will need splits
+                    random.shuffle(self.letter_indexes)
+                    self.nr_letters = len(self.letter_indexes)
+                        
+                        # depending on setup we will need to half or third the used letters as we want even distribution of samples for comparison
+                    if include_arpl: 
+                            if include_counterfactuals:
+                                self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 3))]
+                                self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 3))]
+                                self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 3))]
+                                
+                            else:
+                                self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2))]
+                                self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 2))]
+                                
+                    elif include_counterfactuals:
+                            self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2))]
+                            self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 2))]
+                    
+                else: 
+                    self.targets, self.which_letters = (list(), "None") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
+                    self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
+                                        
+            # In case no synthetic negative samples are used, use letters as unknowns
+            # Letters A to N in train and val set, P to Z in test set
             else: 
-                targets, self.which_letters = (list(), "None") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
-                self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
-                                     
-        # In case no synthetic negative samples are used, use letters as unknowns
-        # Letters A to N in train and val set, P to Z in test set
-        else: 
-            targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
-            self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in targets]
-            
-        # Calculate the indices for splitting, # 80% for training   , 20% for Validation
-        split_index_cf = int(0.8 * len(self.counterfactual_samples))  
-        split_index_arpl = int(0.8 * len(self.arpl_samples))   
+                self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
+                self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
                 
-        if which_set == "train":
-            # Take the first 80% of the samples for training
-            self.counterfactual_samples = self.counterfactual_samples[:split_index_cf]
-            self.arpl_samples = self.arpl_samples[:split_index_arpl]
-            
-        elif which_set == "val":
-            # Take the last 20% of the samples for validation
-            self.counterfactual_samples = self.counterfactual_samples[split_index_cf:]
-            self.arpl_samples = self.arpl_samples[split_index_arpl:]
-            
-        # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
-        self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
+            # Calculate the indices for splitting, # 80% for training   , 20% for Validation
+            split_index_cf = int(0.8 * len(self.counterfactual_samples))  
+            split_index_arpl = int(0.8 * len(self.arpl_samples))   
+                    
+            if which_set == "train":
+                # Take the first 80% of the samples for training
+                self.counterfactual_samples = self.counterfactual_samples[:split_index_cf]
+                self.arpl_samples = self.arpl_samples[:split_index_arpl]
+                
+            elif which_set == "val":
+                # Take the last 20% of the samples for validation
+                self.counterfactual_samples = self.counterfactual_samples[split_index_cf:]
+                self.arpl_samples = self.arpl_samples[split_index_arpl:]
+                
+            # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
+            self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
         
         # shuffle it too for good measures:
         random.shuffle(self.synthetic_samples)
@@ -525,8 +529,8 @@ def get_loss_functions(args):
         return dict(
                     first_loss_func=EntropicOpensetLoss(num_of_classes=10),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
-                    training_data=Dataset(args, args.dataset_root, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
-                    val_data = Dataset(args, args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
+                    training_data=Dataset(args, args.dataset_root, include_unknown=args.include_unknown, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=args.include_unknown, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
                 )
     elif args.approach == "Objectosphere":
         print(" ========= Using Objectosphere Loss ===========")

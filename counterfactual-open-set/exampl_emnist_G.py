@@ -143,6 +143,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         
         print(" ++++++++++++++++++ " + which_set.upper() + " DATASET LOADING +++++++++++++++++++ ")
+        print(" ========= INCLUDING APRL:" + str(include_unknown))
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(include_arpl))
         print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(mixed_unknowns))

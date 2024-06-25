@@ -118,6 +118,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.counterfactual_samples = list()
         self.arpl_samples = list()
         self.targets = list()
+        self.letter_indexes = list()
         
         self.mnist = torchvision.datasets.EMNIST(
             root=dataset_root,

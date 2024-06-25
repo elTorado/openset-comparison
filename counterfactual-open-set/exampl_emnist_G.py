@@ -104,7 +104,7 @@ def transpose(x):
 
 class Dataset(torch.utils.data.dataset.Dataset):
 
-    def __init__(self, args, dataset_root, which_set="train", include_unknown = True, has_garbage_class=False, include_arpl = False, include_counterfactuals = False, mixed_unknowns = False):
+    def __init__(self, args, dataset_root, which_set="train", include_unknown = False, has_garbage_class=False, include_arpl = False, include_counterfactuals = False, mixed_unknowns = False):
         
         include_unknown = args.include_unknown
         self.which_letters = ""
@@ -143,7 +143,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         
         print(" ++++++++++++++++++ " + which_set.upper() + " DATASET LOADING +++++++++++++++++++ ")
-        print(" ========= INCLUDING APRL:" + str(include_unknown))
+        print(" ========= INCLUDING NEGATIVES:" + str(include_unknown))
         print(" ========= INCLUDING COUNTERFACTUALS :" + str(include_counterfactuals))
         print(" ========= INCLUDING APRL:" + str(include_arpl))
         print(" ========= MIXING GENERATED SAMPLES WITH LETTERS: " + str(mixed_unknowns))

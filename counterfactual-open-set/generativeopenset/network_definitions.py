@@ -208,6 +208,8 @@ class multiclassDiscriminator32(nn.Module):
 
         self.conv7 = nn.Conv2d(128,    128,     3, 1, 1, bias=False)
         self.conv8 = nn.Conv2d(128,    128,     3, 1, 1, bias=False)
+        self.conv9 = nn.Conv2d(128,    128,     3, 2, 1, bias=False)
+        
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(64)
         self.bn3 = nn.BatchNorm2d(128)
@@ -259,6 +261,9 @@ class multiclassDiscriminator32(nn.Module):
         x = nn.LeakyReLU(0.2)(x)
         x = self.conv8(x)
         x = self.bn8(x)
+        x = nn.LeakyReLU(0.2)(x)
+        x = self.conv9(x)
+        x = self.bn9(x)
         x = nn.LeakyReLU(0.2)(x)
 
         x = x.view(batch_size, -1)

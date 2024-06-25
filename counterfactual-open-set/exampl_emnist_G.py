@@ -63,7 +63,7 @@ def command_line_options():
     parser.add_argument("--include_arpl", "-inc_a", type=bool, default=False, dest="include_arpl", help="Include ARPL samples in the dataset")
     parser.add_argument("--mixed_unknowns", "-mu", type=bool, default=False, dest="mixed_unknowns", help="Mix unknown samples in the dataset")
     parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
-    parser.add_argument("--include_unknown", "-iu", type=bool, default=True, dest="include_unknown", help="Include unknwons")
+    parser.add_argument("--include_unknown", "-iu", dest= "include_unknown", type=bool, default=True, dest="include_unknown", help="Include unknwons")
 
     return parser.parse_args()
 
@@ -106,7 +106,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     def __init__(self, args, dataset_root, which_set="train", include_unknown = True, has_garbage_class=False, include_arpl = False, include_counterfactuals = False, mixed_unknowns = False):
         
-        
+        include_unknown = args.include_unknown
         self.which_letters = ""
         self.includes_synthetic_samples = include_arpl or include_counterfactuals
         assert not (which_set == "test" and self.includes_synthetic_samples), "TEST SET CANNOT INCLUDE SYNTHETIC SAMPLES!"

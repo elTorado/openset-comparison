@@ -77,15 +77,16 @@ class ImageConverter(Converter):
         if self.normalize:
             img = img.astype(np.float32) * (1.0 / 255)
 
-        # keep the image greyscale
-        if self.torch:
-            # Transpose the image for PyTorch [C, H, W] format
-            # Before the transpose operation
-            if img.ndim == 2:  # Grayscale image, with no channel dimension
-                img = np.expand_dims(img, axis=-1)  # Add a channel dimension
-                # img = np.repeat(img, 3, axis=2)  Replicate the grayscale channel 3 times
+        if self.options["dataset_name"] != "imagenet":
+            # keep the image greyscale
+            if self.torch:
+                # Transpose the image for PyTorch [C, H, W] format
+                # Before the transpose operation
+                if img.ndim == 2:  # Grayscale image, with no channel dimension
+                    img = np.expand_dims(img, axis=-1)  # Add a channel dimension
+                    # img = np.repeat(img, 3, axis=2)  Replicate the grayscale channel 3 times
 
-            img = img.transpose((2, 0, 1))
+        img = img.transpose((2, 0, 1))
 
         return img
 

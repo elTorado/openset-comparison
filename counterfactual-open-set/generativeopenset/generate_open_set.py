@@ -10,12 +10,14 @@ def is_true(x):
 # Dataset (input) and result_dir (output) are always required
 parser = argparse.ArgumentParser()
 parser.add_argument('--result_dir', required=True, help='Output directory for images and model checkpoints')
+parser.add_argument('--dataset', required=True, help='datatet')
 
 # Other options can change with every run
 parser.add_argument('--batch_size', type=int, default=64, help='Batch size [default: 64]')
 parser.add_argument('--fold', type=str, default='train', help='Fold [default: train]')
 parser.add_argument('--start_epoch', type=int, help='Epoch to start from (defaults to most recent epoch)')
 parser.add_argument('--count', type=int, default=1, help='Number of counterfactuals to generate')
+parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
 
 options = vars(parser.parse_args())
 

@@ -567,8 +567,6 @@ def get_experiment_suffix(args):
         suffix += "_letters"
     return suffix
 
-
-
 def training(args): 
     # setup device
     if args.gpu is not None:

@@ -16,6 +16,8 @@ parser = argparse.ArgumentParser()
 #parser.add_argument('--label', type=str, help='Label to assign to each item')
 parser.add_argument('--result_dir', help='Result directory')
 parser.add_argument('--output_filename', required=True, help='Output .dataset filename')
+
+
 options = vars(parser.parse_args())
 
 # Import the rest of the project
@@ -79,7 +81,7 @@ except: raise FileNotFoundError("Could not access emnist_split1.dataset at " + D
 examples = []
 errorcount = 0
 
-for filename in ls('trajectories', '.npy'):
+for filename in ls('trajectories/counterfactual', '.npy'):
     grid = grid_from_filename(filename)
     
     for image in grid:
@@ -89,8 +91,8 @@ for filename in ls('trajectories', '.npy'):
                 'filename': saved_filename,
                 'label': -1,
             })
-        except Exception as e:  # Catching all exceptions, you might want to specify if needed
-            errorcount += 1  # Increment error count if an error occurs
+        except Exception as e:  
+            errorcount += 1  # Increment error count if an error occurs (if e.g. grid dimenssion are unexpected - might happen when e.g. last batch is not as large as others)
 
 # After all files have been processed, print the error count
 print(f"Total errors encountered: {errorcount}")

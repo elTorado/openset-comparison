@@ -88,7 +88,7 @@ def generate_open_set(networks, dataloader, **options):
     images = np.array(images).transpose((0,2,3,1))
 
     dummy_class = 0
-    video_filename = make_video_filename(result_dir, dataloader, dummy_class, dummy_class, label_type='grid')
+    video_filename = make_video_filename(result_dir, dataloader, dummy_class, dummy_class, dataset=options["dataset"], label_type='grid')
 
     # Save the images in npy/jpg format as input for the labeling system
     trajectory_filename = video_filename.replace('.mjpeg', '.npy')
@@ -166,14 +166,21 @@ def generate_counterfactual_column(networks, start_images, target_class, **optio
 
 
 # Trajectories are written to result_dir/trajectories/
-def make_video_filename(result_dir, dataloader, start_class, target_class, label_type='active'):
+def make_video_filename(result_dir, dataloader, start_class, target_class, dataset, label_type='active'):
     trajectory_id = '{}_{}'.format(dataloader.dsf.name, int(time.time() * 1000))
     start_class_name = dataloader.lab_conv.labels[start_class]
     target_class_name = dataloader.lab_conv.labels[target_class]
     video_filename = '{}-{}-{}-{}.mjpeg'.format(label_type, trajectory_id, start_class_name, target_class_name)
-    video_filename = os.path.join('trajectories', video_filename)
+    
+    subdirectory = ""
+    if dataset == "emnist":
+        subdirectory = "trajectories/emnist"
+    elif dataset == "imagenet":
+        subdirectory = "trajectories/imagenet"
+    
+    video_filename = os.path.join(subdirectory, video_filename)
     video_filename = os.path.join(result_dir, video_filename)
-    path = os.path.join(result_dir, 'trajectories')
+    path = os.path.join(result_dir, subdirectory)
     if not os.path.exists(path):
         print("Creating trajectories directory {}".format(path))
         os.mkdir(path)

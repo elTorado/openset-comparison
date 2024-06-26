@@ -57,8 +57,16 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
             images = device(images)
             labels = device(class_labels)
             
+            print("LABEL DEVICE")
+            print(labels.device)
+            
             images = Variable(images)
             labels = Variable(class_labels)
+            
+            print("LABEL DEVICE")
+            print(labels.device)
+            
+            
 
             if options["dataset_name"] == "imagenet":
                 ac_scale = 1

@@ -81,30 +81,34 @@ except: raise FileNotFoundError("Could not access emnist_split1.dataset at " + D
 examples = []
 errorcount = 0
 
-for filename in ls('trajectories/counterfactual', '.npy'):
-    grid = grid_from_filename(filename)
-    
-    for image in grid:
-        try:
-            saved_filename = save_image(image)  # Assuming save_image returns the filename where the image is saved
-            examples.append({
-                'filename': saved_filename,
-                'label': -1,
-            })
-        except Exception as e:  
-            errorcount += 1  # Increment error count if an error occurs (if e.g. grid dimenssion are unexpected - might happen when e.g. last batch is not as large as others)
 
-# After all files have been processed, print the error count
+if options["dataset"] == "emnnist":
+    for filename in ls('trajectories/counterfactual', '.npy'):
+        grid = grid_from_filename(filename)
+        
+        for image in grid:
+            try:
+                saved_filename = save_image(image)  
+                examples.append({
+                    'filename': saved_filename,
+                    'label': -1,
+                })
+            except Exception as e:  
+                errorcount += 1  # Increment error count if an error occurs (if e.g. grid dimenssion are unexpected - might happen when e.g. last batch is not as large as others)
+
+# different to emnist, imagenet are already present as lone images
+elif options["dataset"] == "imagenet":
+    for filename in ls('trajectories/arpl', '.jpg'):
+        try:
+            if not "grid" in filename:
+                examples.append({
+                    'filename': filename,
+                    'label': -1,
+                })
+        except Exception as e:  
+                errorcount += 1 
+                
+
 print(f"Total errors encountered: {errorcount}")
 
 write_dataset(examples, options['output_filename'])
-
-def write_dataset_manually(filename = "generated_counterfactuals_imagenet.dataset"):
-    with open(filename, 'w') as fp:
-        for imagepath in ls('trajectories', '.jpg'):
-            line = {
-                'filename': imagepath,
-                'label': -1,
-            }
-            fp.write(json.dumps(line))
-            fp.write('\n')

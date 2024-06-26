@@ -19,6 +19,7 @@ import copy
 
 DEFAULT_FOLD = 'train'
 
+DATA_DIR = "root/data/imagenet"
 
 class DatasetFile(object):
     def __init__(self, input_filename, example_count=None):

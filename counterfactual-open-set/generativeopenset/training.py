@@ -172,8 +172,8 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
             ############################
 
             # Keep track of accuracy on positive-labeled examples for monitoring
-            log.collect_prediction('Classifier Accuracy', netC(images), labels)
-            #log.collect_prediction('Discriminator Accuracy, Real Data', netD(images), labels)
+            # log.collect_prediction('Classifier Accuracy', netC(images), labels)
+            # log.collect_prediction('Discriminator Accuracy, Real Data', netD(images), labels)
 
             log.print_every()
 

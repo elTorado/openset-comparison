@@ -41,12 +41,24 @@ class ImageConverter(Converter):
 
     def to_array(self, example):
         filename = os.path.expanduser(example['filename'])
-        if not filename.startswith('/'):
-            filename = os.path.join(self.data_dir, filename)
-        img = Image.open(filename)  # Open image using PIL
 
         # Resize operation
         #img = img.resize(self.img_shape, Image.ANTIALIAS)
+        
+        if ImageConverter.kwargs["dataset_name"] == "imagenet":
+            filename = os.path.join(DATA_DIR, filename)
+            img = Image.open(filename)  # Open image using PIL
+
+            # Resize operation for Imagenet
+            # make also sure they are all RGB
+            img = img.convert("RGB")
+            self.img_shape = (256, 256)
+            img = img.resize(self.img_shape, Image.ANTIALIAS)
+        
+        else:
+            if not filename.startswith('/'):
+                filename = os.path.join(self.data_dir, filename)
+                img = Image.open(filename)  # Open image using PIL
 
         img = pad_image_pil(img)
         

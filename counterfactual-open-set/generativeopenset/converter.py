@@ -12,7 +12,7 @@ import random
 import imutil
 from PIL import Image
 
-DATA_DIR = '/mnt/nfs/data'
+DATA_DIR = '/local/scratch/datasets/ImageNet/ILSVRC2012/'
 
 # Converters can be used like a function, on a single example or a batch
 class Converter(object):

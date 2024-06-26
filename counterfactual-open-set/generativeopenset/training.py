@@ -158,6 +158,8 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
 
             # Classify real examples into the correct K classes with hinge loss
             classifier_logits = netC(images)
+            classifier_logits = device(classifier_logits) 
+            
             errC = F.softplus(classifier_logits * -labels).mean()
             errC.backward()
             log.collect('Classifier Loss', errC)

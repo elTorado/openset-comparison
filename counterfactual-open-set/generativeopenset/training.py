@@ -54,18 +54,11 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
             
             log.collect("Current Epoch: ", epoch)
             
-            images = device(images)
-            labels = device(class_labels)
-            
-            print("LABEL DEVICE")
-            print(labels.device)
-            
             images = Variable(images)
             labels = Variable(class_labels)
             
-            print("LABEL DEVICE")
-            print(labels.device)
-            
+            images = device(images)
+            labels = device(class_labels)
             
 
             if options["dataset_name"] == "imagenet":

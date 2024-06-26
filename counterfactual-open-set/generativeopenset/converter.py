@@ -61,7 +61,8 @@ class ImageConverter(Converter):
                 filename = os.path.join(self.data_dir, filename)
                 img = Image.open(filename)  # Open image using PIL
 
-        img = pad_image_pil(img)
+            # apply zero padding 
+            img = pad_image_pil(img)
         
         if self.delete_background:
             seg_filename = os.path.expanduser(example['segmentation'])

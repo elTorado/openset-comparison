@@ -1,5 +1,5 @@
 {
-  "batch_size": 64,
+  "batch_size": 8,
   "beta1": 0.5,
   "cf_distance_weight": 1,
   "cf_gan_scale": 4,
@@ -8,11 +8,11 @@
 
 
 
-  "dataset": "/home/user/heizmann/data/emnist/emnist_split1.dataset",
-  "comparison_dataset": "/home/user/heizmann/data/emnist/emnist_split2.dataset",
+  "_dataset": "/home/user/heizmann/data/emnist/emnist_split1.dataset",
+  "_comparison_dataset": "/home/user/heizmann/data/emnist/emnist_split2.dataset",
 
-  "___dataset": "/home/user/heizmann/openset-comparison/imagenet_p2.dataset",
-  "___comparison_dataset": "/home/user/heizmann/openset-comparison/imagenet_p2.dataset",
+  "dataset": "/home/user/heizmann/openset-comparison/imagenet_p2.dataset",
+  "comparison_dataset": "/home/user/heizmann/openset-comparison/imagenet_p2.dataset",
 
 
   "hypothesis": "Example run on tiny imagenet",

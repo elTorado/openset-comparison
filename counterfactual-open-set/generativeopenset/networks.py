@@ -11,12 +11,12 @@ def build_networks(num_classes, epoch=None, latent_size=10, batch_size=64, **opt
     
     print(options)
     
-    if options["dataset"] == "emnist":
+    if options["dataset_name"] == "emnist":
         EncoderClass = network_definitions.encoder32
         GeneratorClass = network_definitions.generator32
         DiscrimClass = network_definitions.multiclassDiscriminator32
     
-    elif options["dataset"] == "imagenet":
+    elif options["dataset_name"] == "imagenet":
         EncoderClass = network_definitions.encoder256
         GeneratorClass = network_definitions.generator256
         DiscrimClass = network_definitions.multiclassDiscriminator256

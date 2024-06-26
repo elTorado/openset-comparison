@@ -163,6 +163,11 @@ class encoder256(nn.Module):
 
         self.fc1 = nn.Linear(131072, latent_size)  # Adjust to match flattened input
 
+        self.dr1 = nn.Dropout2d(0.2)
+        self.dr2 = nn.Dropout2d(0.2)
+        self.dr3 = nn.Dropout2d(0.2)
+        self.dr4 = nn.Dropout2d(0.2)
+        
         self.apply(weights_init)
         self.cuda()
 

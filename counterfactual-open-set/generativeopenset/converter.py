@@ -59,7 +59,7 @@ class ImageConverter(Converter):
         else:
             if not filename.startswith('/'):
                 filename = os.path.join(self.data_dir, filename)
-                img = Image.open(filename)  # Open image using PIL
+            img = Image.open(filename)  # Open image using PIL
 
             # apply zero padding 
             img = pad_image_pil(img)

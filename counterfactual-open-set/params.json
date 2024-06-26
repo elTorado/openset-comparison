@@ -11,9 +11,9 @@
   "dataset": "/home/user/heizmann/data/emnist/emnist_split1.dataset",
   "comparison_dataset": "/home/user/heizmann/data/emnist/emnist_split2.dataset",
 
+  "___dataset": "/home/user/heizmann/openset-comparison/imagenet_p2.dataset",
+  "___comparison_dataset": "/home/user/heizmann/openset-comparison/imagenet_p2.dataset",
 
-  "Cdataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split1.dataset",
-  "Ccomparison_dataset": "/home/deanheizmann/masterthesis/openset-imagenet/emnist_split2.dataset",
 
   "hypothesis": "Example run on tiny imagenet",
   "delete_background": false,

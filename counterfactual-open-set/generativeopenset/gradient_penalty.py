@@ -11,7 +11,7 @@ def calc_gradient_penalty(netD, real_data, fake_data, args, penalty_lambda=10.0)
                 
         alpha = torch.rand(real_data.size()[0], 1, 1, 1)
         alpha = alpha.expand(real_data.size())
-        lpha = device(alpha)
+        alpha = device(alpha)
         
         # Traditional WGAN-GP
         interpolates = alpha * real_data + (1 - alpha) * fake_data

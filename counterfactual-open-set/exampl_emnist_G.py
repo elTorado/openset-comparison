@@ -349,6 +349,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
     '''
     TO BE DELETED!!
     '''
+
+
 def create_labels_files(args):
     
     first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
@@ -416,10 +418,9 @@ def create_fold():
     # Split 3: For Classifier training: Train and val contain letters a-n as negatives (later expanded by generated counterfactuals), test contains p-z as unknowns 
     
     with open(DATA_DIR + 'digits.dataset', 'r') as digits,  open(DATA_DIR + 'letters.dataset', 'r') as letters: 
-        val_size = 3600 
         test_size = 3600 
-        train_size = 16800  # 70% of 24,000 for training in the first split
-        train_len = val_len = test_len = 0  # Initialize counters
+        train_size = 20400  # 85% of 24,000 for training in the first split
+        train_len = test_len = 0  # Initialize counters
         
         digits = digits.readlines()
         letters = letters.readlines()
@@ -439,14 +440,8 @@ def create_fold():
                 file1.write(json.dumps(element, sort_keys=True) + '\n')
                 # We dont need the fold in the csv files and we need to label to be in the second row
                 
-            # Validation data
-            for element in digits[train_size:train_size+val_size]:
-                val_len += 1
-                element["fold"] = "val"
-                file1.write(json.dumps(element, sort_keys=True) + '\n')
-                
             # Test data
-            for element in digits[train_size+val_size:train_size+val_size+test_size]:
+            for element in digits[-test_size:]:
                 test_len += 1
                 element["fold"] = "test"
                 file1.write(json.dumps(element, sort_keys=True) + '\n')
@@ -457,6 +452,9 @@ def create_fold():
         print(" ==== TEST SPLIT: " + str(test_len) + " ========")
 
         # Reset counters for the second file split
+        test_size = 3600 
+        val_size = 3600
+        train_size = 16800  # 70% of 24,000 for training in the  split
         train_len = val_len = test_len = 0
             
         with open('emnist_split2.dataset', 'w') as file2:
@@ -887,6 +885,6 @@ if __name__ == "__main__":
     if args.task == "eval":
         print(" TASK IS TO EVALUATE")
         evaluate(args = args)
-    if args.task == "show":
+    if args.task == "dataset":
         print("creating labels file")
-        create_labels_files(args=args)
+        create_fold(args=args)

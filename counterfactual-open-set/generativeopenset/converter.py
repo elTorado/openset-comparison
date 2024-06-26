@@ -38,6 +38,7 @@ class ImageConverter(Converter):
         self.torch = torch
         self.normalize = normalize
         self.delete_background = delete_background
+        self.options = kwargs
 
     def to_array(self, example):
         filename = os.path.expanduser(example['filename'])
@@ -45,7 +46,7 @@ class ImageConverter(Converter):
         # Resize operation
         #img = img.resize(self.img_shape, Image.ANTIALIAS)
         
-        if ImageConverter.kwargs["dataset_name"] == "imagenet":
+        if self.options["dataset_name"] == "imagenet":
             filename = os.path.join(DATA_DIR, filename)
             img = Image.open(filename)  # Open image using PIL
 

@@ -10,7 +10,7 @@ def is_true(x):
 # Dataset (input) and result_dir (output) are always required
 parser = argparse.ArgumentParser()
 parser.add_argument('--result_dir', required=True, help='Output directory for images and model checkpoints')
-parser.add_argument('--dataset', required=True, help='datatet')
+parser.add_argument('--dataset', required=True, help='dataset')
 
 # Other options can change with every run
 parser.add_argument('--batch_size', type=int, default=64, help='Batch size [default: 64]')

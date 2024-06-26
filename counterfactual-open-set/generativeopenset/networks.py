@@ -8,17 +8,20 @@ from imutil import ensure_directory_exists
 
 def build_networks(num_classes, epoch=None, latent_size=10, batch_size=64, **options):
     networks = {}
+    if options["dataset"] == "emnist":
+        EncoderClass = network_definitions.encoder32
+        GeneratorClass = network_definitions.generator32
+        DiscrimClass = network_definitions.multiclassDiscriminator32
+    
+    elif options["dataset"] == "imagenet":
+        EncoderClass = network_definitions.encoder256
+        GeneratorClass = network_definitions.generator256
+        DiscrimClass = network_definitions.multiclassDiscriminator256
 
-    EncoderClass = network_definitions.encoder32
-    networks['encoder'] = EncoderClass(latent_size=latent_size)
-
-    GeneratorClass = network_definitions.generator32
-    networks['generator'] = GeneratorClass(latent_size=latent_size)
-
-    DiscrimClass = network_definitions.multiclassDiscriminator32
-    networks['discriminator'] = DiscrimClass(num_classes=num_classes, latent_size=latent_size)
-
-    ClassifierClass = network_definitions.classifier32
+    networks['encoder'] = EncoderClass(latent_size=latent_size)    
+    networks['generator'] = GeneratorClass(latent_size=latent_size)    
+    networks['discriminator'] = DiscrimClass(num_classes=num_classes, latent_size=latent_size)    
+    ClassifierClass = network_definitions.classifier32    
     networks['classifier_k'] = ClassifierClass(num_classes=num_classes, latent_size=latent_size)
     networks['classifier_kplusone'] = ClassifierClass(num_classes=num_classes, latent_size=latent_size)
 

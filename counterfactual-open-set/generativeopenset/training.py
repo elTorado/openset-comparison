@@ -9,7 +9,7 @@ from vector import make_noise
 from dataloader import FlexibleCustomDataloader
 import imutil
 import logutil
-
+from vast.tools import set_device_gpu, set_device_cpu, device
 from gradient_penalty import calc_gradient_penalty
 
 
@@ -17,6 +17,16 @@ log = logutil.TimeSeries('Training GAN')
 
 
 def train_gan(networks, optimizers, dataloader, epoch=None, **options):
+    
+    args = options
+    # setup device
+    if args['gpu'] is not None:
+        set_device_gpu(index=args['gpu'] )
+        print(" ============== GPU Selected! =============")
+    else:
+        print("No GPU device selected, training will be extremely slow")
+        set_device_cpu()
+    
     for net in networks.values():
         net.train()
     netE = networks['encoder']
@@ -30,120 +40,129 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
     result_dir = options['result_dir']
     batch_size = options['batch_size']
     latent_size = options['latent_size']
+    
+    #setup vast tools devices
+    netE = device(netE)
+    netD = device(netD)
+    netG = device(netG)
+    netC = device(netC)
 
     for i, (images, class_labels) in enumerate(dataloader):
-        images = Variable(images)
-        labels = Variable(class_labels)
-
-        #ac_scale = random.choice([1, 2, 4, 8])
-        ac_scale = 4
-        sample_scale = 4
-        ############################
-        # Discriminator Updates
-        ###########################
-        netD.zero_grad()
-
-        # Classify sampled images as fake
-        noise = make_noise(batch_size, latent_size, sample_scale)
         
-        print("size of noise: ", noise.size())
-        
-        fake_images = netG(noise, sample_scale)
-        logits = netD(fake_images)[:,0]
-        loss_fake_sampled = F.softplus(logits).mean()
-        log.collect('Discriminator Sampled', loss_fake_sampled)
-        loss_fake_sampled.backward()
+        # ONLY USE POSITIVE CLASSES - only applied when training imagenet protocols!
+        if (class_labels < 0).any():
+            images = Variable(images)
+            labels = Variable(class_labels)
 
-        """
-        # Classify autoencoded images as fake
-        more_images, more_labels = dataloader.get_batch()
-        more_images = Variable(more_images)
-        fake_images = netG(netE(more_images, ac_scale), ac_scale)
-        logits_fake = netD(fake_images)[:,0]
-        #loss_fake_ac = F.softplus(logits_fake).mean() * options['discriminator_weight']
-        loss_fake_ac = logits_fake.mean() * options['discriminator_weight']
-        log.collect('Discriminator Autoencoded', loss_fake_ac)
-        loss_fake_ac.backward()
-        """
+            #ac_scale = random.choice([1, 2, 4, 8])
+            ac_scale = 4
+            sample_scale = 4
+            ############################
+            # Discriminator Updates
+            ###########################
+            netD.zero_grad()
 
-        # Classify real examples as real
-        logits = netD(images)[:,0]
-        loss_real = F.softplus(-logits).mean() * options['discriminator_weight']
-        #loss_real = -logits.mean() * options['discriminator_weight']
-        loss_real.backward()
-        log.collect('Discriminator Real', loss_real)
-        gp = calc_gradient_penalty(netD, images.data, fake_images.data)
-        gp.backward()
-        log.collect('Gradient Penalty', gp)
+            # Classify sampled images as fake
+            noise = make_noise(batch_size, latent_size, sample_scale)
+            
+            print("size of noise: ", noise.size())
+            
+            fake_images = netG(noise, sample_scale)
+            logits = netD(fake_images)[:,0]
+            loss_fake_sampled = F.softplus(logits).mean()
+            log.collect('Discriminator Sampled', loss_fake_sampled)
+            loss_fake_sampled.backward()
 
-        optimizerD.step()
+            """
+            # Classify autoencoded images as fake
+            more_images, more_labels = dataloader.get_batch()
+            more_images = Variable(more_images)
+            fake_images = netG(netE(more_images, ac_scale), ac_scale)
+            logits_fake = netD(fake_images)[:,0]
+            #loss_fake_ac = F.softplus(logits_fake).mean() * options['discriminator_weight']
+            loss_fake_ac = logits_fake.mean() * options['discriminator_weight']
+            log.collect('Discriminator Autoencoded', loss_fake_ac)
+            loss_fake_ac.backward()
+            """
 
-        ############################
+            # Classify real examples as real
+            logits = netD(images)[:,0]
+            loss_real = F.softplus(-logits).mean() * options['discriminator_weight']
+            #loss_real = -logits.mean() * options['discriminator_weight']
+            loss_real.backward()
+            log.collect('Discriminator Real', loss_real)
+            gp = calc_gradient_penalty(netD, images.data, fake_images.data)
+            gp.backward()
+            log.collect('Gradient Penalty', gp)
 
-        ############################
-        # Generator Update
-        ###########################
-        netG.zero_grad()
+            optimizerD.step()
 
-        """
-        # Minimize fakeness of sampled images
-        noise = make_noise(batch_size, latent_size, sample_scale)
-        fake_images_sampled = netG(noise, sample_scale)
-        logits = netD(fake_images_sampled)[:,0]
-        errSampled = F.softplus(-logits).mean() * options['generator_weight']
-        errSampled.backward()
-        log.collect('Generator Sampled', errSampled)
-        """
+            ############################
 
-        # Minimize fakeness of autoencoded images
-        fake_images = netG(netE(images, ac_scale), ac_scale)
-        logits = netD(fake_images)[:,0]
-        #errG = F.softplus(-logits).mean() * options['generator_weight']
-        errG = -logits.mean() * options['generator_weight']
-        errG.backward()
-        log.collect('Generator Autoencoded', errG)
+            ############################
+            # Generator Update
+            ###########################
+            netG.zero_grad()
 
-        optimizerG.step()
+            """
+            # Minimize fakeness of sampled images
+            noise = make_noise(batch_size, latent_size, sample_scale)
+            fake_images_sampled = netG(noise, sample_scale)
+            logits = netD(fake_images_sampled)[:,0]
+            errSampled = F.softplus(-logits).mean() * options['generator_weight']
+            errSampled.backward()
+            log.collect('Generator Sampled', errSampled)
+            """
 
-        ############################
-        # Autoencoder Update
-        ###########################
-        netG.zero_grad()
-        netE.zero_grad()
+            # Minimize fakeness of autoencoded images
+            fake_images = netG(netE(images, ac_scale), ac_scale)
+            logits = netD(fake_images)[:,0]
+            #errG = F.softplus(-logits).mean() * options['generator_weight']
+            errG = -logits.mean() * options['generator_weight']
+            errG.backward()
+            log.collect('Generator Autoencoded', errG)
 
-        # Minimize reconstruction loss
-        reconstructed = netG(netE(images, ac_scale), ac_scale)
-        err_reconstruction = torch.mean(torch.abs(images - reconstructed)) * options['reconstruction_weight']
-        err_reconstruction.backward()
-        log.collect('Pixel Reconstruction Loss', err_reconstruction)
+            optimizerG.step()
 
-        optimizerE.step()
-        optimizerG.step()
-        ###########################
+            ############################
+            # Autoencoder Update
+            ###########################
+            netG.zero_grad()
+            netE.zero_grad()
 
-        ############################
-        # Classifier Update
-        ############################
-        netC.zero_grad()
+            # Minimize reconstruction loss
+            reconstructed = netG(netE(images, ac_scale), ac_scale)
+            err_reconstruction = torch.mean(torch.abs(images - reconstructed)) * options['reconstruction_weight']
+            err_reconstruction.backward()
+            log.collect('Pixel Reconstruction Loss', err_reconstruction)
 
-        # Classify real examples into the correct K classes with hinge loss
-        classifier_logits = netC(images)
-        errC = F.softplus(classifier_logits * -labels).mean()
-        errC.backward()
-        log.collect('Classifier Loss', errC)
+            optimizerE.step()
+            optimizerG.step()
+            ###########################
 
-        optimizerC.step()
-        ############################
+            ############################
+            # Classifier Update
+            ############################
+            netC.zero_grad()
 
-        # Keep track of accuracy on positive-labeled examples for monitoring
-        log.collect_prediction('Classifier Accuracy', netC(images), labels)
-        #log.collect_prediction('Discriminator Accuracy, Real Data', netD(images), labels)
+            # Classify real examples into the correct K classes with hinge loss
+            classifier_logits = netC(images)
+            errC = F.softplus(classifier_logits * -labels).mean()
+            errC.backward()
+            log.collect('Classifier Loss', errC)
 
-        log.print_every()
+            optimizerC.step()
+            ############################
 
-        if i % 100 == 1:
-            fixed_noise = make_noise(batch_size, latent_size, sample_scale, fixed_seed=42)
-            # demo(networks, images, fixed_noise, ac_scale, sample_scale, result_dir, epoch, i)
+            # Keep track of accuracy on positive-labeled examples for monitoring
+            log.collect_prediction('Classifier Accuracy', netC(images), labels)
+            #log.collect_prediction('Discriminator Accuracy, Real Data', netD(images), labels)
+
+            log.print_every()
+
+            if i % 100 == 1:
+                fixed_noise = make_noise(batch_size, latent_size, sample_scale, fixed_seed=42)
+                # demo(networks, images, fixed_noise, ac_scale, sample_scale, result_dir, epoch, i)
     return True
 
 

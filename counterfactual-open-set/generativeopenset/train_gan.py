@@ -9,7 +9,7 @@ parser.add_argument('--result_dir', help='Output directory for images and model 
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train for [default: 10]')
 parser.add_argument('--aux_dataset', help='Path to aux_dataset file [default: None]')
 parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
-parser.add_argument('--dataset', type=str, required=True, help='dataset')
+parser.add_argument('--dataset_name', type=str, required=True, help='name of the dataset')
 
 options = vars(parser.parse_args())
 

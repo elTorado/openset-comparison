@@ -10,7 +10,7 @@ def make_noise(batch_size, latent_size, scale, fixed_seed=None):
     if fixed_seed is not None:
         seed(fixed_seed)
     noise_t.normal_(0, 1)
-    noise = Variable(noise_t).cuda()
+    noise = Variable(noise_t)
     result = clamp_to_unit_sphere(noise, scale**2)
     if fixed_seed is not None:
         seed(int(time.time()))

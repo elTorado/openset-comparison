@@ -51,12 +51,23 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
         
         # ONLY USE POSITIVE CLASSES - only applied when training imagenet protocols!
         if (class_labels < 0).any():
+            
+            log.collect("Current Epoch: ", epoch)
+            
+            images = device(images)
+            labels = device(class_labels)
+            
             images = Variable(images)
             labels = Variable(class_labels)
 
-            #ac_scale = random.choice([1, 2, 4, 8])
-            ac_scale = 4
-            sample_scale = 4
+            if options["dataset_name"] == "imagenet":
+                ac_scale = 1
+                sample_scale = 1
+                
+            else:
+                ac_scale = 4
+                sample_scale = 4
+                
             ############################
             # Discriminator Updates
             ###########################
@@ -64,10 +75,10 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
 
             # Classify sampled images as fake
             noise = make_noise(batch_size, latent_size, sample_scale)
-            
-            print("size of noise: ", noise.size())
+            noise = device(noise)
             
             fake_images = netG(noise, sample_scale)
+            
             logits = netD(fake_images)[:,0]
             loss_fake_sampled = F.softplus(logits).mean()
             log.collect('Discriminator Sampled', loss_fake_sampled)

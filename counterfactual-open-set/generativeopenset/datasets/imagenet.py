@@ -1,23 +1,25 @@
 import os
 import numpy as np
 import json
-from tqdm import tqdm
 from PIL import Image
-from scipy import io as sio
-import gzip
-import struct
-import csv
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from PIL import Image
 import torch
 from torch.utils.data.dataset import Dataset
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--protocol', type=str, required=True, help='protocol, can be 1, 2, or 3')
+
+options = vars(parser.parse_args())
 
 
 ##### CONVERT IMAGENT PROTOCOL CSV FILES INTO .DATASET FILES FOR GAN TRAINING 
 ##### EACH ROW IN PROTOCOL IS TRANSFORMED INTO DICT WITH FILENAME / FOLD / LABEL
-##### TRAN AND VAL DATA IS COMBINED INTO ONE SINGLE FILE 
+##### TRAN AND TEST DATA IS COMBINED INTO ONE SINGLE FILE 
 
 
 _DATA_DIR = '/home/user/heizmann/data/'
@@ -25,7 +27,8 @@ DATA_DIR = 'local/scratch/datasets/ImageNet/ILSVRC2012/'
 
 
 """ Code based on: Bhoumik, A. (2021). Open-set Classification on ImageNet."""
-
+def transform(img):
+    return img.permute(0, 3, 1,2)
 
 class ImagenetDataset(Dataset):
     """ Imagenet Dataset. """
@@ -108,19 +111,19 @@ class ImagenetDataset(Dataset):
     def create_gan_training_splits(self):
         start_val_index = int(len(self) * 0.8)  # Calculate index for 20% validation split
         
-        with open('imagenet.dataset', 'w') as file: 
+        with open("imagenet_p"+options["protocol"]+".dataset", 'w') as file: 
             for i in range(len(self)):
                 jpeg_path, label = self.dataset.iloc[i]
-                # Determine whether the entry should be 'train' or 'val'
+                # Determine whether the entry should be 'train' or 'test'
                 entry = {
                     "filename": jpeg_path,
-                    "fold": "val" if i >= start_val_index else "train",
+                    "fold": "test" if i >= start_val_index else "train",
                     "label": int(label)
                 }
                 if label >= 0:
                     file.write(json.dumps(entry, sort_keys=True) + '\n')
 
 if __name__ == '__main__':
-    #imagenet = ImagenetDataset(csv_file="/home/deanheizmann/masterthesis/openset-imagenet/protocols/p1_train.csv", imagenet_path="som
-    imagenet = ImagenetDataset(csv_file="/home/user/heizmann/openset-comparison/protocols/p1_train.csv", imagenet_path=DATA_DIR)
+    #imagenet = ImagenetDataset(csv_file="/home/deanheizmann/masterthesis/openset-imagenet/protocols/p2_train.csv", imagenet_path=DATA_DIR)
+    imagenet = ImagenetDataset(csv_file="/home/user/heizmann/openset-comparison/protocols/p"+options["protocol"]+"_train.csv", imagenet_path=DATA_DIR)
     imagenet.create_gan_training_splits()

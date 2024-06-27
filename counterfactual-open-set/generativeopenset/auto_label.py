@@ -84,7 +84,7 @@ errorcount = 0
 
 
 if options["dataset"] == "emnnist":
-    for filename in ls('trajectories/counterfactual', '.npy'):
+    for filename in ls('trajectories/emnist/counterfactual', '.npy'):
         grid = grid_from_filename(filename)
         
         for image in grid:
@@ -99,7 +99,7 @@ if options["dataset"] == "emnnist":
 
 # different to emnist, imagenet are already present as lone images
 elif options["dataset"] == "imagenet":
-    for filename in ls('trajectories/arpl', '.jpg'):
+    for filename in ls('trajectories/imagenet/counterfactual', '.jpg'):
         try:
             if not "grid" in filename:
                 examples.append({

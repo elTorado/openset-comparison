@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser()
 #parser.add_argument('--label', type=str, help='Label to assign to each item')
 parser.add_argument('--result_dir', help='Result directory')
 parser.add_argument('--output_filename', required=True, help='Output .dataset filename')
+parser.add_argument('--dataset', required=True, help='dataset of which images are processed')
 
 
 options = vars(parser.parse_args())

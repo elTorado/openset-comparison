@@ -174,9 +174,9 @@ def make_video_filename(result_dir, dataloader, start_class, target_class, datas
     
     subdirectory = ""
     if dataset == "emnist":
-        subdirectory = "trajectories/emnist"
+        subdirectory = "trajectories/emnist/counterfactual"
     elif dataset == "imagenet":
-        subdirectory = "trajectories/imagenet"
+        subdirectory = "trajectories/imagenet/counterfactual"
     
     video_filename = os.path.join(subdirectory, video_filename)
     video_filename = os.path.join(result_dir, video_filename)

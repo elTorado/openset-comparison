@@ -155,7 +155,7 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
             ############################
             # Classifier Update
             ############################
-            '''
+            
             netC.zero_grad()
                     
             # Classify real examples into the correct K classes with hinge loss
@@ -168,7 +168,7 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
             log.collect('Classifier Loss', errC)
 
             optimizerC.step()
-            '''
+            
             ############################
 
             # Keep track of accuracy on positive-labeled examples for monitoring

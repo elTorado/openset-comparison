@@ -114,6 +114,11 @@ def generate_counterfactual_column(networks, start_images, target_class, **optio
     distance_weight = options['cf_distance_weight']
     gan_scale = options['cf_gan_scale']
     cf_batch_size = len(start_images)
+    
+    # hardcode this for the moment, for greyscale gan_scale is 4
+    if options["dataset_name"] == "imagenet":
+        gan_scale = 1
+    
 
     # Start with the latent encodings
     z_value = to_np(netE(start_images, gan_scale))

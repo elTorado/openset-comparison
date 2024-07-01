@@ -57,7 +57,7 @@ def generate_counterfactual(networks, dataloader, **options):
 
     images = np.array(images).transpose((0,2,3,1)) #re order dimensions for saving or displaying
     dummy_class = 0
-    video_filename = make_video_filename(result_dir, dataloader, dummy_class, dummy_class, label_type='grid')
+    video_filename = make_video_filename(result_dir, dataloader, dummy_class, dummy_class, dataset=options["dataset_name"],  label_type='grid')
 
     # Save the images in npy/jpg format as input for the labeling system
     trajectory_filename = video_filename.replace('.mjpeg', '.npy')
@@ -88,7 +88,7 @@ def generate_open_set(networks, dataloader, **options):
     images = np.array(images).transpose((0,2,3,1))
 
     dummy_class = 0
-    video_filename = make_video_filename(result_dir, dataloader, dummy_class, dummy_class, dataset=options["dataset"], label_type='grid')
+    video_filename = make_video_filename(result_dir, dataloader, dummy_class, dummy_class, dataset=options["dataset_name"], label_type='grid')
 
     # Save the images in npy/jpg format as input for the labeling system
     trajectory_filename = video_filename.replace('.mjpeg', '.npy')

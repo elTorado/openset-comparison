@@ -9,8 +9,6 @@ from imutil import ensure_directory_exists
 def build_networks(num_classes, epoch=None, latent_size=10, batch_size=64, **options):
     networks = {}
     
-    print(options)
-    
     if options["dataset_name"] == "emnist":
         EncoderClass = network_definitions.encoder32
         GeneratorClass = network_definitions.generator32

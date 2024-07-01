@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser()
 #parser.add_argument('--label', type=str, help='Label to assign to each item')
 parser.add_argument('--result_dir', help='Result directory')
 parser.add_argument('--output_filename', required=True, help='Output .dataset filename')
+parser.add_argument('--dataset_name', required=True, help='dataset')
 options = vars(parser.parse_args())
 
 # Import the rest of the project
@@ -79,7 +80,13 @@ for filename in ls('trajectories', '.npy'):
 '''
 
 examples = []
-for filename in ls('trajectories/arpl', '.jpg'):
+
+if options["dataset_name"]=="imagenet":
+    directory = 'trajectories/arpl/imagenet'
+if options["dataset_name"]=="emnist":
+    directory = 'trajectories/arpl/emnist'
+    
+for filename in ls(directory, '.jpg'):
     if not "grid" in filename:
         examples.append({
             'filename': filename,

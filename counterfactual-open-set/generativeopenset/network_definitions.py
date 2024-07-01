@@ -238,7 +238,6 @@ class encoder256(nn.Module):
         x = clamp_to_unit_sphere(x)
         return x
 
-
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -679,7 +678,11 @@ class classifier256(nn.Module):
         self.conv7 = nn.Conv2d(128,    128,     3, 1, 1, bias=False)
         self.conv8 = nn.Conv2d(128,    128,     3, 1, 1, bias=False)
         self.conv9 = nn.Conv2d(128,    128,     3, 2, 1, bias=False)
-
+        
+        self.conv10 = nn.Conv2d(128,    128,     3, 2, 1, bias=False)
+        self.conv11 = nn.Conv2d(128,    128,     3, 2, 1, bias=False)
+        self.conv12 = nn.Conv2d(128,    128,     3, 2, 1, bias=False)
+        
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(64)
         self.bn3 = nn.BatchNorm2d(128)
@@ -691,11 +694,16 @@ class classifier256(nn.Module):
         self.bn7 = nn.BatchNorm2d(128)
         self.bn8 = nn.BatchNorm2d(128)
         self.bn9 = nn.BatchNorm2d(128)
+        
+        self.bn10 = nn.BatchNorm2d(128)
+        self.bn11 = nn.BatchNorm2d(128)
+        self.bn12 = nn.BatchNorm2d(128)
 
         self.fc1 = nn.Linear(131072, num_classes)
         self.dr1 = nn.Dropout2d(0.2)
         self.dr2 = nn.Dropout2d(0.2)
         self.dr3 = nn.Dropout2d(0.2)
+        self.dr4 = nn.Dropout2d(0.2)
 
         self.apply(weights_init)
         self.cuda()
@@ -734,6 +742,17 @@ class classifier256(nn.Module):
         x = nn.LeakyReLU(0.2)(x)
         x = self.conv9(x)
         x = self.bn9(x)
+        x = nn.LeakyReLU(0.2)(x)
+        
+        x = self.dr4(x)
+        x = self.conv10(x)
+        x = self.bn10(x)
+        x = nn.LeakyReLU(0.2)(x)
+        x = self.conv11(x)
+        x = self.bn11(x)
+        x = nn.LeakyReLU(0.2)(x)
+        x = self.conv12(x)
+        x = self.bn12(x)
         x = nn.LeakyReLU(0.2)(x)
 
         x = x.view(batch_size, -1)

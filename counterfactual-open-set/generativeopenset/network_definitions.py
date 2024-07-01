@@ -699,7 +699,7 @@ class classifier256(nn.Module):
         self.bn11 = nn.BatchNorm2d(128)
         self.bn12 = nn.BatchNorm2d(128)
 
-        self.fc1 = nn.Linear(131072, num_classes)
+        self.fc1 = nn.Linear(2048, num_classes)
         self.dr1 = nn.Dropout2d(0.2)
         self.dr2 = nn.Dropout2d(0.2)
         self.dr3 = nn.Dropout2d(0.2)
@@ -758,5 +758,6 @@ class classifier256(nn.Module):
         x = x.view(batch_size, -1)
         if return_features:
             return x
+        print("SHAPE:", x.shape)
         x = self.fc1(x)
         return x

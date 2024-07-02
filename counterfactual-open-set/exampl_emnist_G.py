@@ -166,7 +166,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 random.shuffle(self.counterfactual_samples)
                 random.shuffle(self.arpl_samples)
                 
-                if self.mixed_unknowns:
+                if mixed_unknowns:
                     # letters are mixed with synthetic samples in train and validation set
                     self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
                     self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]

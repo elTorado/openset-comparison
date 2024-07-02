@@ -180,17 +180,17 @@ class Dataset(torch.utils.data.dataset.Dataset):
                         # depending on setup we will need to half or third the used letters as we want even distribution of samples for comparison
                     if include_arpl: 
                             if include_counterfactuals:
-                                self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 3))]
-                                self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 3))]
-                                self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 3))]
+                                self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 3))]
+                                self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 3))]
+                                self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 3))]
                                 
                             else:
-                                self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2))]
-                                self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 2))]
+                                self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 2))]
+                                self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 2))]
                                 
                     elif include_counterfactuals:
-                            self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2))]
-                            self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 2))]
+                            self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 2))]
+                            self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 2))]
                             print("after splitting")
                             print(type(self.counterfactual_samples))
                     

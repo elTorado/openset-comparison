@@ -76,14 +76,11 @@ def grid_from_filename(filename):
         exit()
     return grid
 
-try: train_file_path = os.path.join(DATASET_DIR, "emnist_split1.dataset")
-except: raise FileNotFoundError("Could not access emnist_split1.dataset at " + DATASET_DIR)
-
 examples = []
 errorcount = 0
 
 
-if options["dataset"] == "emnnist":
+if options["dataset"] == "emnist":
     print("CREATING EMNIST - COUNTERFACTUAL DATASET FILE")
     grids = 0
     images = 0

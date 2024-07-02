@@ -84,21 +84,31 @@ errorcount = 0
 
 
 if options["dataset"] == "emnnist":
-    for filename in ls('trajectories/emnist/counterfactual', '.npy'):
+    print("CREATING EMNIST - COUNTERFACTUAL DATASET FILE")
+    grids = 0
+    images = 0
+    for filename in ls('trajectories/emnist/counterfactual/', '.npy'):
+        grids += 1
         grid = grid_from_filename(filename)
         
         for image in grid:
+            
             try:
                 saved_filename = save_image(image)  
                 examples.append({
                     'filename': saved_filename,
                     'label': -1,
                 })
+                images += 1
             except Exception as e:  
                 errorcount += 1  # Increment error count if an error occurs (if e.g. grid dimenssion are unexpected - might happen when e.g. last batch is not as large as others)
+    print("GRIDS FOUND: ", grids)
+    print("IMAGES ADDED: ", images)
 
 # different to emnist, imagenet are already present as lone images
 elif options["dataset"] == "imagenet":
+    print("CREATING IMAGENET - COUNTERFACTUAL DATASET FILE")
+    images = 0
     for filename in ls('trajectories/imagenet/counterfactual', '.jpg'):
         try:
             if not "grid" in filename:
@@ -106,9 +116,10 @@ elif options["dataset"] == "imagenet":
                     'filename': filename,
                     'label': -1,
                 })
+                images += 1
         except Exception as e:  
                 errorcount += 1 
-                
+    print("IMAGES ADDED: ", images)
 
 print(f"Total errors encountered: {errorcount}")
 

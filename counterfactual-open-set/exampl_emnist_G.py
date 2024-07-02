@@ -205,10 +205,10 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     elif which_set == "val":
                         if include_arpl:
                             if include_counterfactuals:
-                                split_index = math.ceil(self.nr_letters * 2 / 3)
-                                self.letter_indexes = self.letter_indexes[split_index:]
-                                self.counterfactual_samples = self.counterfactual_samples[split_index:]
-                                self.arpl_samples = self.arpl_samples[split_index:]
+                                split_index = math.ceil(self.nr_letters // 3)
+                                self.letter_indexes = self.letter_indexes[-split_index:]
+                                self.counterfactual_samples = self.counterfactual_samples[-split_index:]
+                                self.arpl_samples = self.arpl_samples[-split_index:]
                             else:
                                 split_index = math.ceil(self.nr_letters / 2)
                                 self.letter_indexes = self.letter_indexes[split_index:]

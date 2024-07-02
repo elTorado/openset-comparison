@@ -600,7 +600,7 @@ def get_experiment_suffix(args):
     if args.mixed_unknowns:
         suffix += "_mixed"
         letters = False
-    if args.include_unknown:
+    if not args.include_unknown:
         suffix += "no_negatives"
         letters = False
     if letters:

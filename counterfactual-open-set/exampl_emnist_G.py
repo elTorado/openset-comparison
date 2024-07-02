@@ -152,6 +152,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         print("- - - - - - - - - - - - - - - - - - - - ", end='\n')
         
         if include_unknown:
+            print("TRAINING WITH UNKNOWNS")
             # check if synthtic samples are included
             if self.includes_synthetic_samples: 
                 

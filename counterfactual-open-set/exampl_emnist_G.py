@@ -185,39 +185,38 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     '''
                     self.nr_letters = len(self.letter_indexes)    
                         # depending on setup we will need to half or third the used letters as we want even distribution of samples for comparison
+                        
                     if which_set == "train":
-                        if include_arpl: 
-                                if include_counterfactuals:
-                                    self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 3))]
-                                    self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 3))]
-                                    self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 3))]
-                                    
-                                else:
-                                    self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 2))]
-                                    self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 2))]
-                                    
+                        if include_arpl:
+                            if include_counterfactuals:
+                                split_index = math.ceil(self.nr_letters // 3)
+                                self.letter_indexes = self.letter_indexes[:split_index]
+                                self.counterfactual_samples = self.counterfactual_samples[:split_index]
+                                self.arpl_samples = self.arpl_samples[:split_index]
+                            else:
+                                split_index = math.ceil(self.nr_letters // 2)
+                                self.letter_indexes = self.letter_indexes[:split_index]
+                                self.arpl_samples = self.arpl_samples[:split_index]
                         elif include_counterfactuals:
-                                self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 2))]
-                                self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 2))]
-                                print("after splitting")
-                                print(type(self.counterfactual_samples))
-                                
+                            split_index = math.ceil(self.nr_letters // 2)
+                            self.letter_indexes = self.letter_indexes[:split_index]
+                            self.counterfactual_samples = self.counterfactual_samples[:split_index]
+
                     elif which_set == "val":
-                        if include_arpl: 
-                                if include_counterfactuals:
-                                    self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 3)):]
-                                    self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 3)):]
-                                    self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 3)):]
-                                    
-                                else:
-                                    self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2)):]
-                                    self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 2)):]
-                                    
+                        if include_arpl:
+                            if include_counterfactuals:
+                                split_index = math.ceil(self.nr_letters * 2 / 3)
+                                self.letter_indexes = self.letter_indexes[split_index:]
+                                self.counterfactual_samples = self.counterfactual_samples[split_index:]
+                                self.arpl_samples = self.arpl_samples[split_index:]
+                            else:
+                                split_index = math.ceil(self.nr_letters / 2)
+                                self.letter_indexes = self.letter_indexes[split_index:]
+                                self.arpl_samples = self.arpl_samples[split_index:]
                         elif include_counterfactuals:
-                                self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2)):]
-                                self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 2)):]
-                                print("after splitting")
-                                print(type(self.counterfactual_samples))
+                            split_index = math.ceil(self.nr_letters / 2)
+                            self.letter_indexes = self.letter_indexes[split_index:]
+                            self.counterfactual_samples = self.counterfactual_samples[split_index:]
                                 
                         
                         
@@ -248,7 +247,6 @@ class Dataset(torch.utils.data.dataset.Dataset):
              '''               
              
             # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
-            print(type(self.counterfactual_samples))
             self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
         
         # shuffle it too for good measures:

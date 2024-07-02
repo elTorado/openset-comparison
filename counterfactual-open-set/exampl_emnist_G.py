@@ -169,10 +169,6 @@ class Dataset(torch.utils.data.dataset.Dataset):
                         self.arpl_samples = self.arpl_samples[:math.ceil((usual_nr_negatives // 2))]
                 elif include_counterfactuals:
                     self.counterfactual_samples = self.load_counterfactuals()
-
-                
-                random.shuffle(self.counterfactual_samples)
-                random.shuffle(self.arpl_samples)
                 
                 if mixed_unknowns:
                     # letters are mixed with synthetic samples in train and validation set
@@ -250,8 +246,6 @@ class Dataset(torch.utils.data.dataset.Dataset):
             # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
             self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
         
-        # shuffle it too for good measures:
-        random.shuffle(self.synthetic_samples)
         
         
   

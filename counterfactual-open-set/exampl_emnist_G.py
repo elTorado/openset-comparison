@@ -154,16 +154,21 @@ class Dataset(torch.utils.data.dataset.Dataset):
         if include_unknown:
             # check if synthtic samples are included
             if self.includes_synthetic_samples: 
-                        
+                
+                # only used for splitting purposes. We want the same amount of synthetic samples, as usually letters are used
+                dummy_targets,_ = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
+                dummy_indexes = [i for i, t in enumerate(self.letters.dummy_targets) if t in dummy_targets]
+                usual_nr_negatives = len(dummy_indexes)    
+                
                 # fill synthetic samples list with samples, test set does not include synthetic samples
                 if include_arpl:
                     self.arpl_samples = self.load_arpl()
                     if include_counterfactuals:
-                        self.counterfactual_samples = self.load_counterfactuals()
+                        self.counterfactual_samples = self.load_counterfactuals()[:math.ceil((usual_nr_negatives // 2))]
+                        self.arpl_samples = self.arpl_samples[:math.ceil((usual_nr_negatives // 2))]
                 elif include_counterfactuals:
                     self.counterfactual_samples = self.load_counterfactuals()
-                    print("after loading")
-                    print(type(self.counterfactual_samples))
+
                 
                 random.shuffle(self.counterfactual_samples)
                 random.shuffle(self.arpl_samples)
@@ -266,6 +271,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
     '''        
     def load_counterfactuals(self, data_path=GENERATED_COUNTERFACTUALS_DIR):
         
+        print("LOADEING COUNTERFACTUAL IMAGES")
+        
         samples = []
         counter = 0
         # Read the whole file at once
@@ -309,6 +316,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
         Return: A list with image tensors and labels (-1)
     ''' 
     def load_arpl(self, data_path = GENERATED_ARPL_DIR):
+        
+        print("LOADEING ARPL IMAGES")
+        
         samples = []
         counter = 0
         # Read the whole file at once

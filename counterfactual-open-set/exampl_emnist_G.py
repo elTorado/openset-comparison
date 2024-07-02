@@ -226,6 +226,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
                 self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
                 
+            '''                
             # Calculate the indices for splitting, # 80% for training   , 20% for Validation
             split_index_cf = int(0.8 * len(self.counterfactual_samples))  
             split_index_arpl = int(0.8 * len(self.arpl_samples))   
@@ -239,7 +240,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 # Take the last 20% of the samples for validation
                 self.counterfactual_samples = self.counterfactual_samples[split_index_cf:]
                 self.arpl_samples = self.arpl_samples[split_index_arpl:]
-                
+             '''               
+             
             # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
             print(type(self.counterfactual_samples))
             self.synthetic_samples = self.arpl_samples + self.counterfactual_samples

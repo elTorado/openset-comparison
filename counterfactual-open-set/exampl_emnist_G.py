@@ -215,6 +215,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 self.arpl_samples = self.arpl_samples[split_index_arpl:]
                 
             # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
+            print(type(self.arpl_samples))
+            print(type(self.counterfactual_samples))
             self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
         
         # shuffle it too for good measures:
@@ -757,9 +759,6 @@ def evaluate(args):
     val_dataset = Dataset(args,  args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
     test_dataset = Dataset(args, args.dataset_root, which_set="test")
 
-    eval_metrics = defaultdict(AverageMeter)
-    v_metrics = defaultdict(AverageMeter)
-
     num_classes = len(val_dataset.classes)
 
     # create data loaders
@@ -783,6 +782,8 @@ def evaluate(args):
     
     # create model
     suffix = get_experiment_suffix(args=args)
+    
+    # Result dir in "LeNet"
     results_dir = pathlib.Path(f"{args.arch}")
     model_path = f"{results_dir}/{suffix}.pth"
 
@@ -840,17 +841,7 @@ def evaluate(args):
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
 
 
-
-""" Saves a training checkpoint.
-
-    Args:
-        f_name(str): File name.
-        model(torch module): Pytorch model.
-        epoch(int): Current epoch.
-        opt(torch optimizer): Current optimizer.
-        best_score_(float): Current best score.
-        scheduler(torch lr_scheduler): Pytorch scheduler.
-"""    
+   
 def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
     
     # Create directory if it does not exist

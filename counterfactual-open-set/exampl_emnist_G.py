@@ -173,27 +173,49 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
                     self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
                     
+                    '''
                     # shuffle the indices as we will need splits
                     random.shuffle(self.letter_indexes)
                     self.nr_letters = len(self.letter_indexes)
+                    '''
                         
                         # depending on setup we will need to half or third the used letters as we want even distribution of samples for comparison
-                    if include_arpl: 
-                            if include_counterfactuals:
-                                self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 3))]
-                                self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 3))]
-                                self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 3))]
-                                
-                            else:
+                    if which_set == "train":
+                        if include_arpl: 
+                                if include_counterfactuals:
+                                    self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 3))]
+                                    self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 3))]
+                                    self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 3))]
+                                    
+                                else:
+                                    self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 2))]
+                                    self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 2))]
+                                    
+                        elif include_counterfactuals:
                                 self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 2))]
-                                self.arpl_samples = self.arpl_samples[:math.ceil((self.nr_letters // 2))]
+                                self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 2))]
+                                print("after splitting")
+                                print(type(self.counterfactual_samples))
                                 
-                    elif include_counterfactuals:
-                            self.letter_indexes = self.letter_indexes[:math.ceil((self.nr_letters // 2))]
-                            self.counterfactual_samples = self.counterfactual_samples[:math.ceil((self.nr_letters // 2))]
-                            print("after splitting")
-                            print(type(self.counterfactual_samples))
-                    
+                    elif which_set == "val":
+                        if include_arpl: 
+                                if include_counterfactuals:
+                                    self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 3)):]
+                                    self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 3)):]
+                                    self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 3)):]
+                                    
+                                else:
+                                    self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2)):]
+                                    self.arpl_samples = self.arpl_samples[math.ceil((self.nr_letters // 2)):]
+                                    
+                        elif include_counterfactuals:
+                                self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2)):]
+                                self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 2)):]
+                                print("after splitting")
+                                print(type(self.counterfactual_samples))
+                                
+                        
+                        
                 else: 
                     self.targets, self.which_letters = (list(), "None") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
                     self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]

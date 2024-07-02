@@ -50,7 +50,7 @@ examples = []
 if options["dataset_name"]=="imagenet":
     directory = 'trajectories/imagenet/arpl'
 if options["dataset_name"]=="emnist":
-    directory = 'trajectories/emnist/emnist'
+    directory = 'trajectories/emnist/arpl'
 
 images = 0
 for filename in ls(directory, '.jpg'):

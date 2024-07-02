@@ -600,6 +600,8 @@ def get_experiment_suffix(args):
         letters = False
     if letters:
         suffix += "_letters"
+    if args.include_unknown:
+        suffix += "no_negatives"
     return suffix
 
 def training(args): 
@@ -824,6 +826,7 @@ def evaluate(args):
 
     net = architectures.LeNet(num_classes=num_classes)
     start_epoch, best_score = load_checkpoint(net, model_path)
+    print(f"Taking model: {model_path}")
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     net = tools.device(net)
 
@@ -858,9 +861,6 @@ def evaluate(args):
         loader=test_loader,
         dataset= "TEST"
     )
-    
-    print("VALIDATION TARGETS:", val_targets[:10], test_targets[-10:], np.unique(val_targets))
-    print("TEST TARGETS:", val_targets[:10], test_targets[-10:], np.unique(val_targets))
     
     # Print summary statistics for test data
     print(f"Number of test samples: {len(test_targets)}")

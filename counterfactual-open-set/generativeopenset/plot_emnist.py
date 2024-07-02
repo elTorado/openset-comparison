@@ -153,10 +153,7 @@ def plot_OSCR(args, scores):
   ############ FINAL PREPARATIONS ##############
   val = [scores[protocol]["EOS"]["val"]]
   test = [scores[protocol]["EOS"]["test"]]
-  
-  print(val)
-  print(test)
-  
+    
   red = cm.get_cmap('tab10', 10).colors[3]
   blue = cm.get_cmap('tab10', 10).colors[0]
   

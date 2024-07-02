@@ -156,9 +156,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
             if self.includes_synthetic_samples: 
                 
                 # only used for splitting purposes. We want the same amount of synthetic samples, as usually letters are used
-                dummy_targets,_ = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
-                dummy_indexes = [i for i, t in enumerate(self.letters.dummy_targets) if t in dummy_targets]
-                usual_nr_negatives = len(dummy_indexes)    
+                self.dummy_targets,_ = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
+                self.dummy_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.dummy_targets]
+                usual_nr_negatives = len(self.dummy_indexes)    
                 
                 # fill synthetic samples list with samples, test set does not include synthetic samples
                 if include_arpl:

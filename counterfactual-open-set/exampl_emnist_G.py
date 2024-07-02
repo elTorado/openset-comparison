@@ -176,9 +176,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     '''
                     # shuffle the indices as we will need splits
                     random.shuffle(self.letter_indexes)
-                    self.nr_letters = len(self.letter_indexes)
+                    
                     '''
-                        
+                    self.nr_letters = len(self.letter_indexes)    
                         # depending on setup we will need to half or third the used letters as we want even distribution of samples for comparison
                     if which_set == "train":
                         if include_arpl: 

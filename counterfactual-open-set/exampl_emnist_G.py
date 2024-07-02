@@ -598,10 +598,12 @@ def get_experiment_suffix(args):
     if args.mixed_unknowns:
         suffix += "_mixed"
         letters = False
-    if letters:
-        suffix += "_letters"
     if args.include_unknown:
         suffix += "no_negatives"
+        letters = False
+    if letters:
+        suffix += "_letters"
+
     return suffix
 
 def training(args): 

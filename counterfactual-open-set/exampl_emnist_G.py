@@ -798,7 +798,8 @@ def evaluate(args):
 
     num_classes = len(val_dataset.classes)
     if args.include_unknown:
-        num_classes -= 1
+        print(" MODEL IS NOT TRAINED ON NEGATIVES ")
+        num_classes = num_classes - 1 
 
     # create data loaders
     val_loader = torch.utils.data.DataLoader(

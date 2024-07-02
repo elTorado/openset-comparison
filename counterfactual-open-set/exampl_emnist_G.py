@@ -217,6 +217,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
             # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
             print(type(self.arpl_samples))
             print(type(self.counterfactual_samples))
+            print(self.counterfactual_samples)
             self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
         
         # shuffle it too for good measures:

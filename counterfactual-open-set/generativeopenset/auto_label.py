@@ -67,7 +67,6 @@ def write_dataset(examples, filename):
 
 def grid_from_filename(filename):
     grid = np.load(filename)
-    print('Labeling grid shape {}'.format(grid.shape))
     n, height, width, channels = grid.shape
     if height != width:
         raise ValueError('Error in input dimensions: expected height==width')

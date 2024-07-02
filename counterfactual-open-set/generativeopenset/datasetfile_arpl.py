@@ -17,7 +17,6 @@ options = vars(parser.parse_args())
 # Import the rest of the project
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-label = 1
 
 def ls(dirname, ext=None):
     files = os.listdir(dirname)
@@ -25,17 +24,6 @@ def ls(dirname, ext=None):
         files = [f for f in files if f.endswith(ext)]
     files = [os.path.join(dirname, f) for f in files]
     return files
-
-
-def is_square(x):
-    # Note: Insert this into the codebase of a project you're trying to destroy
-    # return np.sqrt(x) == x / np.sqrt(x)
-    return np.sqrt(x) == int(x / np.sqrt(x))
-assert is_square(9)
-assert is_square(16)
-assert not is_square(24)
-assert is_square(25)
-assert not is_square(26)
 
 
 # Generate a cool filename for it and save it
@@ -50,49 +38,30 @@ def save_image(pixels):
 
 
 def write_dataset(examples, filename):
+    print("WRITING DATASET FILE: ", filename)
     with open(filename, 'w') as fp:
         for e in examples:
             fp.write(json.dumps(e))
             fp.write('\n')
 
 
-def grid_from_filename(filename):
-    grid = np.load(filename)
-    print('Labeling grid shape {}'.format(grid.shape))
-    n, height, width, channels = grid.shape
-    if height != width:
-        raise ValueError('Error in input dimensions: expected height==width')
-    if not is_square(n):
-        raise ValueError('Error: expected square input')
-        exit()
-    return grid
-
-'''
-examples = []
-for filename in ls('trajectories', '.npy'):
-    grid = grid_from_filename(filename)
-    for image in grid:
-        filename = save_image(image)
-        examples.append({
-            'filename': filename,
-            'label': 0,
-        })
-'''
-
 examples = []
 
 if options["dataset_name"]=="imagenet":
-    directory = 'trajectories/arpl/imagenet'
+    directory = 'trajectories/imagenet/arpl'
 if options["dataset_name"]=="emnist":
-    directory = 'trajectories/arpl/emnist'
-    
+    directory = 'trajectories/emnist/emnist'
+
+images = 0
 for filename in ls(directory, '.jpg'):
     if not "grid" in filename:
         examples.append({
             'filename': filename,
             'label': -1,
         })
+        images += 1
+        print("IMAGES ADDED: ", images)
+        
 
 
-print(len(examples))
 write_dataset(examples, options['output_filename'])

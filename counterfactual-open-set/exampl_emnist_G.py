@@ -797,6 +797,7 @@ def evaluate(args):
     test_dataset = Dataset(args, args.dataset_root, which_set="test")
 
     num_classes = len(val_dataset.classes)
+    print("Number of classes in validation dataset:", num_classes)
     
     '''
     if args.include_unknown:
@@ -825,14 +826,15 @@ def evaluate(args):
     
     # create model
     suffix = get_experiment_suffix(args=args)
+    print("Experiment suffix:", suffix)
     
     # Result dir in "LeNet"
     results_dir = pathlib.Path(f"{args.arch}")
     model_path = f"{results_dir}/{suffix}.pth"
+    print("Model path:", model_path)
 
     net = architectures.LeNet(num_classes=num_classes)
     start_epoch, best_score = load_checkpoint(net, model_path)
-    print(f"Taking model: {model_path}")
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     net = tools.device(net)
 

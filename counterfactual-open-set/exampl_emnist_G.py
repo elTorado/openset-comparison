@@ -589,6 +589,7 @@ def get_loss_functions(args):
 def get_experiment_suffix(args):
     suffix = ""
     letters = True
+    print(args)
     if args.include_counterfactuals:
         suffix += "_counterfactuals"
         letters = False

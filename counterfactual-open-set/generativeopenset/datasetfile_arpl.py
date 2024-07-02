@@ -60,7 +60,7 @@ for filename in ls(directory, '.jpg'):
             'label': -1,
         })
         images += 1
-        print("IMAGES ADDED: ", images)
+    print("IMAGES ADDED: ", images)
         
 
 

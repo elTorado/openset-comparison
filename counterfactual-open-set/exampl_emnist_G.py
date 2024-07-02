@@ -28,7 +28,7 @@ import math
 DATA_DIR = '/home/user/heizmann/data/'
 
 #created by grid labeler
-GENERATED_COUNTERFACTUALS_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/generated_images_counterfactual.dataset"
+GENERATED_COUNTERFACTUALS_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/emnist_counterfactual.dataset"
 GENERATED_ARPL_DIR = "/home/user/heizmann/openset-comparison/counterfactual-open-set/emnist_arpl.dataset"
 
 #Local

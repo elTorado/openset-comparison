@@ -162,6 +162,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
                         self.counterfactual_samples = self.load_counterfactuals()
                 elif include_counterfactuals:
                     self.counterfactual_samples = self.load_counterfactuals()
+                    print("after loading")
+                    print(type(self.counterfactual_samples))
                 
                 random.shuffle(self.counterfactual_samples)
                 random.shuffle(self.arpl_samples)
@@ -189,6 +191,8 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     elif include_counterfactuals:
                             self.letter_indexes = self.letter_indexes[math.ceil((self.nr_letters // 2))]
                             self.counterfactual_samples = self.counterfactual_samples[math.ceil((self.nr_letters // 2))]
+                            print("after splitting")
+                            print(type(self.counterfactual_samples))
                     
                 else: 
                     self.targets, self.which_letters = (list(), "None") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
@@ -215,9 +219,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
                 self.arpl_samples = self.arpl_samples[split_index_arpl:]
                 
             # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
-            print(type(self.arpl_samples))
             print(type(self.counterfactual_samples))
-            print(self.counterfactual_samples)
             self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
         
         # shuffle it too for good measures:

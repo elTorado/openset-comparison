@@ -797,6 +797,8 @@ def evaluate(args):
     test_dataset = Dataset(args, args.dataset_root, which_set="test")
 
     num_classes = len(val_dataset.classes)
+    if args.include_unknown:
+        num_classes -= 1
 
     # create data loaders
     val_loader = torch.utils.data.DataLoader(

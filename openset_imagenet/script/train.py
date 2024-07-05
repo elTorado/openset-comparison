@@ -11,7 +11,8 @@ def get_args(command_line_options = None):
     Returns:
         parser: arguments structure
     """
-    parser = argparse.ArgumentParser("Imagenet Training Parameters", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser("Imagenet Training Parameters",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "configuration",
         type = pathlib.Path,
@@ -44,6 +45,23 @@ def get_args(command_line_options = None):
         default = 20,
         help = "Select Priority Level"
     )
+    
+    parser.add_argument(
+        "--include_counterfactuals", "-inc_c",
+        type=bool, default=False, 
+        dest="include_counterfactuals",
+        help="Include counterfactual images in the dataset")
+    
+    parser.add_argument("--include_arpl", "-inc_a",
+                        type=bool, default=False,
+                        dest="include_arpl", 
+                        help="Include ARPL samples in the dataset")
+    
+    parser.add_argument("--mixed_unknowns", "-mu",
+                        type=bool, default=False,
+                        dest="mixed_unknowns",
+                        help="Mix unknown samples in the dataset")
+    
 
     args = parser.parse_args(command_line_options)
 
@@ -54,11 +72,15 @@ def get_args(command_line_options = None):
 def main(command_line_options = None):
 
     args = get_args(command_line_options)
+
     config = openset_imagenet.util.load_yaml(args.configuration)
     if args.gpu:
         config.gpu = args.gpu
     config.protocol = args.protocol
     config.output_directory = args.output_directory
+    config.include_counterfactuals = args.include_counterfactuals
+    config.include_arpl = args.include_arpl
+    config.mixed_unknowns = args.mixed_unknowns
 
     openset_imagenet.train.worker(config)
 

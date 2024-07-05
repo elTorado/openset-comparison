@@ -68,11 +68,14 @@ def write_dataset(examples, filename):
 def grid_from_filename(filename):
     grid = np.load(filename)
     n, height, width, channels = grid.shape
+    
+    '''
     if height != width:
         raise ValueError('Error in input dimensions: expected height==width')
     if not is_square(n):
         raise ValueError('Error: expected square input')
         exit()
+    '''
     return grid
 
 examples = []

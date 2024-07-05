@@ -639,6 +639,8 @@ def training(args):
     val_data_loader = torch.utils.data.DataLoader(
         validation_data,
         batch_size=args.Batch_Size,
+        shuffle=True,
+        num_workers=5,
         pin_memory=True
     )
     
@@ -880,7 +882,6 @@ def evaluate(args):
     file_path = directory / f"test_{get_experiment_suffix(args=args)}.npz"
     np.savez(file_path, gt=test_targets, logits=logits, features=test_features, scores=scores)
     print(f"Target labels, logits, features, and scores saved in: {file_path}")
-
 
    
 def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):

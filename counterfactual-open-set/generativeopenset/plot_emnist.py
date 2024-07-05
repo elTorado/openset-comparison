@@ -133,7 +133,6 @@ def get_experiment_suffix(args):
     return [suffix]
 
   
-  
 def load_scores(args):
   
   suffixes = get_experiment_suffix(args=args)
@@ -186,10 +185,12 @@ def plot_OSCR(args, scores):
   
   args.labels = ["Val", "Test"] 
   
-  openset_imagenet.util.plot_oscr(arrays=val, methods=[args.approach], color=blue, scale=scale, title=suffix,
+  title = suffix.replace("_", " ")
+  
+  openset_imagenet.util.plot_oscr(arrays=val, methods=[args.approach], color=blue, scale=scale, title=title,
                 ax_label_font=font, ax=ax, unk_label=-1,)
   
-  openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=red, scale=scale, title=suffix,
+  openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=red, scale=scale, title=title,
                 ax_label_font=font, ax=ax, unk_label=-1,)
 
   ax.legend(args.labels, frameon=False, fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)

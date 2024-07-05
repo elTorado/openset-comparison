@@ -809,7 +809,8 @@ def evaluate(args):
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=args.Batch_Size,
-        pin_memory=True
+        pin_memory=True,
+        shuffle = True
         )
     test_loader = torch.utils.data.DataLoader(
         test_dataset,

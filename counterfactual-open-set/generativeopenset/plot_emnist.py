@@ -167,6 +167,7 @@ def load_scores(args):
 def plot_OSCR(args, scores):
   
   # default entropic openset loss, can be implemented to different losses in the future
+  print(args.approach[0])
   loss = args.approach[0]
   suffix = scores[0]
   score = scores[1]
@@ -458,7 +459,7 @@ if __name__ == "__main__":
 
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)  
-  '''
+  
   for suffix in scores.keys():
     
     print("Writing file", suffix)
@@ -488,7 +489,7 @@ if __name__ == "__main__":
 
     finally:
       pdf.close()
-  '''
+  
   if args.all:
     print("Writing Combined OSC Comparison")
     pdf = PdfPages("Combined_OSC_Comparison.pdf")

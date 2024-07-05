@@ -106,6 +106,7 @@ elif options["dataset"] == "imagenet":
     print("CREATING IMAGENET - COUNTERFACTUAL DATASET FILE")
     images = 0
     for filename in ls('trajectories/imagenet/counterfactual', '.jpg'):
+        print(filename)
         try:
             if not "grid" in filename:
                 examples.append({

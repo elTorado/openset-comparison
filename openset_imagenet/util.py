@@ -98,23 +98,32 @@ def calculate_oscr(gt, scores, unk_label=-1):
     """
     # Change the unk_label to calculate for kn_unknown or unk_unknown
     gt = gt.astype(int)
+    
+    # kn is a boolean array where True indicates known classes.
+    # unk is a boolean array where True indicates unknown classes.
     kn = gt >= 0
-
     unk = gt == unk_label
 
     # Get total number of samples of each type
     total_kn = np.sum(kn)
     total_unk = np.sum(unk)
-
     ccr, fpr = [], []
+    
+    # predicted class and max score for each sample
     pred_class = np.argmax(scores, axis=1)
     max_score = np.max(scores, axis=1)
+    
+    # array of scores of the target class for known samples.
     target_score = scores[kn][range(kn.sum()), gt[kn]]
-
+    
+    # Iterate over unique target scores (
     for tau in np.unique(target_score)[:-1]:
+        
+        # val is the proportion of correctly classified known samples with target score greater than tau
         val = ((pred_class[kn] == gt[kn]) & (target_score > tau)).sum() / total_kn
         ccr.append(val)
 
+        # here val is the proportion of unknown samples with maximum score greater than tau
         val = (unk & (max_score > tau)).sum() / total_unk
         fpr.append(val)
 
@@ -173,7 +182,7 @@ def plot_single_oscr(x, y, ax, exp_name, color, baseline, scale):
 def plot_oscr(arrays, methods, color, scale='linear', title=None, ax_label_font=13,
               ax=None, unk_label=-1):
     
-    print("================ plot_oscr called !! =================")
+    print("================ plot_oscr !! =================")
 
     color_palette = color
     

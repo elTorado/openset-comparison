@@ -4,6 +4,9 @@ checkpoints/
 images/
 runs/
 LeNet_plus_plus/
+LeNet/
 *.pdf
 counterfactual-open-set/evaluation/
 evaluation/
+Plots emnist/
+Results_last.tex

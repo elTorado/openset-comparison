@@ -12,9 +12,7 @@ data:
   train_file: protocols/p{}_train.csv        # relative to data directory
   val_file:   protocols/p{}_val.csv          # relative to data directory
 
-  counterfactual_train_file:   counterfactual-open-set/generated_counterfactuals_imagenet_train.dataset   
-  counterfactual_val_file:   counterfactual-open-set/generated_counterfactuals_imagenet_val.dataset   
-  
+  counterfactual_file:   counterfactual-open-set/imagenet_images_counterfactual.dataset
   arpl_file:   counterfactual-open-set/generated_arpl_imagenet.dataset            # relative to data directory
   test_file:  protocols/p{}_test.csv         # relative to data directory
 

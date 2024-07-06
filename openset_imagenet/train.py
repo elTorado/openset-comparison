@@ -298,8 +298,8 @@ def worker(cfg):
     train_file = pathlib.Path(cfg.data.train_file.format(cfg.protocol))
     val_file = pathlib.Path(cfg.data.val_file.format(cfg.protocol))
     
-    counterfactual_train_file = pathlib.Path(cfg.data.counterfactual_train_file) if cfg.include_counterfactuals else None
-    counterfactual_val_file = pathlib.Path(cfg.data.counterfactual_val_file) if cfg.include_counterfactuals else None
+    counterfactual_file = pathlib.Path(cfg.data.counterfactual_file) if cfg.include_counterfactuals else None
+    
     
     arpl_file = pathlib.Path(cfg.data.arpl_file) if cfg.include_arpl else None
 
@@ -308,7 +308,7 @@ def worker(cfg):
             csv_file=train_file,
             which_set="train",
             imagenet_path=cfg.data.imagenet_path,
-            counterfactuals_path= counterfactual_train_file,
+            counterfactuals_path= counterfactual_file,
             arpl_path= arpl_file,
             mixed_unknowns=cfg.mixed_unknowns,
             transform=train_tr
@@ -317,7 +317,7 @@ def worker(cfg):
             csv_file=val_file,
             which_set="val",
             imagenet_path=cfg.data.imagenet_path,
-            counterfactuals_path= counterfactual_val_file,
+            counterfactuals_path= counterfactual_file,
             mixed_unknowns=cfg.mixed_unknowns,
             arpl_path= arpl_file,
             transform=val_tr

@@ -18,6 +18,9 @@ def get_args(command_line_options = None):
         type = pathlib.Path,
         help = "The configuration file that defines the experiment"
     )
+    
+    parser.add_argument("--include_unknown", "-iu", action='store_false', dest="include_unknown", help="Exclude unknowns")
+
     parser.add_argument(
         "protocol",
         type=int,

@@ -93,6 +93,8 @@ def get_args():
                         type=bool, default=False,
                         dest="mixed_unknowns",
                         help="Mix unknown samples in the dataset")
+    
+    parser.add_argument("--include_unknown", "-iu", action='store_false', dest="include_unknown", help="Exclude unknowns")
 
     args = parser.parse_args()
     try:

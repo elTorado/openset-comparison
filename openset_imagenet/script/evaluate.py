@@ -105,21 +105,20 @@ def get_args():
     return args
 
 '''Creates a string suffix that can be used when writing files'''
-def get_experiment_suffix(args):
-    print(args)
+def get_experiment_suffix(cfg):
     suffix = ""
     letters = True
-    print(args)
-    if args.include_counterfactuals:
+    print(cfg)
+    if cfg.include_counterfactuals:
         suffix += "_counterfactuals"
         letters = False
-    if args.include_arpl:
+    if cfg.include_arpl:
         suffix += "_arpl"
         letters = False
-    if args.mixed_unknowns:
+    if cfg.mixed_unknowns:
         suffix += "_mixed"
         letters = False
-    if not args.include_unknown:
+    if not cfg.include_unknown:
         suffix += "no_negatives"
         letters = False
     if letters:
@@ -139,6 +138,7 @@ def main():
     config.include_counterfactuals = args.include_counterfactuals
     config.include_arpl = args.include_arpl
     config.mixed_unknowns = args.mixed_unknowns
+    config.include_unknown = args.include_unknown
     
     
     cfg = config

@@ -64,7 +64,7 @@ def get_args():
     )
     parser.add_argument(
         "--output-directory",
-        default = "experiments/protocol_{}",
+        default = "experiments/Protocol_{}",
         help = "Where to find the results of the experiments"
     )
     parser.add_argument(

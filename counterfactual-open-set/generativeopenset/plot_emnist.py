@@ -197,15 +197,18 @@ def plot_OSCR(args, scores):
   ax.label_outer()
   ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
   ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
-  fig.text(0.5, 0.03, 'FPR', ha='center', fontsize=font)
-  fig.text(0.08, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
   
-  # Figure labels
-  fig.text(0.5, 0.03, 'FPR', ha='center', fontsize=font)
-  fig.text(0.08, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
+  # Close grid at 10^0
+  ax.set_xlim(left=10**-2, right=10**0)
+
   
-  fig.tight_layout(pad=2.0)
-  pyplot.subplots_adjust(left=0.15, bottom=0.15)
+  
+  # Adding more white space around the figure
+  fig.subplots_adjust(left=0.15, right=0.95, top=0.95, bottom=0.15)
+  
+  fig.text(0.55, 0.06, 'FPR', ha='center', fontsize=font+1)
+  fig.text(-0.01, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
+
 
 def plot_OSCR_comparison(args, scores, pdf):
     # Default entropic openset loss, can be implemented to different losses in the future
@@ -474,13 +477,13 @@ if __name__ == "__main__":
       plot_OSCR(args, scores= (suffix, scores[suffix]))
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
 
-    
+      """
       # plot confidences
       print("Plotting confidence plots")
       plot_confidences(args)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
       
-      """
+      
       if not args.linear and not args.sort_by_loss:
         # plot histograms
         print("Plotting softmax histograms")

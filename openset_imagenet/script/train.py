@@ -27,7 +27,7 @@ def get_args(command_line_options = None):
     parser.add_argument(
         "--output-directory", "-o",
         type=pathlib.Path,
-        default=".",
+        default="./experiments",
         help="Directory to store the trained models into"
     )
     parser.add_argument(

@@ -33,7 +33,27 @@ def set_seeds(seed):
     # torch.backends.cudnn.deterministic = True
     # torch.backends.cudnn.benchmark = False
 
+'''Creates a string suffix that can be used when writing files'''
+def get_experiment_suffix(args):
+    suffix = ""
+    letters = True
+    print(args)
+    if args.include_counterfactuals:
+        suffix += "_counterfactuals"
+        letters = False
+    if args.include_arpl:
+        suffix += "_arpl"
+        letters = False
+    if args.mixed_unknowns:
+        suffix += "_mixed"
+        letters = False
+    if not args.include_unknown:
+        suffix += "no_negatives"
+        letters = False
+    if letters:
+        suffix += "_letters"
 
+    return suffix
 
 def save_checkpoint(f_name, model, epoch, opt, best_score_, scheduler=None):
     """ Saves a training checkpoint.
@@ -481,12 +501,16 @@ def worker(cfg):
             f"v:{val_time:.1f}s")
 
         # save best model and current model
-        ckpt_name = str(cfg.output_directory / cfg.name) + "_curr.pth"
+        
+        protocol = f"protocol_{cfg.protocol}"
+        suffix = get_experiment_suffix(args=cfg)
+        
+        ckpt_name = str(cfg.output_directory / protocol) + suffix + "_curr.pth"
         save_checkpoint(ckpt_name, model, epoch, opt, curr_score, scheduler=scheduler)
 
         if curr_score > BEST_SCORE:
             BEST_SCORE = curr_score
-            ckpt_name = str(cfg.output_directory / cfg.name) + "_best.pth"
+            ckpt_name = str(cfg.output_directory / protocol) + suffix + "_best.pth"
             # ckpt_name = f"{cfg.name}_best.pth"  # best model
             logger.info(f"Saving best model {ckpt_name} at epoch: {epoch}")
             save_checkpoint(ckpt_name, model, epoch, opt, BEST_SCORE, scheduler=scheduler)

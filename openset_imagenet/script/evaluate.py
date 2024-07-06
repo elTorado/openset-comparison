@@ -8,7 +8,7 @@ import torch
 from vast.tools import set_device_gpu, set_device_cpu, device
 from torchvision import transforms as tf
 from torch.utils.data import DataLoader
-
+import pathlib
 import openset_imagenet
 
 
@@ -17,16 +17,25 @@ def get_args():
     parser = argparse.ArgumentParser("Get parameters for evaluation", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # directory parameters
+    
     parser.add_argument(
-        "loss",
-        choices = ["entropic", "softmax", "garbage"],
+        "configuration",
+        type = pathlib.Path,
+        default= "openset-imagenet/config/train.yaml",
+        help = "The configuration file that defines the experiment"
+    )
+    
+    parser.add_argument(
+        "-l", "--loss",
+        choices=["entropic", "softmax", "garbage"],
+        default= "entropic",
         help="Which loss function to evaluate"
     )
     parser.add_argument(
-        "protocol",
-        type = int,
-        choices = (1,2,3),
-        help = "Which protocol to evaluate"
+        "-p", "--protocol",
+        type=int,
+        choices=(1, 2, 3),
+        help="Which protocol to evaluate"
     )
     parser.add_argument(
         "--use-best", "-b",
@@ -55,7 +64,7 @@ def get_args():
     )
     parser.add_argument(
         "--output-directory",
-        default = "experiments/Protocol_{}",
+        default = "experiments/protocol_{}",
         help = "Where to find the results of the experiments"
     )
     parser.add_argument(
@@ -68,6 +77,22 @@ def get_args():
         type=int,
         default=4,
         help="Data loaders number of workers, default:4")
+    
+    parser.add_argument(
+        "--include_counterfactuals", "-inc_c",
+        type=bool, default=False, 
+        dest="include_counterfactuals",
+        help="Include counterfactual images in the dataset")
+    
+    parser.add_argument("--include_arpl", "-inc_a",
+                        type=bool, default=False,
+                        dest="include_arpl", 
+                        help="Include ARPL samples in the dataset")
+    
+    parser.add_argument("--mixed_unknowns", "-mu",
+                        type=bool, default=False,
+                        dest="mixed_unknowns",
+                        help="Mix unknown samples in the dataset")
 
     args = parser.parse_args()
     try:
@@ -77,26 +102,74 @@ def get_args():
     args.output_directory = Path(args.output_directory)
     return args
 
+'''Creates a string suffix that can be used when writing files'''
+def get_experiment_suffix(args):
+    suffix = ""
+    letters = True
+    print(args)
+    if args.include_counterfactuals:
+        suffix += "_counterfactuals"
+        letters = False
+    if args.include_arpl:
+        suffix += "_arpl"
+        letters = False
+    if args.mixed_unknowns:
+        suffix += "_mixed"
+        letters = False
+    if not args.include_unknown:
+        suffix += "no_negatives"
+        letters = False
+    if letters:
+        suffix += "_letters"
 
+    return suffix
 
 def main():
     args = get_args()
+    
+    config = openset_imagenet.util.load_yaml(args.configuration)
+    
+    if args.gpu:
+        config.gpu = args.gpu
+    config.protocol = args.protocol
+    config.output_directory = args.output_directory
+    config.include_counterfactuals = args.include_counterfactuals
+    config.include_arpl = args.include_arpl
+    config.mixed_unknowns = args.mixed_unknowns
+    
+    
+    cfg = config
 
     # Create transformations
     transform_val = tf.Compose(
         [tf.Resize(256),
          tf.CenterCrop(224),
          tf.ToTensor()])
+    
+    
+    # Load dataset files and syntetic image files. Dataset file paths are hardcoded on config file    
+    val_file = pathlib.Path(cfg.data.val_file.format(cfg.protocol))
+    test_file = pathlib.Path(cfg.data.test_file.format(cfg.protocol))
+    
+    counterfactual_val_file = pathlib.Path(cfg.data.counterfactual_val_file) if cfg.include_counterfactuals else None
+    arpl_file = pathlib.Path(cfg.data.arpl_file) if cfg.include_arpl else None
 
     # create datasets
     val_dataset = openset_imagenet.ImagenetDataset(
-        csv_file=args.protocol_directory/f"p{args.protocol}_val.csv",
-        imagenet_path=args.imagenet_directory,
-        transform=transform_val)
+            csv_file=val_file,
+            imagenet_path=cfg.data.imagenet_path,
+            counterfactuals_path= counterfactual_val_file,
+            mixed_unknowns=cfg.mixed_unknowns,
+            arpl_path= arpl_file,
+            transform=transform_val
+        )
 
     test_dataset = openset_imagenet.ImagenetDataset(
-        csv_file=args.protocol_directory/f"p{args.protocol}_test.csv",
-        imagenet_path=args.imagenet_directory,
+         csv_file=test_file,
+        imagenet_path=cfg.data.imagenet_path,
+        counterfactuals_path= None,
+        mixed_unknowns=None,
+        arpl_path= None,
         transform=transform_val)
 
     # Info on console
@@ -121,8 +194,12 @@ def main():
         n_classes = val_dataset.label_count - 1  # number of classes - 1 when training with unknowns
 
     # create model
-    suffix = "_best" if args.use_best else "_curr"
-    model = openset_imagenet.ResNet50(fc_layer_dim=n_classes, out_features=n_classes, logit_bias=False)
+    suffix = get_experiment_suffix(cfg) + "_best" if args.use_best else "_curr"   
+    
+    model = openset_imagenet.ResNet50(fc_layer_dim=n_classes,
+                                      out_features=n_classes, 
+                                      logit_bias=False)
+    
     start_epoch, best_score = openset_imagenet.train.load_checkpoint(model, args.output_directory / (args.loss+suffix+".pth"))
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     device(model)

@@ -102,6 +102,24 @@ def get_args():
       "--table",
       help = "Select the file where to write the Confidences (gamma) and CCR into"
     )
+        
+    parser.add_argument(
+        "--include_counterfactuals", "-inc_c",
+        type=bool, default=False, 
+        dest="include_counterfactuals",
+        help="Include counterfactual images in the dataset")
+    
+    parser.add_argument("--include_arpl", "-inc_a",
+                        type=bool, default=False,
+                        dest="include_arpl", 
+                        help="Include ARPL samples in the dataset")
+    
+    parser.add_argument("--mixed_unknowns", "-mu",
+                        type=bool, default=False,
+                        dest="mixed_unknowns",
+                        help="Mix unknown samples in the dataset")
+    
+    parser.add_argument("--include_unknown", "-iu", action='store_false', dest="include_unknown", help="Exclude unknowns")
 
     args = parser.parse_args()
 
@@ -122,7 +140,7 @@ def load_scores(args):
         experiment_dir = args.output_directory / f"Protocol_{protocol}"
         suffix = "_best" if args.use_best else "_curr"
         checkpoint_file = experiment_dir / (loss+suffix+".pth")
-        score_files = {v : experiment_dir / f"{loss}_{v}_arr{suffix}.npz" for v in ("val", "test")}
+        score_files = {v : experiment_dir / f"{suffix}_{v}_arr.npz" for v in ("val", "test")}
         if os.path.exists(checkpoint_file):
           if not all(os.path.exists(v) for v in score_files.values()) or args.force:
             # extract score files first

@@ -12,7 +12,7 @@ import os
 class ImagenetDataset(Dataset):
     """ Imagenet Dataset. """
 
-    def __init__(self, csv_file, imagenet_path, counterfactuals_path, arpl_path, mixed_unknowns, transform=None):
+    def __init__(self, which_set, csv_file, imagenet_path, counterfactuals_path, arpl_path, mixed_unknowns, transform=None):
         """ Constructs an Imagenet Dataset from a CSV file. The file should list the path to the
         images and the corresponding label. For example:
         val/n02100583/ILSVRC2012_val_00013430.JPEG,   0
@@ -50,10 +50,18 @@ class ImagenetDataset(Dataset):
         if counterfactuals_path:
             with open(counterfactuals_path, 'r') as cf_file:
                 counterfactual_images = cf_file.read().splitlines()
+                
+                # for the validation set, we replace original images from the back instead of from the front
+                if which_set != "train":
+                    counterfactual_images.reverse()
+
             
             if arpl_path:
                 with open(arpl_path, 'r') as arpl_file:
                     arpl_images = arpl_file.read().splitlines()
+                    
+                if which_set != "train":
+                    arpl_images.reverse()
 
                 if mixed_unknowns:
                     third = len(negative_indices) // 3

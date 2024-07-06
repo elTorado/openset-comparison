@@ -94,6 +94,8 @@ def get_args():
         const = 0,
         help = "Select the GPU index that you have. You can specify an index or not. If not, 0 is assumed. If not selected, we will train on CPU only (not recommended)"
     )
+    
+    parser.add_argument("--all", action='store_true', dest="all", help="plott all")  
     parser.add_argument(
       "--plots",
       help = "Select where to write the plots into"
@@ -130,82 +132,120 @@ def get_args():
     args.table = args.table or f"Results_{suffix}.tex"
     return args
 
+'''Creates a string suffix that can be used when writing files'''
+def get_experiment_suffix(args):
+  if args.all:
+    return ["_letters", "_counterfactuals",
+            "_counterfactuals_mixed", "_arpl", 
+            "_arpl_mixed", "_counterfactuals_arpl", 
+            "_counterfactuals_arpl_mixed"]
+  
+  else:
+    suffix = ""
+    letters = True
+    if args.include_counterfactuals:
+        suffix += "_counterfactuals"
+        letters = False
+    if args.include_arpl:
+        suffix += "_arpl"
+        letters = False
+    if args.mixed_unknowns:
+        suffix += "_mixed"
+        letters = False
+    if not args.include_unknown:
+        suffix += "no_negatives"
+        letters = False
+    if letters:
+        suffix += "_letters"
+
+    return [suffix]
+
 
 def load_scores(args):
     # collect all result files
+    
+    suffixes = get_experiment_suffix(args=args)
+    
     scores = {p:{} for p in args.protocols}
     epoch = {p:{} for p in args.protocols}
+    
     for protocol in args.protocols:
-      for loss in args.loss_functions:
+      for suffix in suffixes:
         experiment_dir = args.output_directory / f"Protocol_{protocol}"
-        suffix = "_best" if args.use_best else "_curr"
-        checkpoint_file = experiment_dir / (loss+suffix+".pth")
+        suffix = suffix + "_best" if args.use_best else "_curr"
         score_files = {v : experiment_dir / f"{suffix}_{v}_arr.npz" for v in ("val", "test")}
-        if os.path.exists(checkpoint_file):
-          if not all(os.path.exists(v) for v in score_files.values()) or args.force:
-            # extract score files first
-            print("Extracting scores of", checkpoint_file)
-            call = ["evaluate_imagenet.py", loss, str(protocol), "--output-directory", experiment_dir, "--imagenet-directory", args.imagenet_directory, "--protocol-directory", args.protocol_directory]
-            if args.gpu is not None:
-              call += ["-g", str(args.gpu)]
-            if args.use_best:
-              call += ["-b"]
-            subprocess.call(call)
-          # remember files
-          scores[protocol][loss] = openset_imagenet.util.read_array_list(score_files)
 
-          # remember epoch where scores are extracted
-          checkpoint = torch.load(checkpoint_file, map_location="cpu")
-          epoch[protocol][loss] = (checkpoint["epoch"],checkpoint["best_score"])
+        '''
+        checkpoint_file = experiment_dir / (loss+suffix+".pth")
+        # if os.path.exists(checkpoint_file):
+        if not all(os.path.exists(v) for v in score_files.values()) or args.force:
+          # extract score files first
+          print("Extracting scores of", checkpoint_file)
+          call = ["evaluate_imagenet.py", loss, str(protocol), "--output-directory", experiment_dir, "--imagenet-directory", args.imagenet_directory, "--protocol-directory", args.protocol_directory]
+          if args.gpu is not None:
+            call += ["-g", str(args.gpu)]
+          if args.use_best:
+            call += ["-b"]
+          subprocess.call(call)
+          '''
+        # remember files
+        scores[protocol][suffix] = openset_imagenet.util.read_array_list(score_files)
 
+        # remember epoch where scores are extracted
+        # checkpoint = torch.load(checkpoint_file, map_location="cpu")
+        # epoch[protocol][loss] = (checkpoint["epoch"],checkpoint["best_score"])
+
+        epoch = []
+        """
         else:
           print ("Checkpoint file", checkpoint_file, "not found, skipping protocol", protocol, loss)
           scores[protocol][loss] = None
           epoch[protocol][loss] = (0, 0)
-
+        """
     return scores, epoch
 
 
-def plot_OSCR(args, scores):
+def plot_OSCR(args, scores, suffix):
+  
+    protocol = args.protocols[0]
+    suffix = suffix
+  
+    # default entropic openset loss, can be implemented to different losses in the future
     # plot OSCR
-    P = len(args.protocols)
-    fig = pyplot.figure(figsize=(5*P,6))
-    gs = fig.add_gridspec(2, P, hspace=0.2, wspace=0.05)
-    axs = gs.subplots(sharex=True, sharey=True)
-    axs = axs.flat
+    # Only create one subplot directly
+    fig, ax = pyplot.subplots(figsize=(5, 6))
     font = 15
     scale = 'linear' if args.linear else 'semilog'
 
-    if args.sort_by_loss:
-      for index, l in enumerate(args.loss_functions):
-#        val = [scores[p][l]["val"] if scores[p][l] is not None else None for p in args.protocols]
-        test = [scores[p][l]["test"] if scores[p][l] is not None else None for p in args.protocols]
-        openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Negative',
-                      ax_label_font=font, ax=axs[index], unk_label=-1,)
-        openset_imagenet.util.plot_oscr(arrays=test, methods=[l]*len(args.protocols), scale=scale, title=f'{args.labels[index]} Unknown',
-                      ax_label_font=font, ax=axs[index+P], unk_label=-2,)
-      # Manual legend
-      axs[-P].legend([f"$P_{p}$" for p in args.protocols], frameon=False,
-                fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
-    else:
-      for index, p in enumerate(args.protocols):
-#        val = [scores[p][l]["val"] if scores[p][l] is not None else None for l in args.loss_functions]
-        test = [scores[p][l]["test"] if scores[p][l] is not None else None for l in args.loss_functions]
-        openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Negative',
-                      ax_label_font=font, ax=axs[index], unk_label=-1,)
-        openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P_{p}$ Unknown',
-                      ax_label_font=font, ax=axs[index+P], unk_label=-2,)
-      # Manual legend
-      axs[-P].legend(args.labels, frameon=False,
-                fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
-    # Axis properties
-    for ax in axs:
-        ax.label_outer()
-        ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
-        ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
-    # Figure labels
-    fig.text(0.5, 0.03, 'FPR', ha='center', fontsize=font)
-    fig.text(0.08, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
+    ############ FINAL PREPARATIONS ##############
+          
+    red = pyplot.colormaps.get_cmap('tab10').colors[3]
+    blue = pyplot.colormaps.get_cmap('tab10').colors[0]
+    
+    args.labels = ["Val", "Test"] 
+    
+    title = suffix.replace("_", " ")
+
+    val = [scores[protocol][suffix]["val"]]
+    openset_imagenet.util.plot_oscr(arrays=val, methods=args.loss_functions, scale=scale, title=f'$P{protocol}{suffix}$ Val',
+                  ax_label_font=font, ax=ax, unk_label=-1, color=blue)
+    test = [scores[protocol][suffix]["test"]]
+    openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P{protocol}{suffix}$ Test',
+                  ax_label_font=font, ax=ax, unk_label=-1,color=red)
+    ax.legend(args.labels, frameon=False, fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
+    ax.label_outer()
+    ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+    ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+    
+    # Close grid at 10^0
+    ax.set_xlim(left=10**-2, right=10**0)
+
+
+    # Adding more white space around the figure
+    fig.subplots_adjust(left=0.15, right=0.95, top=0.95, bottom=0.15)
+    
+    fig.text(0.55, 0.06, 'FPR', ha='center', fontsize=font+1)
+    fig.text(-0.01, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
 
 
 def plot_confidences(args):
@@ -408,35 +448,45 @@ def conf_and_ccr_table(args, scores, epochs):
 def main():
   args = get_args()
 
-
+  # HARDCODED AS WE USE ONE PROTOCOL ONLY. 
+  protocol = args.protocols[0]
+  
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)
 
   print("Writing file", args.plots)
   pdf = PdfPages(args.plots)
-  try:
-    # plot OSCR (actually not required for best case)
-    print("Plotting OSCR curves")
-    plot_OSCR(args, scores)
-    pdf.savefig(bbox_inches='tight', pad_inches = 0)
-
-    if not args.linear and not args.use_best and not args.sort_by_loss:
-      # plot confidences
-      print("Plotting confidence plots")
-      plot_confidences(args)
+  
+  for suffix in scores[protocol].keys():
+  
+    try:
+      # plot OSCR (actually not required for best case)
+      print("Plotting OSCR curves")
+      plot_OSCR(args, scores, suffix)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
 
-    if not args.linear and not args.sort_by_loss:
-      # plot histograms
-      print("Plotting softmax histograms")
-      plot_softmax(args, scores)
-      pdf.savefig(bbox_inches='tight', pad_inches = 0)
+      '''
+      if not args.linear and not args.use_best and not args.sort_by_loss:
+        # plot confidences
+        print("Plotting confidence plots")
+        plot_confidences(args)
+        pdf.savefig(bbox_inches='tight', pad_inches = 0)
 
-  finally:
-    pdf.close()
+      if not args.linear and not args.sort_by_loss:
+        # plot histograms
+        print("Plotting softmax histograms")
+        plot_softmax(args, scores)
+        pdf.savefig(bbox_inches='tight', pad_inches = 0)
+      '''
+      
+    finally:
+      pdf.close()
 
   # create result table
   if not args.linear and not args.sort_by_loss:
     print("Creating Table")
     print("Writing file", args.table)
     conf_and_ccr_table(args, scores, epoch)
+
+if __name__ == "__main__":
+  main()

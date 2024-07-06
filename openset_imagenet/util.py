@@ -186,6 +186,7 @@ def plot_oscr(arrays, methods, color, scale='linear', title=None, ax_label_font=
 
     color_palette = color
     
+    print(len(arrays))
     assert len(arrays) == 1
     assert len(methods) == 1
     

@@ -166,7 +166,6 @@ def load_scores(args):
 def plot_OSCR(args, scores):
   
   # default entropic openset loss, can be implemented to different losses in the future
-  print(args.approach[0])
   loss = args.approach[0]
   suffix = scores[0]
   score = scores[1]
@@ -179,7 +178,7 @@ def plot_OSCR(args, scores):
   ############ FINAL PREPARATIONS ##############
   val = [score[loss]["val"]]
   test = [score[loss]["test"]]
-    
+        
   red = pyplot.colormaps.get_cmap('tab10').colors[3]
   blue = pyplot.colormaps.get_cmap('tab10').colors[0]
   
@@ -201,7 +200,6 @@ def plot_OSCR(args, scores):
   # Close grid at 10^0
   ax.set_xlim(left=10**-2, right=10**0)
 
-  
   
   # Adding more white space around the figure
   fig.subplots_adjust(left=0.15, right=0.95, top=0.95, bottom=0.15)

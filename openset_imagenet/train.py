@@ -306,6 +306,7 @@ def worker(cfg):
     if train_file.exists() and val_file.exists():
         train_ds = ImagenetDataset(
             csv_file=train_file,
+            which_set="train",
             imagenet_path=cfg.data.imagenet_path,
             counterfactuals_path= counterfactual_train_file,
             arpl_path= arpl_file,
@@ -314,6 +315,7 @@ def worker(cfg):
         )
         val_ds = ImagenetDataset(
             csv_file=val_file,
+            which_set="val",
             imagenet_path=cfg.data.imagenet_path,
             counterfactuals_path= counterfactual_val_file,
             mixed_unknowns=cfg.mixed_unknowns,
@@ -502,7 +504,7 @@ def worker(cfg):
 
         # save best model and current model
         
-        protocol = f"protocol_{cfg.protocol}"
+        protocol = f"Protocol_{cfg.protocol}"
         suffix = get_experiment_suffix(args=cfg)
         
         ckpt_name = str(cfg.output_directory / protocol) + suffix + "_curr.pth"

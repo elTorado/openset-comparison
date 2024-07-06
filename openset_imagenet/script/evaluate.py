@@ -203,7 +203,7 @@ def main():
                                       out_features=n_classes, 
                                       logit_bias=False)
     
-    start_epoch, best_score = openset_imagenet.train.load_checkpoint(model, args.output_directory / (args.loss+suffix+".pth"))
+    start_epoch, best_score = openset_imagenet.train.load_checkpoint(model, args.output_directory / (suffix+".pth"))
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     device(model)
 
@@ -214,7 +214,7 @@ def main():
         model=model,
         loader=val_loader
     )
-    file_path = args.output_directory / f"{args.loss}_val_arr{suffix}.npz"
+    file_path = args.output_directory / f"{suffix}_val_arr.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")
 
@@ -224,6 +224,6 @@ def main():
         model=model,
         loader=test_loader
     )
-    file_path = args.output_directory / f"{args.loss}_test_arr{suffix}.npz"
+    file_path = args.output_directory / f"{suffix}_test_arr.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")

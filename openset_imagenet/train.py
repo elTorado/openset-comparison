@@ -456,7 +456,7 @@ def worker(cfg):
     suffix = get_experiment_suffix(args=cfg)
         
     
-    writer = SummaryWriter(log_dir=str(cfg.output_directory / protocol / suffix), filename_suffix="-"+cfg.log_name)
+    writer = SummaryWriter(log_dir=str(cfg.output_directory / protocol / suffix), filename_suffix=suffix+cfg.log_name)
 
     for epoch in range(START_EPOCH, cfg.epochs):
         epoch_time = time.time()
@@ -516,7 +516,7 @@ def worker(cfg):
 
         if curr_score > BEST_SCORE:
             BEST_SCORE = curr_score
-            ckpt_name = str(cfg.output_directory / protocol) + suffix + "_best.pth"
+            ckpt_name = str(cfg.output_directory / protocol / suffix) + suffix + "_best.pth"
             # ckpt_name = f"{cfg.name}_best.pth"  # best model
             logger.info(f"Saving best model {ckpt_name} at epoch: {epoch}")
             save_checkpoint(ckpt_name, model, epoch, opt, BEST_SCORE, scheduler=scheduler)

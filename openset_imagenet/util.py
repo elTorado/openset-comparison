@@ -104,19 +104,16 @@ def calculate_oscr(gt, scores, unk_label=-1):
     kn = gt >= 0
     unk = gt == unk_label
 
-    # Get total number of samples of each type
     total_kn = np.sum(kn)
     total_unk = np.sum(unk)
     ccr, fpr = [], []
     
-    # predicted class and max score for each sample
     pred_class = np.argmax(scores, axis=1)
     max_score = np.max(scores, axis=1)
     
     # array of scores of the target class for known samples.
     target_score = scores[kn][range(kn.sum()), gt[kn]]
     
-    # Iterate over unique target scores (
     for tau in np.unique(target_score)[:-1]:
         
         # val is the proportion of correctly classified known samples with target score greater than tau

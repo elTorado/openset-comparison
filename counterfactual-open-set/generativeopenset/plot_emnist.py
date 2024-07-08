@@ -213,7 +213,7 @@ def plot_OSCR_comparison(args, scores, pdf):
     loss = args.approach[0]
 
     # Create the figure and axis
-    fig, ax = plt.subplots(figsize=(5, 6))
+    fig, ax = plt.subplots(figsize=(8, 7))
     font = 15
     scale = 'linear' if args.linear else 'semilog'
     
@@ -226,26 +226,28 @@ def plot_OSCR_comparison(args, scores, pdf):
 
     for index, (suffix, score) in enumerate(scores.items()):
         # Extract val and test scores for the current loss
-        val = [score[loss]["val"]]
         test = [score[loss]["test"]]
         
         color = colors[index % len(colors)]  # Cycle through colors if more than the colormap length
 
         # Add label for the current test score
-        labels.append(f"Test {suffix}")
+        labels.append(suffix[1:].replace("_", " & ").replace("mixed", "letters"))
 
         # Plot test scores
         openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=color, scale=scale, 
                                         title="Test score comparison", ax_label_font=font, ax=ax, unk_label=-1)
 
     # Set the legend with labels
-    ax.legend(labels, frameon=False, fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, 
+    ax.legend(labels, frameon=False, fontsize=font - 1, bbox_to_anchor=(0.5, -0.1), ncol=3, loc='upper center', handletextpad=0.5, 
               columnspacing=1, markerscale=3)
-    ax.label_outer()
+    
     ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
     ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
-    fig.text(0.5, 0.03, 'FPR', ha='center', fontsize=font)
-    fig.text(0.08, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
+    
+    ax.set_xlim(left=10**-2, right=10**0)
+    
+    fig.text(0.45, 0.08, 'FPR', ha='center', fontsize=font)
+    fig.text(0.085, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
 
     # Adjust layout to prevent overlap
     fig.tight_layout(pad=2.0)
@@ -279,7 +281,6 @@ def plot_confidences(args):
 
     P = 1
     linewidth = 1.5
-    legend_pos = "lower right"
     font_size = 15
     color_palette = cm.get_cmap('tab10', 10).colors
     fig = pyplot.figure(figsize=(12,3*P+1))
@@ -319,11 +320,11 @@ def plot_confidences(args):
       max_len = max(max_len, max(step_kn))
       min_len = min(min_len, min(step_kn))
     # set titles
-    ax_kn.set_title(f"${suffix}$ Known", fontsize=font_size)
-    ax_unk.set_title(f"${suffix}$ Negative", fontsize=font_size)
+    ax_kn.set_title(suffix[1:].replace("_", " & ").replace("mixed", "letters") + " - Known", fontsize=font_size)
+    ax_unk.set_title(suffix[1:].replace("_", " & ").replace("mixed", "letters") + " - Negative", fontsize=font_size)
 
     # Manual legend
-    axs[-2].legend(args.labels, frameon=False,
+    axs[-2].legend(["Confidence"], frameon=False,
                   fontsize=font_size - 1, bbox_to_anchor=(0.8, -0.1), ncol=3, handletextpad=0.5, columnspacing=1)
 
     for ax in axs:
@@ -337,7 +338,7 @@ def plot_confidences(args):
         ax.xaxis.set_major_locator(MaxNLocator(6))
         ax.label_outer()
     # X label
-    fig.text(0.5, 0.05, 'Epoch', ha='center', fontsize=font_size)
+    fig.text(0.5, 0.0, 'Epoch', ha='center', fontsize=font_size)
 
 def plot_softmax(args, scores):
   args.loss_functions = ["EOS"]
@@ -470,18 +471,18 @@ if __name__ == "__main__":
     try:
       # plot OSCR (actually not required for best case)
       
-
+      '''
       print("Plotting OSCR curves")
       plot_OSCR(args, scores= (suffix, scores[suffix]))
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
-
-      """
+      '''
+      
       # plot confidences
       print("Plotting confidence plots")
       plot_confidences(args)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
       
-      
+      """
       if not args.linear and not args.sort_by_loss:
         # plot histograms
         print("Plotting softmax histograms")

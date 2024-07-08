@@ -448,7 +448,15 @@ def worker(cfg):
     logger.info(f"Learning rate: {cfg.opt.lr}")
     logger.info(f"Device: {cfg.gpu}")
     logger.info("Training...")
-    writer = SummaryWriter(log_dir=cfg.output_directory, filename_suffix="-"+cfg.log_name)
+    
+    
+    
+    
+    protocol = f"Protocol_{cfg.protocol}"
+    suffix = get_experiment_suffix(args=cfg)
+        
+    
+    writer = SummaryWriter(log_dir=str(cfg.output_directory / protocol / suffix), filename_suffix="-"+cfg.log_name)
 
     for epoch in range(START_EPOCH, cfg.epochs):
         epoch_time = time.time()
@@ -503,11 +511,7 @@ def worker(cfg):
             f"v:{val_time:.1f}s")
 
         # save best model and current model
-        
-        protocol = f"Protocol_{cfg.protocol}"
-        suffix = get_experiment_suffix(args=cfg)
-        
-        ckpt_name = str(cfg.output_directory / protocol) + suffix + "_curr.pth"
+        ckpt_name = str(cfg.output_directory / protocol / suffix) + suffix + "_curr.pth"
         save_checkpoint(ckpt_name, model, epoch, opt, curr_score, scheduler=scheduler)
 
         if curr_score > BEST_SCORE:

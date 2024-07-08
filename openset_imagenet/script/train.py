@@ -84,6 +84,7 @@ def main(command_line_options = None):
     config.include_counterfactuals = args.include_counterfactuals
     config.include_arpl = args.include_arpl
     config.mixed_unknowns = args.mixed_unknowns
+    config.include_unknown = args.include_unknown
 
     openset_imagenet.train.worker(config)
 

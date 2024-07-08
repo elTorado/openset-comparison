@@ -216,7 +216,7 @@ def validate(model, data_loader, loss_fn, n_classes, trackers, cfg):
         if neg_count:
             trackers["conf_unk"].update(neg_conf, neg_count)
 
-def get_arrays(model, loader):
+def get_arrays(model, loader, dataset = "Default"):
     """ Extract deep features, logits and targets for all dataset. Returns numpy arrays
 
     Args:
@@ -227,10 +227,14 @@ def get_arrays(model, loader):
     with torch.no_grad():
         data_len = len(loader.dataset)         # dataset length
         
+        print(" LEN OF THE " + dataset + " EVALUATION DATA: ", data_len)
+        
         if isinstance(model, ResNet50):
+                    print( " Evaluating ResNet50 Model")
                     logits_dim = model.logits.out_features # logits output classes
                     features_dim = model.logits.in_features  # features dimensionality
-        elif isinstance(model, architectures.LeNet_plus_plus):
+        else:
+                    print( " Evaluating LeNet_Plus Model")
                     logits_dim = model.fc2.out_features # logits output classes
                     features_dim = model.fc2.in_features  # features dimensionality    
         
@@ -242,7 +246,9 @@ def get_arrays(model, loader):
         all_scores = torch.empty((data_len, logits_dim), device="cpu")
 
         index = 0
+        i = 0 
         for images, labels in tqdm.tqdm(loader):
+            i += 1
             curr_b_size = labels.shape[0]  # current batch size, very last batch has different value
             images = device(images)
             labels = device(labels)
@@ -254,6 +260,7 @@ def get_arrays(model, loader):
             all_feat[index:index + curr_b_size] = feature.detach().cpu()
             all_scores[index:index + curr_b_size] = score.detach().cpu()
             index += curr_b_size
+        print( " BATCHES EVALUATED IN EVALUATION LOOP: ", i)
         return(
             all_targets.numpy(),
             all_logits.numpy(),

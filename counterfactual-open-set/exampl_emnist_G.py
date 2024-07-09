@@ -175,10 +175,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
                     self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
                     self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
                     
-                    
+                    '''
                     # shuffle the indices as we will need splits
+                    # ! This is actually bad as we use slicing, when we shuffle first it will eventually overlap the samples between train and val
                     random.shuffle(self.letter_indexes)
-                    
+                    '''
                     
                     self.nr_letters = len(self.letter_indexes)    
                         # depending on setup we will need to half or third the used letters as we want even distribution of samples for comparison

@@ -12,7 +12,7 @@ import os
 class ImagenetDataset(Dataset):
     """ Imagenet Dataset. """
 
-    def __init__(self, which_set, csv_file, imagenet_path, counterfactuals_path, arpl_path, mixed_unknowns, transform=None):
+    def __init__(self, which_set, csv_file, include_unknown, imagenet_path, counterfactuals_path, arpl_path, mixed_unknowns, transform=None):
         """ Constructs an Imagenet Dataset from a CSV file. The file should list the path to the
         images and the corresponding label. For example:
         val/n02100583/ILSVRC2012_val_00013430.JPEG,   0
@@ -47,6 +47,9 @@ class ImagenetDataset(Dataset):
                     break  # Break if no more images are available to avoid index errors
             print(f"Replaced {replace_count} of {initial_count} paths with {description}.")
 
+        if not include_unknown:
+            self.remove_negative_label()
+        
         if counterfactuals_path:
             with open(counterfactuals_path, 'r') as cf_file:
                 counterfactual_images = cf_file.read().splitlines()
@@ -136,7 +139,6 @@ class ImagenetDataset(Dataset):
 
                 image = Image.open(full_path).convert("RGB")
             except IOError:
-                # Handle case where neither image path works, e.g., by returning a default image or raising an error
                 raise IOError(f"Unable to open image from both paths: {self.imagenet_path / jpeg_path} and {jpeg_path}")
         
 
@@ -163,6 +165,7 @@ class ImagenetDataset(Dataset):
 
     def remove_negative_label(self):
         """ Removes all negative labels (<0) from the dataset. This is required for training with plain softmax"""
+        print(" REMOVE ALL NEGATIVE LABELS ")
         self.dataset.drop(self.dataset[self.dataset[1] < 0].index, inplace=True)
         self.unique_classes = np.sort(self.dataset[1].unique())
         self.label_count = len(self.dataset[1].unique())

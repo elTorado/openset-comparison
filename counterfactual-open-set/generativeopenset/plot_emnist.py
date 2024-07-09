@@ -207,6 +207,62 @@ def plot_OSCR(args, scores):
   fig.text(0.55, 0.06, 'FPR', ha='center', fontsize=font+1)
   fig.text(-0.01, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
 
+def plot_many_OSCR(args, scores, pdf):
+    # Default entropic openset loss, can be implemented to different losses in the future
+    loss = args.approach[0]
+
+    # Create the figure and axes with a 4x2 grid (7 subplots)
+    fig, axs = plt.subplots(2, 4, figsize=(18, 6))
+    font = 13
+    scale = 'linear' if args.linear else 'semilog'
+    
+    colormap = plt.get_cmap('tab10')
+    colors = colormap.colors
+    axs = axs.flatten()
+    labels=[]
+    for index, (suffix, score) in enumerate(scores.items()):
+        ax = axs[index]  # Get the specific subplot for this score
+        test = [score[loss]["test"]]
+        val = [score[loss]["val"]]
+                
+        red = pyplot.colormaps.get_cmap('tab10').colors[3]
+        blue = pyplot.colormaps.get_cmap('tab10').colors[0]
+
+        title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+
+        # Plot test scores
+        openset_imagenet.util.plot_oscr(arrays=val, methods=[args.approach], color=blue, scale=scale, title=title,
+                ax_label_font=font, ax=ax, unk_label=-1,)
+  
+        openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=red, scale=scale, title=title,
+                ax_label_font=font, ax=ax, unk_label=-1,)
+
+        # Set grid and limits
+        ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+        ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+        ax.set_xlim(left=10**-2, right=10**0)
+        ax.set_ylim(0, 1.05)
+        
+    # Set the legend with labels
+   
+    ax.legend(["Val", "Test"], frameon=False, fontsize=16, bbox_to_anchor=(-0.4, -0.25), ncol=3, loc='upper center', handletextpad=0.5, 
+              columnspacing=1, markerscale=3)
+    
+        
+    # Remove the unused subplot (8th subplot)
+    fig.delaxes(axs[-1])
+
+    # Adjust layout to prevent overlap
+    # fig.tight_layout(pad=2.0)
+    plt.subplots_adjust(left=0.1, bottom=0.1, hspace=0.3)
+    
+    fig.text(0.45, 0.03, 'FPR', ha='center', fontsize=font+1)
+    fig.text(0.05, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
+
+    pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
+
+    plt.close(fig)  
+
 
 def plot_OSCR_comparison(args, scores, pdf):
     # Default entropic openset loss, can be implemented to different losses in the future
@@ -258,87 +314,155 @@ def plot_OSCR_comparison(args, scores, pdf):
 
     plt.close(fig)  # Close the figure after saving to the PDF
 
-#these even t files are in the LeNet directory
-# Can easily be adjustet to load all event file
-def plot_confidences(args):
-  loss = "EOS"  
-  suffixes = get_experiment_suffix(args=args)
-  
-  current_dir = os.path.dirname(os.path.abspath(__file__))
-  event_dir = os.path.join(current_dir, '../LeNet/Logs/')
-  
-  # locate event paths
-  event_files = {}
-  files = sorted(os.listdir(event_dir))
-  
-  for suffix in suffixes:
-  
-    # get the event files
+def plot_many_confidences(args, pdf):
+    loss = "EOS"
+    suffixes = get_experiment_suffix(args=args)
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    event_dir = os.path.join(current_dir, '../LeNet/Logs/')
+    
+    # Locate event paths
+    event_files = {}
+    files = sorted(os.listdir(event_dir))
+    
     for f in files:
-      if f.startswith(suffix + "_event"):
-        file_path = os.path.abspath(os.path.join(event_dir+f))
-        event_files[suffix] = file_path
+        for suffix in suffixes:
+            if f.startswith(suffix + "_event"):
+                file_path = os.path.abspath(os.path.join(event_dir, f))
+                event_files[suffix] = file_path
 
-    P = 1
     linewidth = 1.5
     font_size = 15
     color_palette = cm.get_cmap('tab10', 10).colors
-    fig = pyplot.figure(figsize=(12,3*P+1))
-    gs = fig.add_gridspec(P, 2, hspace=0.2, wspace=0.1)
-    axs = gs.subplots(sharex=True, sharey=True)
-    axs = axs.flat
+    fig, axs = plt.subplots(2, 4, figsize=(16, 8))
+    axs = axs.flatten()
 
+    def load_accumulators(files, suffix):
+        known_data, unknown_data = {}, {}
+        event_file = files[suffix]
+        try:
+            event_acc = EventAccumulator(str(event_file), size_guidance={'scalars': 0})
+            event_acc.Reload()
+            for event in event_acc.Scalars('val/conf_kn'):
+                known_data[event.step + 1] = event.value
+            for event in event_acc.Scalars('val/conf_unk'):
+                unknown_data[event.step + 1] = event.value
+        except KeyError:
+            pass
 
-    def load_accumulators(files):
-      known_data, unknown_data = {}, {}
-      event_file = files[suffix]
-      try:
-        event_acc = EventAccumulator(str(event_file), size_guidance={'scalars': 0})
-        event_acc.Reload()
-        for event in event_acc.Scalars('val/conf_kn'):
-              known_data[event.step + 1] = event.value
-        for event in event_acc.Scalars('val/conf_unk'):
-              unknown_data[event.step + 1] = event.value
-      except KeyError: pass
+        # Re-structure
+        return zip(*sorted(known_data.items())), zip(*sorted(unknown_data.items()))
 
-      # re-structure
-      return zip(*sorted(known_data.items())), zip(*sorted(unknown_data.items()))
+    for index, suffix in enumerate(suffixes):
+        ax = axs[index]  # Get the specific subplot for this score
+        (step_kn, val_kn), (step_unk, val_unk) = load_accumulators(event_files, suffix)
 
-    max_len = 0
-    min_len = 100
-    ax_kn = axs[0]
-    ax_unk = axs[1]
-    step_kn, val_kn, step_unk, val_unk = [[]]*4
-    (step_kn, val_kn), (step_unk, val_unk) = load_accumulators(event_files)
+        # Plot known and unknown confidences
+        ax.plot(step_kn, val_kn, linewidth=linewidth, label='Known', color=color_palette[1])
+        ax.plot(step_unk, val_unk, linewidth=linewidth, label='Unknown', color=color_palette[0])
 
-    #need to adjust color paletes to be dynamic if we want to plot multiple aproaches 
-    # Plot known confidence
-    ax_kn.plot(step_kn, val_kn, linewidth=linewidth, label = loss + ' kn', color=color_palette[1])
-    # Plot unknown confidence
-    ax_unk.plot(step_unk, val_unk, linewidth=linewidth, label = loss + ' unk', color=color_palette[1])
-    if len(step_kn):
-      max_len = max(max_len, max(step_kn))
-      min_len = min(min_len, min(step_kn))
-    # set titles
-    ax_kn.set_title(suffix[1:].replace("_", " & ").replace("mixed", "letters") + " - Known", fontsize=font_size)
-    ax_unk.set_title(suffix[1:].replace("_", " & ").replace("mixed", "letters") + " - Negative", fontsize=font_size)
+        ax.set_title(suffix[1:].replace("_", " & ").replace("mixed", "letters"), fontsize=font_size)
 
-    # Manual legend
-    axs[-2].legend(["Confidence"], frameon=False,
-                  fontsize=font_size - 1, bbox_to_anchor=(0.8, -0.1), ncol=3, handletextpad=0.5, columnspacing=1)
+        ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+        ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
 
-    for ax in axs:
-        # set the tick parameters for the current axis handler
+        ax.set_xlim(min(step_kn + step_unk), max(step_kn + step_unk))
+        ax.set_ylim(0.8, 1)
+
         ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
-        ax.set_xlim(min_len, max_len)
-        ax.set_ylim(0, 1)
-        # Thicklocator parameters
-        ax.yaxis.set_major_locator(MaxNLocator(5, prune='lower'))
-        ax.xaxis.set_major_locator(MaxNLocator(6))
-        ax.label_outer()
-    # X label
-    fig.text(0.5, 0.0, 'Epoch', ha='center', fontsize=font_size)
+
+    
+    
+    # Remove the unused subplot (8th subplot)
+    if len(suffixes) < 8:
+        fig.delaxes(axs[-1])
+
+    # Adjust layout to prevent overlap
+    fig.tight_layout(pad=2.0)
+    plt.subplots_adjust(left=0.1, bottom=0.1)
+    
+    fig.text(0.5, 0.04, 'Epoch', ha='center', fontsize=font_size+1)
+    fig.text(0.04, 0.5, 'Confidence', va='center', rotation='vertical', fontsize=font_size+1)
+    
+   
+    ax.legend(["Confidence on Knowns", "Confidence on Negatives"], frameon=False, fontsize=15, bbox_to_anchor=(-0.2, -0.15), ncol=3, loc='upper center', handletextpad=0.5, 
+              columnspacing=1, markerscale=3)
+
+    # Save the final figure to the PDF
+    pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
+
+#these even t files are in the LeNet directory
+# Can easily be adjustet to load all event file
+def plot_confidences(args):
+    loss = "EOS"
+    suffixes = get_experiment_suffix(args=args)
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    event_dir = os.path.join(current_dir, '../LeNet/Logs/')
+    
+    # Locate event paths
+    event_files = {}
+    files = sorted(os.listdir(event_dir))
+    
+    for suffix in suffixes:
+    
+        # Get the event files
+        for f in files:
+            if f.startswith(suffix + "_event"):
+                file_path = os.path.abspath(os.path.join(event_dir, f))
+                event_files[suffix] = file_path
+
+        linewidth = 1.5
+        font_size = 15
+        color_palette = cm.get_cmap('tab10', 10).colors
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        def load_accumulators(files):
+            known_data, unknown_data = {}, {}
+            event_file = files[suffix]
+            try:
+                event_acc = EventAccumulator(str(event_file), size_guidance={'scalars': 0})
+                event_acc.Reload()
+                for event in event_acc.Scalars('val/conf_kn'):
+                    known_data[event.step + 1] = event.value
+                for event in event_acc.Scalars('val/conf_unk'):
+                    unknown_data[event.step + 1] = event.value
+            except KeyError:
+                pass
+
+            # Re-structure
+            return zip(*sorted(known_data.items())), zip(*sorted(unknown_data.items()))
+
+        (step_kn, val_kn), (step_unk, val_unk) = load_accumulators(event_files)
+
+        # Plot known and unknown confidences
+        ax.plot(step_kn, val_kn, linewidth=linewidth, label='Known', color=color_palette[1])
+        ax.plot(step_unk, val_unk, linewidth=linewidth, label='Unknown', color=color_palette[0])
+
+        ax.set_title(suffix[1:].replace("_", " & ").replace("mixed", "letters"), fontsize=font_size)
+
+        # Add grid
+        ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+        ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+
+        # Set limits and labels
+        ax.set_xlim(min(step_kn + step_unk), max(step_kn + step_unk))
+        ax.set_ylim(0.8, 1)
+        ax.set_xlabel('Epoch', fontsize=font_size)
+        ax.set_ylabel('Confidence', fontsize=font_size)
+
+        # Add legend
+        ax.legend(loc='upper right', fontsize=font_size - 1)
+
+        # Set tick parameters
+        ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
+        ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
+
+    plt.tight_layout()
+    pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
 
 def plot_softmax(args, scores):
   args.loss_functions = ["EOS"]
@@ -471,18 +595,18 @@ if __name__ == "__main__":
     try:
       # plot OSCR (actually not required for best case)
       
-      '''
+      """
       print("Plotting OSCR curves")
       plot_OSCR(args, scores= (suffix, scores[suffix]))
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
-      '''
+     
       
       # plot confidences
       print("Plotting confidence plots")
       plot_confidences(args)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
       
-      """
+  
       if not args.linear and not args.sort_by_loss:
         # plot histograms
         print("Plotting softmax histograms")
@@ -492,18 +616,29 @@ if __name__ == "__main__":
 
     finally:
       pdf.close()
-  
+      
+  '''
   if args.all:
     print("Writing Combined OSC Comparison")
     pdf = PdfPages("Combined_OSC_Comparison.pdf")
     plot_OSCR_comparison(args, scores, pdf)
     pdf.close()
-
-
+  '''
+  if args.all:
+    print("Writing combined OSC plots")
+    pdf = PdfPages("All_OSC_plots.pdf")
+    plot_many_OSCR(args, scores, pdf)
+    pdf.close()
+  '''
   # create result table
   if not args.linear and not args.sort_by_loss:
     print("Writing file", "Conf & CCR scores")
     print("Creating Table")
     conf_and_ccr_table(args, scores, epoch)
-    
   
+  if args.all:
+    print("Writing combined confidences")
+    pdf = PdfPages("Combined_Confidences.pdf")
+    plot_many_confidences(args, pdf)
+    pdf.close()
+  '''

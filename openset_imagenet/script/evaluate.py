@@ -106,6 +106,9 @@ def get_args():
 
 '''Creates a string suffix that can be used when writing files'''
 def get_experiment_suffix(cfg):
+    
+    
+    
     suffix = ""
     letters = True
     print(cfg)
@@ -119,7 +122,7 @@ def get_experiment_suffix(cfg):
         suffix += "_mixed"
         letters = False
     if not cfg.include_unknown:
-        suffix += "no_negatives"
+        suffix += "_no_negatives"
         letters = False
     if letters:
         suffix += "_letters"
@@ -154,14 +157,14 @@ def main():
     val_file = pathlib.Path(cfg.data.val_file.format(cfg.protocol))
     test_file = pathlib.Path(cfg.data.test_file.format(cfg.protocol))
     
-    counterfactual_val_file = pathlib.Path(cfg.data.counterfactual_val_file) if cfg.include_counterfactuals else None
+    counterfactual_file = pathlib.Path(cfg.data.counterfactual_file) if cfg.include_counterfactuals else None
     arpl_file = pathlib.Path(cfg.data.arpl_file) if cfg.include_arpl else None
 
     # create datasets
     val_dataset = openset_imagenet.ImagenetDataset(
             csv_file=val_file,
             imagenet_path=cfg.data.imagenet_path,
-            counterfactuals_path= counterfactual_val_file,
+            counterfactuals_path= counterfactual_file,
             mixed_unknowns=cfg.mixed_unknowns,
             arpl_path= arpl_file,
             transform=transform_val

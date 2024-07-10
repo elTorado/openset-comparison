@@ -107,7 +107,7 @@ def command_line_options():
 '''Creates a string suffix that can be used when writing files'''
 def get_experiment_suffix(args):
   if args.all:
-    return ["_letters", "_counterfactuals",
+    return ["_no_negatives", "_letters", "_counterfactuals",
             "_counterfactuals_mixed", "_arpl", 
             "_arpl_mixed", "_counterfactuals_arpl", 
             "_counterfactuals_arpl_mixed"]
@@ -125,7 +125,7 @@ def get_experiment_suffix(args):
         suffix += "_mixed"
         letters = False
     if not args.include_unknown:
-        suffix += "no_negatives"
+        suffix += "_no_negatives"
         letters = False
     if letters:
         suffix += "_letters"
@@ -178,6 +178,8 @@ def plot_OSCR(args, scores):
   ############ FINAL PREPARATIONS ##############
   val = [score[loss]["val"]]
   test = [score[loss]["test"]]
+  
+  print(test)
         
   red = pyplot.colormaps.get_cmap('tab10').colors[3]
   blue = pyplot.colormaps.get_cmap('tab10').colors[0]
@@ -211,17 +213,22 @@ def plot_many_OSCR(args, scores, pdf):
     # Default entropic openset loss, can be implemented to different losses in the future
     loss = args.approach[0]
 
-    # Create the figure and axes with a 4x2 grid (7 subplots)
+    # create figure with 8 subplots
     fig, axs = plt.subplots(2, 4, figsize=(18, 6))
     font = 13
     scale = 'linear' if args.linear else 'semilog'
-    
-    colormap = plt.get_cmap('tab10')
-    colors = colormap.colors
     axs = axs.flatten()
-    labels=[]
+    
     for index, (suffix, score) in enumerate(scores.items()):
+      
+        if suffix == "_no_negatives":
+          print("CHANGING LOSS TO SOFTMAX")
+          loss = "SoftMax"
+        
         ax = axs[index]  # Get the specific subplot for this score
+        
+        print(score)
+        
         test = [score[loss]["test"]]
         val = [score[loss]["val"]]
                 
@@ -268,20 +275,16 @@ def plot_OSCR_comparison(args, scores, pdf):
     # Default entropic openset loss, can be implemented to different losses in the future
     loss = args.approach[0]
 
-    # Create the figure and axis
     fig, ax = plt.subplots(figsize=(8, 7))
     font = 15
     scale = 'linear' if args.linear else 'semilog'
     
-    # Colormap to get different colors for each plot
     colormap = plt.get_cmap('tab10')
     colors = colormap.colors
 
-    # Initialize labels for the legend
     labels = []
 
     for index, (suffix, score) in enumerate(scores.items()):
-        # Extract val and test scores for the current loss
         test = [score[loss]["test"]]
         
         color = colors[index % len(colors)]  # Cycle through colors if more than the colormap length
@@ -464,62 +467,52 @@ def plot_confidences(args):
     pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
 
-def plot_softmax(args, scores):
-  args.loss_functions = ["EOS"]
-  args.protocols = ["1"]
+def plot_softmax(args, suffix, score):
+  
+  loss = args.approach[0]
+
+
+  fig, ax = pyplot.subplots(figsize=(5, 6))
+  font = 15
+  scale = 'linear' if args.linear else 'semilog'
+  
   font_size = 15
   bins = 30
   unk_label = -1
-  P = len(args.protocols)
-  N = len(args.loss_functions)
-
-  fig = pyplot.figure(figsize=(3*P+1, 2*N))
-  gs = fig.add_gridspec(N, P, hspace=0.2, wspace=0.08)
-  axs = gs.subplots(sharex=True, sharey=False)
-  axs = axs.flat
+  
   # Manual colors
   edge_unk = colors.to_rgba('indianred', 1)
   fill_unk = colors.to_rgba('firebrick', 0.04)
   edge_kn = colors.to_rgba('tab:blue', 1)
   fill_kn = colors.to_rgba('tab:blue', 0.04)
 
-  index = 0
-  for protocol in args.protocols:
-    for l, loss in enumerate(args.loss_functions):
+  drop_bg = loss == "garbage"
+  
+    
       # Calculate histogram
-      drop_bg = loss == "garbage"  #  Drop the background class
-      if scores[protocol][loss] is not None:
-        kn_hist, kn_edges, unk_hist, unk_edges = openset_imagenet.util.get_histogram(
-            scores[protocol][loss]["test"],
-            unk_label=unk_label,
-            metric='score',
-            bins=bins,
-            drop_bg=drop_bg
+  kn_hist, kn_edges, unk_hist, unk_edges = openset_imagenet.util.get_histogram(
+      score[loss]["test"],
+      unk_label=unk_label,
+      metric='score',
+      bins=bins,
+      drop_bg=drop_bg
         )
-      else:
-        kn_hist, kn_edges, unk_hist, unk_edges = [], [0], [], [0]
-      # Plot histograms
-      axs[index].stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
-      axs[index].stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
 
-      # axs[ix].set_yscale('log')
-      axs[index].set_title(f"$P_{{{protocol}}}$ {args.labels[l]}")
-      index += 1
+  # Plot histograms
+  ax.stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
+  ax.stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
 
-  # Share y axis of the histograms of the same protocol
-  for p in range(P):
-    for l in range(1,N):
-      axs[N*p+l-1].sharey(axs[N*p+l])
+  # axs[ix].set_yscale('log')
+  ax.set_title(f"${{{suffix}}}$")
 
-  for ax in axs:
-      # set the tick parameters for the current axis handler
-      ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
-      ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
-      ax.yaxis.set_major_locator(MaxNLocator(6))
-      ax.label_outer()
+  # set the tick parameters for the current axis handler
+  ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
+  ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
+  ax.yaxis.set_major_locator(MaxNLocator(6))
+  ax.label_outer()
 
   # Manual legend
-  axs[-2].legend(['Known', 'Unknown'],
+  ax.legend(['Known', 'Unknown'],
                 frameon=False,
                 fontsize=font_size-1,
                 bbox_to_anchor=(0.2, -0.08),
@@ -529,6 +522,64 @@ def plot_softmax(args, scores):
                 markerscale=1)
   # X label
   fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font_size)
+
+def plot_many_softmax(args, scores, pdf):
+  
+  loss = args.approach[0]
+  # create figure with 8 subplots
+  fig, axs = plt.subplots(2, 4, figsize=(18, 6))
+  font = 15
+  axs = axs.flatten()
+
+  bins = 30
+  unk_label = -1
+
+  
+  # Manual colors
+  edge_unk = colors.to_rgba('indianred', 1)
+  fill_unk = colors.to_rgba('firebrick', 0.04)
+  edge_kn = colors.to_rgba('tab:blue', 1)
+  fill_kn = colors.to_rgba('tab:blue', 0.04)
+
+  drop_bg = loss == "garbage"
+  
+  for index, (suffix, score) in enumerate(scores.items()):
+    ax = axs[index]
+    
+      # Calculate histogram
+    kn_hist, kn_edges, unk_hist, unk_edges = openset_imagenet.util.get_histogram(
+        score[loss]["test"],
+        unk_label=unk_label,
+        metric='score',
+        bins=bins,
+        drop_bg=drop_bg
+          )
+
+    # Plot histograms
+    ax.stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
+    ax.stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
+
+    title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+    ax.set_title(title)
+
+    # set the tick parameters for the current axis handler
+    ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
+    ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font)
+    ax.yaxis.set_major_locator(MaxNLocator(6))
+    ax.label_outer()
+
+  # Manual legend
+  ax.legend(['Known', 'Unknown'],
+                frameon=False,
+                fontsize=font-1,
+                 bbox_to_anchor=(-1, -0.25),
+                ncol=2,
+                handletextpad=0.3,
+                columnspacing=1,
+                markerscale=1)
+  # X label
+  fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font)
+  pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
 
 def conf_and_ccr_table(args, scores, epochs):
   approach = args.approach
@@ -587,6 +638,7 @@ if __name__ == "__main__":
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)  
   
+  """
   for suffix in scores.keys():
     
     print("Writing file", suffix)
@@ -595,7 +647,7 @@ if __name__ == "__main__":
     try:
       # plot OSCR (actually not required for best case)
       
-      """
+      
       print("Plotting OSCR curves")
       plot_OSCR(args, scores= (suffix, scores[suffix]))
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
@@ -606,39 +658,53 @@ if __name__ == "__main__":
       plot_confidences(args)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
       
-  
+      
       if not args.linear and not args.sort_by_loss:
         # plot histograms
         print("Plotting softmax histograms")
-        plot_softmax(args, scores)
+        plot_softmax(args, suffix, scores[suffix])
         pdf.savefig(bbox_inches='tight', pad_inches = 0)
-      """
+      
 
     finally:
       pdf.close()
-      
-  '''
+    """  
+  
   if args.all:
+    
+    
     print("Writing Combined OSC Comparison")
     pdf = PdfPages("Combined_OSC_Comparison.pdf")
     plot_OSCR_comparison(args, scores, pdf)
     pdf.close()
-  '''
-  if args.all:
+  
+ 
     print("Writing combined OSC plots")
     pdf = PdfPages("All_OSC_plots.pdf")
     plot_many_OSCR(args, scores, pdf)
     pdf.close()
+    
+    '''
+    print("Writing combined confidences")
+    pdf = PdfPages("Combined_Confidences.pdf")
+    plot_many_confidences(args, pdf)
+    pdf.close()
+    '''
+     
+    print("Writing combined SoftMax scores")
+    pdf = PdfPages("Combined_Softmax_Scores.pdf")
+    plot_many_softmax(args,scores, pdf)
+    pdf.close()
+   
+    
+    
   '''
   # create result table
   if not args.linear and not args.sort_by_loss:
     print("Writing file", "Conf & CCR scores")
     print("Creating Table")
     conf_and_ccr_table(args, scores, epoch)
-  
-  if args.all:
-    print("Writing combined confidences")
-    pdf = PdfPages("Combined_Confidences.pdf")
-    plot_many_confidences(args, pdf)
-    pdf.close()
   '''
+  
+ 
+  

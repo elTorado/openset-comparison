@@ -596,7 +596,7 @@ def get_experiment_suffix(args):
         suffix += "_mixed"
         letters = False
     if not args.include_unknown:
-        suffix += "no_negatives"
+        suffix += "_no_negatives"
         letters = False
     if letters:
         suffix += "_letters"
@@ -613,12 +613,14 @@ def training(args):
         set_device_cpu()
     
     torch.manual_seed(0)
+    
+    data_and_loss = get_loss_functions(args=args)
 
     # get training and validation data and Entropic OpenSet Loss function    
-    training_data=Dataset(args, args.dataset_root , include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
-    first_loss_func=EntropicOpensetLoss(num_of_classes=len(training_data.classes))
-    validation_data = Dataset(args, args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
-
+    training_data=data_and_loss["training_data"]
+    first_loss_func=data_and_loss["first_loss_func"]
+    validation_data = data_and_loss["val_data"]
+    
     # Create .pth file to store the training result and the directory to store it if necessary
     suffix = get_experiment_suffix(args=args)
     results_dir = pathlib.Path(f"{args.arch}")

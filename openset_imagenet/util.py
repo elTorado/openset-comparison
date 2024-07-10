@@ -179,7 +179,6 @@ def plot_single_oscr(x, y, ax, exp_name, color, baseline, scale):
 def plot_oscr(arrays, methods, color, scale='linear', title=None, ax_label_font=13,
               ax=None, unk_label=-1):
     
-    print("================ plot_oscr !! =================")
 
     color_palette = color
     

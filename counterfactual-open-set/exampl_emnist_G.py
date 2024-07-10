@@ -747,6 +747,7 @@ def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
         
 
         loss = loss_func(logits, labels)
+        
         try:
             t_metrics["j"].update(loss.item(), batch_len)     
         except:
@@ -776,8 +777,12 @@ def validate(net, val_data_loader, optimizer, num_classes, loss_func, v_metrics,
             logits, features = net(x)             
             scores = torch.nn.functional.softmax(logits, dim=1)
             loss = loss_func(logits, y) 
-            v_metrics["j"].update(loss.item(), batch_len)
-                        
+            
+            try:
+                v_metrics["j"].update(loss.item(), batch_len)
+            except:
+                continue
+                                    
             start_ix = i * args.Batch_Size
             all_targets[start_ix: start_ix + batch_len] = y
             all_scores[start_ix: start_ix + batch_len] = scores

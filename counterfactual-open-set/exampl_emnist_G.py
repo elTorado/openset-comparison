@@ -751,7 +751,7 @@ def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
         try:
             t_metrics["j"].update(loss.item(), batch_len)     
         except:
-            continue
+            pass
 
         loss.backward()
         optimizer.step()      
@@ -783,13 +783,11 @@ def validate(net, val_data_loader, optimizer, num_classes, loss_func, v_metrics,
             try:
                 v_metrics["j"].update(loss.item(), batch_len)
             except:
-                continue
+                pass
                                     
             start_ix = i * args.Batch_Size
             
-            print(f"Batch {i} - targets: {y}")
-            print(f"Batch index {start_ix}")
-            
+ 
             all_targets[start_ix: start_ix + batch_len] = y
             all_scores[start_ix: start_ix + batch_len] = scores
             

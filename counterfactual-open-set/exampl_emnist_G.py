@@ -137,8 +137,10 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.which_set = which_set
         self.has_garbage_class = has_garbage_class
         
+        
         if include_unknown:
-            self.classes = self.mnist.classes + [-1]
+            if not which_set == "test":
+                self.classes = self.mnist.classes + [-1]
             
         else: 
             self.classes = self.mnist.classes
@@ -227,28 +229,11 @@ class Dataset(torch.utils.data.dataset.Dataset):
             else: 
                 self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
                 self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
-                
-            '''                
-            # Calculate the indices for splitting, # 80% for training   , 20% for Validation
-            split_index_cf = int(0.8 * len(self.counterfactual_samples))  
-            split_index_arpl = int(0.8 * len(self.arpl_samples))   
-                    
-            if which_set == "train":
-                # Take the first 80% of the samples for training
-                self.counterfactual_samples = self.counterfactual_samples[:split_index_cf]
-                self.arpl_samples = self.arpl_samples[:split_index_arpl]
-                
-            elif which_set == "val":
-                # Take the last 20% of the samples for validation
-                self.counterfactual_samples = self.counterfactual_samples[split_index_cf:]
-                self.arpl_samples = self.arpl_samples[split_index_arpl:]
-             '''               
+
              
             # FINALLY, ASSIGN THE SYNTHETIC SAMPLES
             self.synthetic_samples = self.arpl_samples + self.counterfactual_samples
-        
-        
-        
+       
   
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
         if include_unknown:

@@ -241,8 +241,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
        
   
         print(" ========= LENGTH OF DIGITS :" + str(len(self.mnist)))
-        if include_unknown:
-            print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)) + " , FROM LETTERS: " + self.which_letters)
+        if not which_set == "test":
+            if include_unknown:
+                print(" ========= LENGTH OF LETTER :" + str(len(self.letter_indexes)) + " , FROM LETTERS: " + self.which_letters)
         print(" ========= LENGTH OF SYNTHETIC SAMPLES :" + str(len(self.synthetic_samples)))
         print(" ========= CLASSES IN OVERALL DATASET :", self.classes )       
         print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", end='\n')

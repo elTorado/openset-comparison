@@ -141,6 +141,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
         if include_unknown:
                 self.classes = self.mnist.classes + [-1]
             
+        elif which_set == "test":
+                self.classes = self.mnist.classes + [-1]
+            
         else: 
             self.classes = self.mnist.classes
         

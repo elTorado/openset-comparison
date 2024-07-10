@@ -209,7 +209,7 @@ def main():
                                       out_features=n_classes, 
                                       logit_bias=False)
     
-    start_epoch, best_score = openset_imagenet.train.load_checkpoint(model, args.output_directory /suffix/ (suffix+".pth"))
+    start_epoch, best_score = openset_imagenet.train.load_checkpoint(model, args.output_directory /get_experiment_suffix(cfg)/ (suffix+".pth"))
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     device(model)
 

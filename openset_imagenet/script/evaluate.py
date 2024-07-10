@@ -163,15 +163,18 @@ def main():
     # create datasets
     val_dataset = openset_imagenet.ImagenetDataset(
             csv_file=val_file,
+            which_set="val",
+            include_unknown=cfg.include_unknown,
             imagenet_path=cfg.data.imagenet_path,
             counterfactuals_path= counterfactual_file,
             mixed_unknowns=cfg.mixed_unknowns,
             arpl_path= arpl_file,
             transform=transform_val
         )
-
     test_dataset = openset_imagenet.ImagenetDataset(
-         csv_file=test_file,
+        which_set="test",
+        csv_file=test_file,
+        include_unknown=cfg.include_unknown,
         imagenet_path=cfg.data.imagenet_path,
         counterfactuals_path= None,
         mixed_unknowns=None,
@@ -206,7 +209,7 @@ def main():
                                       out_features=n_classes, 
                                       logit_bias=False)
     
-    start_epoch, best_score = openset_imagenet.train.load_checkpoint(model, args.output_directory / (suffix+".pth"))
+    start_epoch, best_score = openset_imagenet.train.load_checkpoint(model, args.output_directory /suffix/ (suffix+".pth"))
     print(f"Taking model from epoch {start_epoch} that achieved best score {best_score}")
     device(model)
 

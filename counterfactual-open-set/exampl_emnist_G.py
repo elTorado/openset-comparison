@@ -139,7 +139,9 @@ class Dataset(torch.utils.data.dataset.Dataset):
         
         
         if include_unknown:
+            print(" DOES NOT INCLUDE UNKNWONS; IS IT THE TEST SET? ", which_set=="test")
             if not which_set == "test":
+                print(" REMOVING CLASS DUE TO NO UNKNOWNS")
                 self.classes = self.mnist.classes + [-1]
             
         else: 

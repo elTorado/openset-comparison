@@ -28,6 +28,16 @@ def confidence(scores, target_labels, offset=0., unknown_class = -1, last_valid_
         neg_count = sum(unknown).item()  # Total negative samples in data
         kn_conf = 0.0
         neg_conf = 0.0
+        
+        print(f"scores shape: {scores.shape}")
+        print(f"target_labels shape: {target_labels.shape}")
+        print(f"known shape: {known.shape}")
+        print(f"unknown shape: {unknown.shape}")
+        print(f"known count: {kn_count}")
+        print(f"neg count: {neg_count}")
+
+        
+        
         if kn_count:
             # Average confidence known samples
             kn_conf = torch.sum(scores[known, target_labels[known]]).item() / kn_count

@@ -778,12 +778,18 @@ def validate(net, val_data_loader, optimizer, num_classes, loss_func, v_metrics,
             scores = torch.nn.functional.softmax(logits, dim=1)
             loss = loss_func(logits, y) 
             
+            
+            
             try:
                 v_metrics["j"].update(loss.item(), batch_len)
             except:
                 continue
                                     
             start_ix = i * args.Batch_Size
+            
+            print(f"Batch {i} - targets: {y}")
+            print(f"Batch index {start_ix}")
+            
             all_targets[start_ix: start_ix + batch_len] = y
             all_scores[start_ix: start_ix + batch_len] = scores
             

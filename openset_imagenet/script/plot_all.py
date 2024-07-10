@@ -11,7 +11,8 @@ import torch
 import numpy
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-from matplotlib import pyplot, cm, colors
+from matplotlib import cm, colors
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator, LogLocator
 
@@ -171,29 +172,13 @@ def load_scores(args):
     
     for protocol in args.protocols:
       for suffix in suffixes:
-        experiment_dir = args.output_directory / f"Protocol_{protocol}"
+        experiment_dir = args.output_directory / f"Protocol_{protocol}"/suffix
         suffix = suffix + "_best" if args.use_best else "_curr"
         score_files = {v : experiment_dir / f"{suffix}_{v}_arr.npz" for v in ("val", "test")}
 
-        '''
-        checkpoint_file = experiment_dir / (loss+suffix+".pth")
-        # if os.path.exists(checkpoint_file):
-        if not all(os.path.exists(v) for v in score_files.values()) or args.force:
-          # extract score files first
-          print("Extracting scores of", checkpoint_file)
-          call = ["evaluate_imagenet.py", loss, str(protocol), "--output-directory", experiment_dir, "--imagenet-directory", args.imagenet_directory, "--protocol-directory", args.protocol_directory]
-          if args.gpu is not None:
-            call += ["-g", str(args.gpu)]
-          if args.use_best:
-            call += ["-b"]
-          subprocess.call(call)
-          '''
+        
         # remember files
         scores[protocol][suffix] = openset_imagenet.util.read_array_list(score_files)
-
-        # remember epoch where scores are extracted
-        # checkpoint = torch.load(checkpoint_file, map_location="cpu")
-        # epoch[protocol][loss] = (checkpoint["epoch"],checkpoint["best_score"])
 
         epoch = []
         """
@@ -206,21 +191,21 @@ def load_scores(args):
 
 
 def plot_OSCR(args, scores, suffix):
-  
+
     protocol = args.protocols[0]
     suffix = suffix
   
     # default entropic openset loss, can be implemented to different losses in the future
     # plot OSCR
     # Only create one subplot directly
-    fig, ax = pyplot.subplots(figsize=(5, 6))
+    fig, ax = plt.subplots(figsize=(5, 6))
     font = 15
     scale = 'linear' if args.linear else 'semilog'
 
     ############ FINAL PREPARATIONS ##############
           
-    red = pyplot.colormaps.get_cmap('tab10').colors[3]
-    blue = pyplot.colormaps.get_cmap('tab10').colors[0]
+    red = plt.colormaps.get_cmap('tab10').colors[3]
+    blue = plt.colormaps.get_cmap('tab10').colors[0]
     
     args.labels = ["Val", "Test"] 
     
@@ -232,6 +217,7 @@ def plot_OSCR(args, scores, suffix):
     test = [scores[protocol][suffix]["test"]]
     openset_imagenet.util.plot_oscr(arrays=test, methods=args.loss_functions, scale=scale, title=f'$P{protocol}{suffix}$ Test',
                   ax_label_font=font, ax=ax, unk_label=-1,color=red)
+    
     ax.legend(args.labels, frameon=False, fontsize=font - 1, bbox_to_anchor=(0.8, -0.12), ncol=3, handletextpad=0.5, columnspacing=1, markerscale=3)
     ax.label_outer()
     ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
@@ -247,6 +233,58 @@ def plot_OSCR(args, scores, suffix):
     fig.text(0.55, 0.06, 'FPR', ha='center', fontsize=font+1)
     fig.text(-0.01, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
 
+def plot_many_OSCR(args, scores, pdf):
+  protocol = args.protocols[0]
+  
+  # create figure with 8 subplots
+  fig, axs = plt.subplots(2, 4, figsize=(18, 6))
+  font = 13
+  scale = 'linear' if args.linear else 'semilog'
+  axs = axs.flatten()
+  
+  for index, (suffix, score) in enumerate(scores.items()):
+    ax = axs[index]  # Get the specific subplot for this score
+    val = [scores[protocol][suffix]["val"]]
+    test = [scores[protocol][suffix]["test"]]
+    
+    red = plt.colormaps.get_cmap('tab10').colors[3]
+    blue = plt.colormaps.get_cmap('tab10').colors[0]
+
+    title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+    
+    # Plot test scores
+    openset_imagenet.util.plot_oscr(arrays=val, methods=[args.approach], color=blue, scale=scale, title=title,
+            ax_label_font=font, ax=ax, unk_label=-1,)
+
+    openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=red, scale=scale, title=title,
+            ax_label_font=font, ax=ax, unk_label=-1,)
+
+    # Set grid and limits
+    ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+    ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+    ax.set_xlim(left=10**-2, right=10**0)
+    ax.set_ylim(0, 1.05)
+    
+  
+    # Set the legend with labels
+   
+    ax.legend(["Val", "Test"], frameon=False, fontsize=16, bbox_to_anchor=(-0.4, -0.25), ncol=3, loc='upper center', handletextpad=0.5, 
+              columnspacing=1, markerscale=3)
+    
+        
+    # Remove the unused subplot (8th subplot)
+    fig.delaxes(axs[-1])
+
+    # Adjust layout to prevent overlap
+    # fig.tight_layout(pad=2.0)
+    plt.subplots_adjust(left=0.1, bottom=0.1, hspace=0.3)
+    
+    fig.text(0.45, 0.03, 'FPR', ha='center', fontsize=font+1)
+    fig.text(0.05, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
+
+    pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
+
+    plt.close(fig)  
 
 def plot_confidences(args):
 
@@ -449,7 +487,7 @@ def main():
   args = get_args()
 
   # HARDCODED AS WE USE ONE PROTOCOL ONLY. 
-  protocol = args.protocols[0]
+  protocol = 2
   
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)

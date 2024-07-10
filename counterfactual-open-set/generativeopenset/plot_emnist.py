@@ -165,6 +165,8 @@ def load_scores(args):
 
 def plot_OSCR(args, scores):
   
+  print(scores)
+  
   # default entropic openset loss, can be implemented to different losses in the future
   loss = args.approach[0]
   suffix = scores[0]
@@ -179,7 +181,6 @@ def plot_OSCR(args, scores):
   val = [score[loss]["val"]]
   test = [score[loss]["test"]]
   
-  print(test)
         
   red = pyplot.colormaps.get_cmap('tab10').colors[3]
   blue = pyplot.colormaps.get_cmap('tab10').colors[0]
@@ -221,14 +222,8 @@ def plot_many_OSCR(args, scores, pdf):
     
     for index, (suffix, score) in enumerate(scores.items()):
       
-        if suffix == "_no_negatives":
-          print("CHANGING LOSS TO SOFTMAX")
-          loss = "SoftMax"
-        
         ax = axs[index]  # Get the specific subplot for this score
-        
-        print(score)
-        
+                
         test = [score[loss]["test"]]
         val = [score[loss]["val"]]
                 
@@ -283,6 +278,7 @@ def plot_OSCR_comparison(args, scores, pdf):
     colors = colormap.colors
 
     labels = []
+    
 
     for index, (suffix, score) in enumerate(scores.items()):
         test = [score[loss]["test"]]
@@ -638,7 +634,7 @@ if __name__ == "__main__":
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)  
   
-  """
+ 
   for suffix in scores.keys():
     
     print("Writing file", suffix)
@@ -651,7 +647,7 @@ if __name__ == "__main__":
       print("Plotting OSCR curves")
       plot_OSCR(args, scores= (suffix, scores[suffix]))
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
-     
+      """
       
       # plot confidences
       print("Plotting confidence plots")
@@ -665,10 +661,10 @@ if __name__ == "__main__":
         plot_softmax(args, suffix, scores[suffix])
         pdf.savefig(bbox_inches='tight', pad_inches = 0)
       
-
+    """  
     finally:
       pdf.close()
-    """  
+   
   
   if args.all:
     

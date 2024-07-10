@@ -131,7 +131,6 @@ def calculate_oscr(gt, scores, unk_label=-1):
 
 
 def plot_single_oscr(x, y, ax, exp_name, color, baseline, scale):
-    print("================ plot single ocscr ===========")
     linestyle = 'solid'
     linewidth = 1
     if baseline:  # The baseline is always the first array

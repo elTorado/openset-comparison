@@ -125,7 +125,7 @@ def get_experiment_suffix(cfg):
         suffix += "_no_negatives"
         letters = False
     if letters:
-        suffix += "_letters"
+        suffix += "_vanilla"
 
     return suffix
 

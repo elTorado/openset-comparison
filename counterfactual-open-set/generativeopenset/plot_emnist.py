@@ -164,9 +164,7 @@ def load_scores(args):
   return scores, epoch
 
 def plot_OSCR(args, scores):
-  
-  print(scores)
-  
+    
   # default entropic openset loss, can be implemented to different losses in the future
   loss = args.approach[0]
   suffix = scores[0]
@@ -233,12 +231,16 @@ def plot_many_OSCR(args, scores, pdf):
         title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
 
         # Plot test scores
+        
+        '''
         openset_imagenet.util.plot_oscr(arrays=val, methods=[args.approach], color=blue, scale=scale, title=title,
                 ax_label_font=font, ax=ax, unk_label=-1,)
-  
+        '''
+        
         openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=red, scale=scale, title=title,
                 ax_label_font=font, ax=ax, unk_label=-1,)
-
+        
+        
         # Set grid and limits
         ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
         ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
@@ -247,12 +249,14 @@ def plot_many_OSCR(args, scores, pdf):
         
     # Set the legend with labels
    
+    '''
     ax.legend(["Val", "Test"], frameon=False, fontsize=16, bbox_to_anchor=(-0.4, -0.25), ncol=3, loc='upper center', handletextpad=0.5, 
               columnspacing=1, markerscale=3)
+    '''
     
-        
-    # Remove the unused subplot (8th subplot)
-    fig.delaxes(axs[-1])
+    ax.legend(["Test"], frameon=False, fontsize=16, bbox_to_anchor=(-0.4, -0.25), ncol=3, loc='upper center', handletextpad=0.5, 
+              columnspacing=1, markerscale=3)
+    
 
     # Adjust layout to prevent overlap
     # fig.tight_layout(pad=2.0)
@@ -337,6 +341,7 @@ def plot_many_confidences(args, pdf):
     axs = axs.flatten()
 
     def load_accumulators(files, suffix):
+        print(files)
         known_data, unknown_data = {}, {}
         event_file = files[suffix]
         try:
@@ -354,6 +359,7 @@ def plot_many_confidences(args, pdf):
 
     for index, suffix in enumerate(suffixes):
         ax = axs[index]  # Get the specific subplot for this score
+        print(suffix)
         (step_kn, val_kn), (step_unk, val_unk) = load_accumulators(event_files, suffix)
 
         # Plot known and unknown confidences
@@ -372,10 +378,6 @@ def plot_many_confidences(args, pdf):
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
 
     
-    
-    # Remove the unused subplot (8th subplot)
-    if len(suffixes) < 8:
-        fig.delaxes(axs[-1])
 
     # Adjust layout to prevent overlap
     fig.tight_layout(pad=2.0)
@@ -634,7 +636,6 @@ if __name__ == "__main__":
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)  
   
- 
   for suffix in scores.keys():
     
     print("Writing file", suffix)
@@ -643,11 +644,11 @@ if __name__ == "__main__":
     try:
       # plot OSCR (actually not required for best case)
       
-      
+       
       print("Plotting OSCR curves")
       plot_OSCR(args, scores= (suffix, scores[suffix]))
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
-      """
+      
       
       # plot confidences
       print("Plotting confidence plots")
@@ -661,34 +662,31 @@ if __name__ == "__main__":
         plot_softmax(args, suffix, scores[suffix])
         pdf.savefig(bbox_inches='tight', pad_inches = 0)
       
-    """  
+    
     finally:
       pdf.close()
-   
   
   if args.all:
     
-    
     print("Writing Combined OSC Comparison")
-    pdf = PdfPages("Combined_OSC_Comparison.pdf")
+    pdf = PdfPages("EMNIST_Combined_OSC_Comparison.pdf")
     plot_OSCR_comparison(args, scores, pdf)
     pdf.close()
   
  
     print("Writing combined OSC plots")
-    pdf = PdfPages("All_OSC_plots.pdf")
+    pdf = PdfPages("EMNIST_All_OSC_plots.pdf")
     plot_many_OSCR(args, scores, pdf)
     pdf.close()
     
-    '''
     print("Writing combined confidences")
-    pdf = PdfPages("Combined_Confidences.pdf")
+    pdf = PdfPages("EMNIST_Combined_Confidences.pdf")
     plot_many_confidences(args, pdf)
     pdf.close()
-    '''
+    
      
     print("Writing combined SoftMax scores")
-    pdf = PdfPages("Combined_Softmax_Scores.pdf")
+    pdf = PdfPages("EMNIST_Combined_Softmax_Scores.pdf")
     plot_many_softmax(args,scores, pdf)
     pdf.close()
    

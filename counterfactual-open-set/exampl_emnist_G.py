@@ -745,9 +745,12 @@ def train(net, train_data_loader, optimizer, loss_func, t_metrics, args):
         optimizer.zero_grad()
         logits, features = net(images)
         
-        # first loss is always computed, second loss only for some loss functions
+
         loss = loss_func(logits, labels)
-        t_metrics["j"].update(loss.item(), batch_len)     
+        try:
+            t_metrics["j"].update(loss.item(), batch_len)     
+        except:
+            continue
 
         loss.backward()
         optimizer.step()      

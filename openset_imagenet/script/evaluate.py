@@ -220,7 +220,7 @@ def main():
         model=model,
         loader=val_loader
     )
-    file_path = args.output_directory / f"{suffix}_val_arr.npz"
+    file_path = args.output_directory / get_experiment_suffix(args) /f"{suffix}_val_arr.npz"
     np.savez(file_path, gt=gt, logits=logits, features=features, scores=scores)
     print(f"Target labels, logits, features and scores saved in: {file_path}")
 

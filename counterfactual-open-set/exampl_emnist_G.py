@@ -567,7 +567,7 @@ def get_loss_functions(args):
     elif args.approach == "EOS":
         print(" ========= Using Entropic Openset Loss ===========")
         return dict(
-                    first_loss_func=EntropicOpensetLoss(num_of_classes=10),
+                    first_loss_func=EntropicOpensetLoss(num_of_classes=11),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
                     training_data=Dataset(args, args.dataset_root, include_unknown=args.include_unknown, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
                     val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=args.include_unknown, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)
@@ -575,7 +575,7 @@ def get_loss_functions(args):
     elif args.approach == "Objectosphere":
         print(" ========= Using Objectosphere Loss ===========")
         return dict(
-                    first_loss_func=EntropicOpensetLoss(num_of_classes=10),
+                    first_loss_func=EntropicOpensetLoss(num_of_classes=1),
                     second_loss_func=losses.objectoSphere_loss(args.Minimum_Knowns_Magnitude),
                     training_data=Dataset(args, args.dataset_root, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
                     val_data = Dataset(args, args.dataset_root, which_set="val", include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns)

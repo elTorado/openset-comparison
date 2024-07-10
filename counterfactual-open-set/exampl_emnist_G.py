@@ -551,7 +551,7 @@ def get_loss_functions(args):
     if args.approach == "SoftMax":
         print(" ========= Using SoftMax Loss ===========")
         return dict(
-                    first_loss_func=nn.CrossEntropyLoss(reduction='none'),
+                    first_loss_func=nn.CrossEntropyLoss(reduction='mean'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
                     training_data = Dataset(args, args.dataset_root, include_unknown=False , include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
                     val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=False, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
@@ -614,8 +614,6 @@ def training(args):
     
     torch.manual_seed(0)
     
-    data_and_loss = get_loss_functions(args=args)
-
     first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
     
     # Create .pth file to store the training result and the directory to store it if necessary

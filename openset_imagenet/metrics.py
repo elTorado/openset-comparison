@@ -29,6 +29,7 @@ def confidence(scores, target_labels, offset=0., unknown_class = -1, last_valid_
         kn_conf = 0.0
         neg_conf = 0.0
         
+        print(f"target labels: {target_labels}")
         print(f"scores shape: {scores.shape}")
         print(f"target_labels shape: {target_labels.shape}")
         print(f"known shape: {known.shape}")

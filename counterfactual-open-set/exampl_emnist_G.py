@@ -616,10 +616,7 @@ def training(args):
     
     data_and_loss = get_loss_functions(args=args)
 
-    # get training and validation data and Entropic OpenSet Loss function    
-    training_data=data_and_loss["training_data"]
-    first_loss_func=data_and_loss["first_loss_func"]
-    validation_data = data_and_loss["val_data"]
+    first_loss_func,second_loss_func,training_data,validation_data = list(zip(*get_loss_functions(args).items()))[-1]
     
     # Create .pth file to store the training result and the directory to store it if necessary
     suffix = get_experiment_suffix(args=args)

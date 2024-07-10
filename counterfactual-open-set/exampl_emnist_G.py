@@ -137,7 +137,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         self.which_set = which_set
         self.has_garbage_class = has_garbage_class
         
-        
+        print(" DOES NOT INCLUDE UNKNWONS; IS IT THE TEST SET? ", which_set=="test")
         if include_unknown:
             print(" DOES NOT INCLUDE UNKNWONS; IS IT THE TEST SET? ", which_set=="test")
             if not which_set == "test":

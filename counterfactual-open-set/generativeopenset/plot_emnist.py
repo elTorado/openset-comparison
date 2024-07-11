@@ -179,6 +179,7 @@ def plot_OSCR(args, scores):
   val = [score[loss]["val"]]
   test = [score[loss]["test"]]
   
+  print(val)
         
   red = pyplot.colormaps.get_cmap('tab10').colors[3]
   blue = pyplot.colormaps.get_cmap('tab10').colors[0]

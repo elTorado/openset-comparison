@@ -10,6 +10,7 @@ import os
 import torch
 import numpy
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+from pathlib import Path
 
 from matplotlib import cm, colors
 import matplotlib.pyplot as plt
@@ -105,7 +106,7 @@ def get_args():
       "--table",
       help = "Select the file where to write the Confidences (gamma) and CCR into"
     )
-        
+
     parser.add_argument(
         "--include_counterfactuals", "-inc_c",
         type=bool, default=False, 
@@ -136,7 +137,7 @@ def get_args():
 '''Creates a string suffix that can be used when writing files'''
 def get_experiment_suffix(args):
   if args.all:
-    return ["_letters", "_counterfactuals",
+    return ["_vanilla", "_counterfactuals",
             "_counterfactuals_mixed", "_arpl", 
             "_arpl_mixed", "_counterfactuals_arpl", 
             "_counterfactuals_arpl_mixed"]
@@ -157,7 +158,7 @@ def get_experiment_suffix(args):
         suffix += "no_negatives"
         letters = False
     if letters:
-        suffix += "_letters"
+        suffix += "_vanilla"
 
     return [suffix]
 
@@ -172,7 +173,7 @@ def load_scores(args):
     
     for protocol in args.protocols:
       for suffix in suffixes:
-        experiment_dir = args.output_directory / f"Protocol_{protocol}"/suffix
+        experiment_dir = (args.output_directory / f"Protocol_{protocol}" / suffix).resolve()
         suffix = suffix + "_best" if args.use_best else "_curr"
         score_files = {v : experiment_dir / f"{suffix}_{v}_arr.npz" for v in ("val", "test")}
 
@@ -242,21 +243,36 @@ def plot_many_OSCR(args, scores, pdf):
   scale = 'linear' if args.linear else 'semilog'
   axs = axs.flatten()
   
+  #choose scores from given protocol
+  scores = scores[protocol]
   for index, (suffix, score) in enumerate(scores.items()):
+  
+    print(suffix)
+    print("===================================================")
+
+    loss = "EOS"
+    # if suffix == _vanilla:
+    #   loss = "SoftMax"
+    
     ax = axs[index]  # Get the specific subplot for this score
-    val = [scores[protocol][suffix]["val"]]
-    test = [scores[protocol][suffix]["test"]]
+    val = [score["val"]]
+    test = [score["test"]]
     
     red = plt.colormaps.get_cmap('tab10').colors[3]
     blue = plt.colormaps.get_cmap('tab10').colors[0]
 
+    # little string operation on the subplot title
     title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+    if title.endswith(" & best"):
+      title = title[:-7]
     
     # Plot test scores
-    openset_imagenet.util.plot_oscr(arrays=val, methods=[args.approach], color=blue, scale=scale, title=title,
+    '''
+    openset_imagenet.util.plot_oscr(arrays=val, methods=[loss], color=blue, scale=scale, title=title,
             ax_label_font=font, ax=ax, unk_label=-1,)
-
-    openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=red, scale=scale, title=title,
+    '''
+    
+    openset_imagenet.util.plot_oscr(arrays=test, methods=[loss], color=red, scale=scale, title=title,
             ax_label_font=font, ax=ax, unk_label=-1,)
 
     # Set grid and limits
@@ -265,26 +281,81 @@ def plot_many_OSCR(args, scores, pdf):
     ax.set_xlim(left=10**-2, right=10**0)
     ax.set_ylim(0, 1.05)
     
+
+  # Set the legend with labels
   
+  ax.legend(["Test"], frameon=False, fontsize=16, bbox_to_anchor=(-0.4, -0.25), ncol=3, loc='upper center', handletextpad=0.5, 
+            columnspacing=1, markerscale=3)
+  '''
+  ax.legend(["Val", "Test"], frameon=False, fontsize=16, bbox_to_anchor=(-0.4, -0.25), ncol=3, loc='upper center', handletextpad=0.5, 
+            columnspacing=1, markerscale=3)
+  '''
+
+  # Adjust layout to prevent overlap
+  # fig.tight_layout(pad=2.0)
+  plt.subplots_adjust(left=0.1, bottom=0.1, hspace=0.3)
+  
+  fig.text(0.45, 0.03, 'FPR', ha='center', fontsize=font+1)
+  fig.text(0.05, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
+
+  pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
+
+  plt.close(fig)  
+
+def plot_OSC_comparison(args, scores, pdf):
+  protocol = args.protocols[0]
+  
+  # create figure with 8 subplots
+  fig, ax = plt.subplots(figsize=(8, 7))
+  font = 13
+  scale = 'linear' if args.linear else 'semilog'
+  colormap = plt.get_cmap('tab10')
+  colors = colormap.colors
+
+  labels = []
+  
+  #choose scores from given protocol
+  scores = scores[protocol]
+  for index, (suffix, score) in enumerate(scores.items()):
+    loss = "EOS"
+    # if suffix == _vanilla:
+    #   loss = "SoftMax"
+    
+    test = [score["test"]]
+    color = colors[index % len(colors)]  # Cycle through colors if more than the colormap length
+    
+    
+    label = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+    if label.endswith(" & best"):
+      label = label[:-7]
+    labels.append(label)
+    # Plot test scores
+
+    openset_imagenet.util.plot_oscr(arrays=test, methods=[loss], color=color, scale=scale, title="Test score comparison",
+            ax_label_font=font, ax=ax, unk_label=-1,)
+    
     # Set the legend with labels
-   
-    ax.legend(["Val", "Test"], frameon=False, fontsize=16, bbox_to_anchor=(-0.4, -0.25), ncol=3, loc='upper center', handletextpad=0.5, 
-              columnspacing=1, markerscale=3)
-    
-        
-    # Remove the unused subplot (8th subplot)
-    fig.delaxes(axs[-1])
+  ax.legend(labels, frameon=False, fontsize=font - 1, bbox_to_anchor=(0.5, -0.1), ncol=3, loc='upper center', handletextpad=0.5, 
+            columnspacing=1, markerscale=3)
+  
+  ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+  ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+  
+  ax.set_xlim(left=10**-2, right=10**0)
+  
+  fig.text(0.45, 0.08, 'FPR', ha='center', fontsize=font)
+  fig.text(0.085, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
 
-    # Adjust layout to prevent overlap
-    # fig.tight_layout(pad=2.0)
-    plt.subplots_adjust(left=0.1, bottom=0.1, hspace=0.3)
-    
-    fig.text(0.45, 0.03, 'FPR', ha='center', fontsize=font+1)
-    fig.text(0.05, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
+  # Adjust layout to prevent overlap
+  fig.tight_layout(pad=2.0)
+  plt.subplots_adjust(left=0.15, bottom=0.15)
 
-    pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
+  # Save the figure to the PDF
+  pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
 
-    plt.close(fig)  
+  plt.close(fig)  # Close the figure after saving to the PDF
+  
+#####################################################################################
 
 def plot_confidences(args):
 
@@ -368,6 +439,8 @@ def plot_confidences(args):
   # X label
   fig.text(0.5, 0.05, 'Epoch', ha='center', fontsize=font_size)
 
+
+#####################################################################################
 
 
 def plot_softmax(args, scores):
@@ -492,18 +565,18 @@ def main():
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)
 
-  print("Writing file", args.plots)
   pdf = PdfPages(args.plots)
   
   for suffix in scores[protocol].keys():
   
     try:
+      '''
       # plot OSCR (actually not required for best case)
       print("Plotting OSCR curves")
       plot_OSCR(args, scores, suffix)
       pdf.savefig(bbox_inches='tight', pad_inches = 0)
 
-      '''
+     
       if not args.linear and not args.use_best and not args.sort_by_loss:
         # plot confidences
         print("Plotting confidence plots")
@@ -519,12 +592,26 @@ def main():
       
     finally:
       pdf.close()
-
+    
+  if args.all:
+    '''
+    print("Writing combined OSC plots")
+    pdf = PdfPages("ImageNet_All_OSC_plots.pdf")
+    plot_many_OSCR(args, scores, pdf)
+    pdf.close()
+    '''
+    print("Writing OSC comparison")
+    pdf = PdfPages("ImageNet_OSC_comparison.pdf")
+    plot_OSC_comparison(args, scores, pdf)
+    pdf.close()
+    
+    
+  '''
   # create result table
   if not args.linear and not args.sort_by_loss:
     print("Creating Table")
     print("Writing file", args.table)
     conf_and_ccr_table(args, scores, epoch)
-
+  '''
 if __name__ == "__main__":
   main()

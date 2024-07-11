@@ -47,9 +47,6 @@ class ImagenetDataset(Dataset):
                     break  # Break if no more images are available to avoid index errors
             print(f"Replaced {replace_count} of {initial_count} paths with {description}.")
 
-        # For training with e.g. softmax we dont use negative labels. For our experiments we want them still in test set.
-        if not include_unknown and which_set != "test":
-            self.remove_negative_label()
         
         if counterfactuals_path:
             with open(counterfactuals_path, 'r') as cf_file:

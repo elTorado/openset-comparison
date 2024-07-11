@@ -106,9 +106,7 @@ def get_args():
 
 '''Creates a string suffix that can be used when writing files'''
 def get_experiment_suffix(cfg):
-    
-    
-    
+
     suffix = ""
     letters = True
     print(cfg)

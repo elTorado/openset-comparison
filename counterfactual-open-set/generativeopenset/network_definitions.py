@@ -3,6 +3,12 @@ from torch import nn
 from vector import clamp_to_unit_sphere
 
 
+"""
+    This file contains the GAN networks for Counterfactual Image Generation. The Networks ending on 32 are used for small-scale 
+    datasets such as EMNIST. The networks ending ond 256 are used for large-scale dataset such as ImageNet and consist of more layers.
+    
+"""
+
 def weights_init(m):
     classname = m.__class__.__name__
     # TODO: what about fully-connected layers?
@@ -246,6 +252,7 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
+################################################################
 
 class generator32(nn.Module):
     def __init__(self, latent_size=100, batch_size=64, **kwargs):
@@ -311,7 +318,7 @@ class generator32(nn.Module):
         return x
 
 class generator256(nn.Module):
-    # FAllS TIEFER -> RESIDUAL CONNECTIONS EINBAUEN 
+    
     
     def __init__(self, latent_size=100, batch_size=64, **kwargs):
         super(self.__class__, self).__init__()
@@ -396,7 +403,7 @@ class generator256(nn.Module):
         x = nn.Sigmoid()(x)
         return x
 
-
+################################################################
 
 class multiclassDiscriminator32(nn.Module):
     def __init__(self, latent_size=100, num_classes=2, batch_size=64, **kwargs):
@@ -580,7 +587,7 @@ class multiclassDiscriminator256(nn.Module):
         x = self.fc1(x)
         return x
 
-
+################################################################
 
 class classifier32(nn.Module):
     def __init__(self, latent_size=100, num_classes=2, batch_size=64, **kwargs):
@@ -660,7 +667,6 @@ class classifier32(nn.Module):
             return x
         x = self.fc1(x)
         return x
-
 
 class classifier256(nn.Module):
     def __init__(self, latent_size=100, num_classes=2, batch_size=64, **kwargs):

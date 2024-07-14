@@ -6,7 +6,25 @@ from torch import nn
 from imutil import ensure_directory_exists
 
 
+'''
+    This file handles network initialization, the saving of checkpoints and loading network weights from given epochs.
+    The code can handle both, ImageNet and EMNIST
+'''
+
+
+
 def build_networks(num_classes, epoch=None, latent_size=10, batch_size=64, **options):
+    """Builds and initializes GAN networks for a specific dataset (EMNIST or ImageNet).
+
+    Args:
+        num_classes (int): The number of classes for classification.
+        epoch (int, optional): The epoch to load network weights from. Defaults to None.
+        latent_size (int, optional): The size of the latent vector. Defaults to 10.
+        batch_size (int, optional): The batch size for training. Defaults to 64.
+
+    Returns:
+        dict: A dictionary containing the initialized networks.
+    """     
     networks = {}
     
     if options["dataset_name"] == "emnist":
@@ -21,9 +39,6 @@ def build_networks(num_classes, epoch=None, latent_size=10, batch_size=64, **opt
         DiscrimClass = network_definitions.multiclassDiscriminator256
         ClassifierClass = network_definitions.classifier256
     
-    
-    
-
     networks['encoder'] = EncoderClass(latent_size=latent_size)    
     networks['generator'] = GeneratorClass(latent_size=latent_size)    
     networks['discriminator'] = DiscrimClass(num_classes=num_classes, latent_size=latent_size)    
@@ -42,6 +57,17 @@ def build_networks(num_classes, epoch=None, latent_size=10, batch_size=64, **opt
 
 
 def get_network_class(name):
+    """Retrieve the network - defined by network class name.
+
+    Args:
+        name (str): The name of the network class to retrieve.
+
+    Returns:
+        class: The network class (Generator / Encoder / Discriminator).
+
+    Raises:
+        SystemExit: If the specified network class does not exist in network_definitions.
+    """
     if type(name) is not str or not hasattr(network_definitions, name):
         print("Error: could not construct network '{}'".format(name))
         print("Available networks are:")
@@ -54,6 +80,13 @@ def get_network_class(name):
 
 
 def save_networks(networks, epoch, result_dir):
+    """Save the networks states dictionaries to the checkpoints directory, including current epoch.
+
+    Args:
+        networks (dict): A dictionary of networks to save.
+        epoch (int): The current epoch number.
+        result_dir (str): Directory to save the network weights.
+    """ 
     for name in networks:
         weights = networks[name].state_dict()
         filename = '{}/checkpoints/{}_epoch_{:04d}.pth'.format(result_dir, name, epoch)
@@ -73,6 +106,17 @@ def get_optimizers(networks, lr=.0001, beta1=.5, beta2=.999, weight_decay=.0, fi
 
 
 def get_pth_by_epoch(result_dir, name, epoch=None):
+    """Load network state from a given epoch. This can be used for continuing the training prodecure when initliazing networks.
+
+    Args:
+        result_dir (str): The directory where checkpoints are stored.
+        name (str): The name of the network.
+        epoch (int, optional): The epoch number to retrieve the checkpoint for. Defaults to None.
+
+    Returns:
+        str: The path to the checkpoint file, or None if no such file exists.
+
+    """    
     checkpoint_path = os.path.join(result_dir, 'checkpoints/')
     ensure_directory_exists(checkpoint_path)
     files = os.listdir(checkpoint_path)

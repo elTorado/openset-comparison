@@ -395,9 +395,6 @@ def worker(cfg):
         # We use balanced class weights
         class_weights = device(train_ds.calculate_class_weights())
         loss = torch.nn.CrossEntropyLoss(weight=class_weights)
-
-    
-    print("NUMBER OF CLASSES: ", n_classes)
     
     # Create the model
     model = ResNet50(fc_layer_dim=n_classes,

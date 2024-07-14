@@ -11,20 +11,17 @@ from torch.utils.data.dataset import Dataset
 import argparse
 
 parser = argparse.ArgumentParser()
-
 parser.add_argument('--protocol', type=str, required=True, help='protocol, can be 1, 2, or 3')
 
 options = vars(parser.parse_args())
 
 
-##### CONVERT IMAGENT PROTOCOL CSV FILES INTO .DATASET FILES FOR GAN TRAINING 
-##### EACH ROW IN PROTOCOL IS TRANSFORMED INTO DICT WITH FILENAME / FOLD / LABEL
-##### TRAN AND TEST DATA IS COMBINED INTO ONE SINGLE FILE 
-
-
 _DATA_DIR = '/home/user/heizmann/data/'
 DATA_DIR = 'local/scratch/datasets/ImageNet/ILSVRC2012/'
 
+'''
+    Downloads the ImageNet dataset and creates a .dataset file. The file contains datasplits for GAN training (80% train, 20% test). 
+'''
 
 """ Code based on: Bhoumik, A. (2021). Open-set Classification on ImageNet."""
 def transform(img):
@@ -107,8 +104,14 @@ class ImagenetDataset(Dataset):
         class_weights = (len(self.dataset) / (counts * self.label_count))
         return torch.from_numpy(class_weights).float().squeeze()
 
-    # FOR NOW ONLY WRITING ONE DATASPLIT
+    
     def create_gan_training_splits(self):
+        """Create training and validation splits for GAN training and save them to a dataset file.
+
+            Splits the dataset into 80% training and 20% validation sets. The entries are saved to a file named
+            "imagenet_p<protocol>.dataset". Each entry contains the filename, fold (either 'train' or 'test'), and the label.
+
+        """        
         start_val_index = int(len(self) * 0.8)  # Calculate index for 20% validation split
         
         with open("imagenet_p"+options["protocol"]+".dataset", 'w') as file: 

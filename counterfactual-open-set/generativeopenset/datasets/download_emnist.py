@@ -16,9 +16,22 @@ DATASET_PATH = os.path.join(DATA_DIR, DATASET_NAME)
 IMAGES_LABELS_URL = 'http://biometrics.nist.gov/cs_links/EMNIST/gzip.zip'
 # old path, not working anymore IMAGES_LABELS_URL = 'http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/matlab.zip'
 
-#!/usr/bin/env python
-# Downloads and processes the EMNIST letters and digits datasets
+
+'''
+    Downloads to EMNIST dataset, if not already there, to the DATA_DIR directory. 
+    Addidionally creates dataset files for different tasks, which are not necessary for the process.
+    - Eventually there will be some use for them.
+
+'''
+
+
 def download(filename, url):
+    """checks if a file exists and if not, will download it
+
+    Args:
+        filename (string): 
+        url (string): 
+    """    
     if os.path.exists(filename):
         print(f"File {filename} already exists, skipping")
     else:
@@ -36,7 +49,8 @@ import gzip
 import os
 
 def extract_gzip(gzip_path, output_path):
-    # Check if the output file already exists
+    '''Check if the output file already exists, unzips it if yes. Downloads it and then unzips if not '''
+    
     if os.path.exists(output_path):
         print(f"The file {output_path} already exists. Extraction skipped.")
         return
@@ -54,6 +68,20 @@ def read_idx(filename):
         return np.frombuffer(f.read(), dtype=np.uint8).reshape(shape)
 
 def convert_emnist(images, labels, fold, category):
+    """Converts EMNIST images and labels to a specific format and saves them as PNG files.
+
+    Args:
+        images (np.ndarray): A numpy array containing the images to be converted.
+        labels (np.ndarray): A numpy array containing the corresponding labels for the images.
+        fold (str): The dataset split, such as 'train', 'test', or 'validation'.
+        category (str): The category of the EMNIST dataset, either 'letters' or 'digits'.
+
+    Returns:
+        list: A list of dictionaries, each containing the filename, fold, and label of the converted images.
+        
+    Raises:
+        AssertionError: If the number of images and labels do not match.
+    """    
     examples = []
     assert images.shape[0] == labels.shape[0], "The number of images and labels must match."
 
@@ -87,12 +115,36 @@ def convert_emnist(images, labels, fold, category):
     return examples
 
 def letter_to_index(letter):
+
     print("convert label")
-    """Convert a letter to its corresponding index, with 'A' as 10, 'B' as 11, ..., 'Z' as 35."""
+    """Convert a letter to its corresponding index, with 'A' as 10, 'B' as 11, ..., 'Z' as 35.
+    
+        Args:
+        letter (str): The letter to convert.
+
+        Returns:
+        int: The index corresponding to the letter.
+    """
     return ord(letter.upper()) - ord('A') + 10
 
 
 def create_datasets(letters, digits, k = 5000):
+    """Create datasets for training, validation, and testing from EMNIST letters and digits.
+
+    This function creates three dataset splits:
+    1. Split 1: For GAN training, containing digits in train and validation sets.
+    2. Split 2: For counterfactual classifier evaluation, containing digits and letters A to M in the test set.
+    3. Split 3: Containing digits and letters P to Z in the test set.
+    
+    Hint: These splits are not needed in the further process, but the logic wasnt removed. Maybe there is some use for them.
+
+    Args:
+        letters (list): A list of dictionaries, each containing 'filename' and 'label' for letters.
+        digits (list): A list of dictionaries, each containing 'filename' and 'label' for digits.
+        k (int, optional): The number of elements to use in each split. Defaults to 5000.
+        
+    Returns: None
+    """
     letters_PtoZ = [elem for elem in letters if elem["label"] in ['Z', 'Y', 'X', 'W', 'V', 'U', 'T', 'S', 'R', 'Q', 'P']]
     letters_AtoM = [elem for elem in letters if elem["label"] in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'M']]
 
@@ -236,6 +288,8 @@ def create_datasets(letters, digits, k = 5000):
     print(" ==== TEST SPLIT: " + str(test_len) + " ========")      
     
 def main():
+    """Downloads and extracts the dataset. Also creates the .dataset splits"""
+    
     print(f"{DATASET_NAME} dataset download script initializing...")
     mkdir(DATA_DIR)
     mkdir(DATASET_PATH)

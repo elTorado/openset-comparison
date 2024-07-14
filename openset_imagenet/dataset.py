@@ -12,16 +12,22 @@ import os
 class ImagenetDataset(Dataset):
     """ Imagenet Dataset. """
 
-    def __init__(self, which_set, csv_file, include_unknown, imagenet_path, counterfactuals_path, arpl_path, mixed_unknowns, transform=None):
-        """ Constructs an Imagenet Dataset from a CSV file. The file should list the path to the
+    def __init__(self, which_set, csv_file, imagenet_path, counterfactuals_path, arpl_path, mixed_unknowns, transform=None):
+        """Constructs an Imagenet Dataset from a CSV file. The file should list the path to the
         images and the corresponding label. For example:
         val/n02100583/ILSVRC2012_val_00013430.JPEG,   0
+        Depending on given armguments, will replace negatives samples in train and validation data
+        with synthetic arpl or counterfactual samples.
 
         Args:
-            csv_file(Path): Path to the csv file with image paths and labels.
-            imagenet_path(Path): Home directory of the Imagenet dataset.
+            which_set (str): Can be "train" "val" or "test"
+            csv_file (Path): Path to csv file where the specific protocol is definied
+            imagenet_path (Path): Dirctory where the ImageNet images a are located
+            counterfactuals_path (Path): Dirctory where the counterfactual images a are located
+            arpl_path (Path): Dirctory where the ARPL images a are located
+            mixed_unknowns (bool): Decides wether synthetic unknwons are mixed with the original images
             transform(torchvision.transforms): Transforms to apply to the images.
-        """
+        """        
         self.dataset = pd.read_csv(csv_file, header=None)
         self.imagenet_path = Path(imagenet_path)
         self.transform = transform
@@ -34,6 +40,17 @@ class ImagenetDataset(Dataset):
         np.random.shuffle(negative_indices)
 
         def replace_image_paths(indices, image_list, description):
+            """ Replaces image paths in the dataset based on the provided indices and image list.
+                It takes a list of indices pointing to specific rows in a dataset
+                It replaces the image paths at the specified indices with the paths from the image list.
+
+                Args:
+                    indices (list): A list of indices indicating the rows in the dataset to be replaced.
+                    image_list (list): A list of dictionaries containing image information.
+                        Each dictionary should have a 'filename' key with the new image path.
+                    description (str): A description of the replacement operation, which is used for logging.
+
+                """          
             initial_count = len(indices)
             replace_count = 0
             for idx in indices:
@@ -49,6 +66,12 @@ class ImagenetDataset(Dataset):
 
         
         if counterfactuals_path:
+            """ 
+                Loads the counterfactual images from the given Path into a list.
+                The list will be eventually handed to the replace_image_paths() function.
+                If the dataset is not the train set, the list is reversed.
+                
+            """            
             with open(counterfactuals_path, 'r') as cf_file:
                 counterfactual_images = cf_file.read().splitlines()
                 
@@ -58,6 +81,12 @@ class ImagenetDataset(Dataset):
 
             
             if arpl_path:
+                """ 
+                Loads the arpl images from the given Path into a list.
+                The list will be eventually handed to the replace_image_paths() function.
+                If the dataset is not the train set, the list is reversed.
+                
+                """      
                 with open(arpl_path, 'r') as arpl_file:
                     arpl_images = arpl_file.read().splitlines()
                     
@@ -93,8 +122,12 @@ class ImagenetDataset(Dataset):
         elif arpl_path:
             with open(arpl_path, 'r') as arpl_file:
                 arpl_images = arpl_file.read().splitlines()
-                arpl_indices = negative_indices
+                
             
+            if which_set != "train":
+                    arpl_images.reverse()
+                    
+            arpl_indices = negative_indices
             if mixed_unknowns:
                 half = len(negative_indices) // 2
                 arpl_indices = negative_indices[half:]

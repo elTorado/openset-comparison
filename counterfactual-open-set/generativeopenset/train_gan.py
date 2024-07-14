@@ -3,16 +3,6 @@ import argparse
 import os
 import sys
 from pprint import pprint
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--result_dir', help='Output directory for images and model checkpoints [default: .]', default='.')
-parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train for [default: 10]')
-parser.add_argument('--aux_dataset', help='Path to aux_dataset file [default: None]')
-parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
-parser.add_argument('--dataset_name', type=str, required=True, help='name of the dataset')
-
-options = vars(parser.parse_args())
-
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from dataloader import CustomDataloader, FlexibleCustomDataloader
 from training import train_gan
@@ -20,6 +10,23 @@ from networks import build_networks, save_networks, get_optimizers
 from options import load_options, get_current_epoch
 from counterfactual import generate_counterfactual
 from comparison import evaluate_with_comparison
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--result_dir', help='Output directory for images and model checkpoints [default: .]', default='.')
+parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train for [default: 10]')
+parser.add_argument('--aux_dataset', help='Path to aux_dataset file [default: None]')
+parser.add_argument("--gpu", "-g", type=int, nargs="?",dest="gpu", const=0, help="If selected, the experiment is run on GPU. You can also specify a GPU index")
+parser.add_argument('--dataset_name', type=str, required=True, help='name of the dataset')
+options = vars(parser.parse_args())
+
+
+'''
+    This file initializes the GAN training procedure. In the orginal implementation, a classifier is traiend and evaluated alongside, 
+    using a comparison dataset. As this is redudent for our case, we dismiss this part as it saves time and resource. 
+
+'''
+
 
 # Load params and check for existing files
 options = load_options(options)

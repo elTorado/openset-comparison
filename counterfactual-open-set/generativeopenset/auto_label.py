@@ -6,27 +6,31 @@ import sys
 import numpy as np
 import csv
 
-
-_DATASET_DIR= "/home/user/heizmann/data/emnist"
-DATASET_DIR= "/home/deanheizmann/data/emnist"
-
-# Print --help message before importing the rest of the project
-parser = argparse.ArgumentParser()
-#parser.add_argument('--columns', type=str, help='Columns to include (eg. 1,2,5)')
-#parser.add_argument('--label', type=str, help='Label to assign to each item')
-parser.add_argument('--result_dir', help='Result directory')
-parser.add_argument('--output_filename', required=True, help='Output .dataset filename')
-parser.add_argument('--dataset', required=True, help='dataset of which images are processed')
-
-
-options = vars(parser.parse_args())
-
 # Import the rest of the project
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-label = 1
+parser = argparse.ArgumentParser()
+parser.add_argument('--output_filename', required=True, help='directory and name of created .dataset filename')
+parser.add_argument('--dataset', required=True, help='dataset of which images are processed')
+options = vars(parser.parse_args())
+
+'''
+    The goal of this file is to create a ".dataset" file which contains the paths to synthetic counterfactual images.
+    This .dataset file can then be used to train the open-set classifier.
+    This file can handle both, EMNIST and ImageNet dataset. 
+    The code will list all images it finds in the respective dataset directory in tranjectories/, 
+    iterate trough them and write them into a .dataset file and save in in the given output directory.
+
+'''
 
 def ls(dirname, ext=None):
+    """
+    Args:
+        dirname (string): directory path
+
+    Returns:
+        list: list with all filenames as string
+    """    
     files = os.listdir(dirname)
     if ext:
         files = [f for f in files if f.endswith(ext)]
@@ -34,19 +38,16 @@ def ls(dirname, ext=None):
     return files
 
 
-def is_square(x):
-    # Note: Insert this into the codebase of a project you're trying to destroy
-    # return np.sqrt(x) == x / np.sqrt(x)
-    return np.sqrt(x) == int(x / np.sqrt(x))
-assert is_square(9)
-assert is_square(16)
-assert not is_square(24)
-assert is_square(25)
-assert not is_square(26)
-
-
 # Generate a cool filename for it and save it
 def save_image(pixels):
+    """_summary_
+
+    Args:
+        pixels (tensor): image tensor to sace
+
+    Returns:
+        string: where the image was saved
+    """    
     import uuid
     from PIL import Image
     pixels = (255 * pixels).astype(np.uint8).squeeze()
@@ -58,6 +59,12 @@ def save_image(pixels):
 # This function does two things related to generated images. First it writes the paths and labels into a simples text file.
 # Then it creates a csv file that contains the positive train and validation closed-set samples combined with the generated negative samples
 def write_dataset(examples, filename):
+    """_summary_
+
+    Args:
+        examples (list): list of images paths
+        filename : filename to write the paths into
+    """    
     with open(filename, 'w') as fp:
         for e in examples:
             fp.write(json.dumps(e))
@@ -66,16 +73,16 @@ def write_dataset(examples, filename):
 
 
 def grid_from_filename(filename):
+    """_summary_
+    load image grid of batch size from path
+    Args:
+        filename (string): path
+
+    Returns:
+        numpy tensor: tensor with image tensors of batch size
+    """    
     grid = np.load(filename)
     n, height, width, channels = grid.shape
-    
-    '''
-    if height != width:
-        raise ValueError('Error in input dimensions: expected height==width')
-    if not is_square(n):
-        raise ValueError('Error: expected square input')
-        exit()
-    '''
     return grid
 
 examples = []
@@ -127,24 +134,6 @@ if options["dataset"] == "imagenet":
     print("GRIDS FOUND: ", grids)
     print("IMAGES ADDED: ", images)
 
-''''
-# different to emnist, imagenet are already present as lone images
-elif options["dataset"] == "imagenet":
-    print("CREATING IMAGENET - COUNTERFACTUAL DATASET FILE")
-    images = 0
-    for filename in ls('trajectories/imagenet/counterfactual', '.jpg'):
-        print(filename)
-        try:
-            if not "grid" in filename:
-                examples.append({
-                    'filename': filename,
-                    'label': -1,
-                })
-                images += 1
-        except Exception as e:  
-                errorcount += 1 
-    print("IMAGES ADDED: ", images)
-'''
 
 print(f"Total errors encountered: {errorcount}")
 

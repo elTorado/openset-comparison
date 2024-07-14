@@ -10,17 +10,41 @@ from vector import clamp_to_unit_sphere
 from logutil import TimeSeries
 import imutil
 
+'''
+    This code creates grids of counterfactual images and open-set images and stores them in 
+    the dataset specific subdirectory of the trajectories/ directory. A trained GAN needs to be provided
+    as well as the dataset name.
+
+'''
+
 
 def to_torch(z, requires_grad=False):
+    '''Convert a numpy array to a PyTorch Variable '''
     return Variable(torch.FloatTensor(z), requires_grad=requires_grad).cuda()
 
 
 def to_np(z):
+    '''Convert a PyTorch Variable to a numpy array'''
     return z.data.cpu().numpy()
 
 
-# Generates 'counterfactual' images for each class, by gradient descent of the class
 def generate_counterfactual(networks, dataloader, **options):
+    """Generate 'counterfactual' images for each class by gradient descent of the class.
+
+    This function generates counterfactual images for a specified number of classes (K). It starts with randomly-selected
+    images from the dataloader and then generates a column of images corresponding to each target class. The generated images
+    are saved in the trajectories directory as a grid of images.
+
+    Args:
+        networks (dict): A dictionary containing the neural networks used for generation, classification, and encoding.
+        dataloader (object): DataLoader object containing dataset.
+        options (dict): Additional options for the generation process.
+            - 'result_dir' (str): Directory where the result files are to be stored.
+            - 'dataset_name' (str): The name of the dataset (e.g., 'imagenet' or 'emnist').
+
+    Returns:
+        np.ndarray: A numpy array containing the generated counterfactual images.
+    """
     
     print("**************** ENTERING COUNTERFACTUALS GENERATION PROCESS*****************")
     """
@@ -73,6 +97,23 @@ def generate_counterfactual(networks, dataloader, **options):
 
 # Generates 'unknown unknown' images unlike any known class
 def generate_open_set(networks, dataloader, **options):
+    """Generate 'unknown unknown' images from known classes.
+
+    This function generates images that do not belong to any known class by using a counterfactual generation process. 
+    The generated images are saved in the trajectories directory as a grid of images.
+
+    Args:
+        networks (dict): A dictionary containing the neural networks used for generation, classification, and encoding.
+        dataloader (object): DataLoader object containing dataset.
+        options (dict): Additional options for the generation process.
+            - 'result_dir' (str): Directory where the result files are to be stored.
+            - 'dataset_name' (str): The name of the dataset (e.g., 'imagenet' or 'emnist').
+
+    Returns:
+        np.ndarray: A numpy array containing the generated 'unknown unknown' images.
+    """
+    
+    
     """
     # TODO: Fix Dropout/BatchNormalization outside of training
     for net in networks:
@@ -106,6 +147,22 @@ def generate_open_set(networks, dataloader, **options):
 
 log = TimeSeries('Counterfactual')
 def generate_counterfactual_column(networks, start_images, target_class, **options):
+    """Generates a grif of counterfactual images in batch size.
+
+    Args:
+        networks (dict): A dictionary containing the neural networks used for generation, classification, and encoding.
+        start_images (torch.Tensor): A batch of starting images to generate counterfactuals from.
+        target_class (int): The target class to which the counterfactuals should correspond.
+        options (dict): Additional options for the generation process.
+            - 'cf_speed' (float): The speed of adjustment in the latent space.
+            - 'cf_max_iters' (int): The Number of grids to be generated. The amount of generated images is this times batch size.
+            - 'cf_distance_weight' (float): The weight given to the distance loss in the loss function.
+            - 'cf_gan_scale' (int): The scale used for the GAN.
+            - 'dataset_name' (str): The name of the dataset.
+
+    Returns:
+        np.ndarray: A numpy array containing the generated counterfactual images grid.
+    """  
     netG = networks['generator']
     netC = networks['classifier_k']
     netE = networks['encoder']
@@ -172,6 +229,19 @@ def generate_counterfactual_column(networks, start_images, target_class, **optio
 
 # Trajectories are written to result_dir/trajectories/
 def make_video_filename(result_dir, dataloader, start_class, target_class, dataset, label_type='active'):
+    """Generate a filename for storing a grid of generated images.
+
+    Args:
+        result_dir (str): Directory where the result files are to be stored.
+        dataloader (object): DataLoader object containing dataset.
+        start_class (int): The starting class.
+        target_class (int): The target class.
+        dataset (str): The name of the dataset being used ('emnist' or 'imagenet').
+        label_type (str, optional): Type of label being used. Defaults to 'active'.
+
+    Returns:
+        str: The generated filename for the video.
+    """    
     trajectory_id = '{}_{}'.format(dataloader.dsf.name, int(time.time() * 1000))
     start_class_name = dataloader.lab_conv.labels[start_class]
     target_class_name = dataloader.lab_conv.labels[target_class]

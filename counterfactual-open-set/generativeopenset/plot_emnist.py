@@ -1,31 +1,18 @@
-
-from pathlib import Path
-import argparse
-import multiprocessing
-import collections
-import subprocess
 import pathlib
-
 import sys
 import os
-
-#Ugly way to deal with the fact that python stubornly refuses to import openset_imagenet. Adds it to python path
+# Ugly way to deal with the fact that python stubornly refuses to import openset_imagenet. Adds it to python path.
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '../../'))
 sys.path.append(parent_dir)
 import openset_imagenet
-
-import os
 import torch
 import numpy
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-
 from matplotlib import pyplot, cm, colors
 from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.ticker import MaxNLocator, LogLocator
+from matplotlib.ticker import MaxNLocator
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 
 def command_line_options():
     import argparse
@@ -41,8 +28,7 @@ def command_line_options():
     parser.add_argument("--task", default='train', choices=['train', 'eval', "plot", "show"])
     parser.add_argument("--arch", default='LeNet_plus_plus', choices=['LeNet', 'LeNet_plus_plus'])
     parser.add_argument('--second_loss_weight', "-w", help='Loss weight for Objectosphere loss', type=float, default=0.0001)
-    parser.add_argument('--Minimum_Knowns_Magnitude', "-m", help='Minimum Possible Magnitude for the Knowns', type=float,
-                        default=50.)
+    parser.add_argument('--Minimum_Knowns_Magnitude', "-m", help='Minimum Possible Magnitude for the Knowns', type=float,  default=50.)
     parser.add_argument("--solver", dest="solver", default='sgd',choices=['sgd','adam'])
     parser.add_argument("--lr", "-l", dest="lr", default=0.01, type=float)
     parser.add_argument('--batch_size', "-b", help='Batch_Size', action="store", dest="Batch_Size", type=int, default=128)
@@ -57,55 +43,41 @@ def command_line_options():
     parser.add_argument("--all", action='store_true', dest="all", help="plott all")
 
     parser.add_argument("--download", "-dwn", type=bool, default=False, dest="download", help="donwload emnist dataset")
-    parser.add_argument(
-        "--labels",
-        nargs="+",
-        choices = ("S", "BG", "EOS"),
-        default = ("S", "BG", "EOS"),
-        help = "Select the labels for the plots"
-    )
-    parser.add_argument(
-        "--use-best",
-        action = "store_true",
-        help = "If selected, the best model is selected from the validation set. Otherwise, the last model is used"
-    )
-    parser.add_argument(
-        "--force", "-f",
-        action = "store_true",
-        help = "If set, score files will be recomputed even if they already exist"
-    )
-    parser.add_argument(
-      "--linear",
-      action="store_true",
-      help = "If set, OSCR curves will be plot with linear FPR axis"
-    )
-    parser.add_argument(
-      "--sort-by-loss", "-s",
-      action = "store_true",
-      help = "If selected, the plots will compare across protocols and not across algorithms"
-    )
-    parser.add_argument(
-      "--plots",
-      help = "Select where to write the plots into"
-    )
-    parser.add_argument(
-      "--table",
-      help = "Select the file where to write the Confidences (gamma) and CCR into"
-    )
-
+    parser.add_argument("--labels", nargs="+", choices = ("S", "BG", "EOS"), default = ("S", "BG", "EOS"), help = "Select the labels for the plots")
+    parser.add_argument("--use-best", action = "store_true", help = "If selected, the best model is selected from the validation set. Otherwise, the last model is used" )
+    parser.add_argument("--force", "-f", action = "store_true", help = "If set, score files will be recomputed even if they already exist")
+    parser.add_argument("--linear", action="store_true", help = "If set, OSCR curves will be plot with linear FPR axis")
+    parser.add_argument("--sort-by-loss", "-s", action = "store_true", help = "If selected, the plots will compare across protocols and not across algorithms")
+    parser.add_argument("--plots", help = "Select where to write the plots into")
+    parser.add_argument("--table", help = "Select the file where to write the Confidences (gamma) and CCR into")
     args = parser.parse_args()
 
     suffixes = get_experiment_suffix( args = args)
     args.plots = [f"Results_{suffix}.pds" for suffix in suffixes]
     args.table = [f"Results_{suffix}.tex" for suffix in suffixes]
-
-
     return args
 
 
 
-'''Creates a string suffix that can be used when writing files'''
+"""
+  This code plots the open-set classifiers trained on the EMNIST dataset. The metrices plotted are
+        - OSCR
+        - Confidence
+        - SoftMax Scores
+  
+  The code can either plot a single experiment, or all expeirments into a single pdf (a pdf for each metrics).
+
+"""
+
+
+
 def get_experiment_suffix(args):
+  '''Provides a string of one or many suffix/-es that can be used when writing files or when loading files
+
+    Return:
+    list with file suffix in a list. Suffix relates to approach that was used for composing the negative samples.
+  
+  '''
   if args.all:
     return ["_no_negatives", "_letters", "_counterfactuals",
             "_counterfactuals_mixed", "_arpl", 
@@ -134,7 +106,16 @@ def get_experiment_suffix(args):
 
   
 def load_scores(args):
+  """Load scores and epochs from model checkpoints
+
+  Args:
+    args (dict): The parser arguments
   
+  Returns:
+    tuple: A tuple containing:
+            - scores (dict): A dictionary with extracted scores from validation and test files.
+            - epoch (dict): A dictionary with epoch and best score information from the model checkpoints.
+  """  
   suffixes = get_experiment_suffix(args=args)
   
   loss = "EOS"
@@ -163,8 +144,17 @@ def load_scores(args):
       
   return scores, epoch
 
+#####################################################################################
+
 def plot_OSCR(args, scores):
-    
+  """Plots ths OSCR curve of a single model into a pdf document.
+  
+  Args:
+    args (dict): The parser arguments
+    scores (dict): The scores of the experiment.
+        -scores has form {loss:{"val" or "test": scores}}
+  """  
+  
   # default entropic openset loss, can be implemented to different losses in the future
   loss = args.approach[0]
   suffix = scores[0]
@@ -210,6 +200,14 @@ def plot_OSCR(args, scores):
   fig.text(-0.01, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
 
 def plot_many_OSCR(args, scores, pdf):
+    """Plots all OSCR curve of all given models into different subplots but into the same pdf document.
+  
+  Args:
+    args (dict): The parser arguments
+    scores (dict): The scores of the experiment.
+        -scores has form {suffix:{loss:{"val" or "test": scores}}}
+    pdf: the pdf document where the plots are saved to
+  """  
     # Default entropic openset loss, can be implemented to different losses in the future
     loss = args.approach[0]
 
@@ -229,7 +227,10 @@ def plot_many_OSCR(args, scores, pdf):
         red = pyplot.colormaps.get_cmap('tab10').colors[3]
         blue = pyplot.colormaps.get_cmap('tab10').colors[0]
 
-        title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+        if suffix == "_no_negatives":
+          title = "no negatives"
+        else:
+          title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
 
         # Plot test scores
         
@@ -270,8 +271,15 @@ def plot_many_OSCR(args, scores, pdf):
 
     plt.close(fig)  
 
-
 def plot_OSCR_comparison(args, scores, pdf):
+    """Plots the OSCR curve on the test set of all given models into the same plot and saves in a pdf document.
+  
+   Args:
+    args (dict): The parser arguments
+    scores (dict): The scores of the experiment.
+        -scores has form {suffix:{loss:{"val" or "test": scores}}}
+     pdf: the pdf document where the plots are saved to
+  """  
     # Default entropic openset loss, can be implemented to different losses in the future
     loss = args.approach[0]
 
@@ -318,9 +326,20 @@ def plot_OSCR_comparison(args, scores, pdf):
 
     plt.close(fig)  # Close the figure after saving to the PDF
 
+#####################################################################################
+
 def plot_many_confidences(args, pdf):
-    loss = "EOS"
+    """Plots the confidence of each model into a own subplot and saves them into the same pdf document
+    
+    Args:
+      args (dict): The parser arguments
+      pdf: the pdf document where the plots are saved to
+  
+    """
     suffixes = get_experiment_suffix(args=args)
+    
+    #we dont plot no negatives since no data on validation
+    suffixes.remove("_no_negatives")
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     event_dir = os.path.join(current_dir, '../LeNet/Logs/')
@@ -367,7 +386,13 @@ def plot_many_confidences(args, pdf):
         ax.plot(step_kn, val_kn, linewidth=linewidth, label='Known', color=color_palette[1])
         ax.plot(step_unk, val_unk, linewidth=linewidth, label='Unknown', color=color_palette[0])
 
-        ax.set_title(suffix[1:].replace("_", " & ").replace("mixed", "letters"), fontsize=font_size)
+        if suffix == "_no_negatives":
+          title = "no negatives"
+        else:
+          title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+
+        
+        ax.set_title(title, fontsize=font_size)
 
         ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
         ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
@@ -379,7 +404,11 @@ def plot_many_confidences(args, pdf):
         ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
 
     
-
+    # Remove the last subplot if there are fewer suffixes than subplots
+    num_plots = len(suffixes)
+    for index in range(num_plots, len(axs)):
+        fig.delaxes(axs[index])
+        
     # Adjust layout to prevent overlap
     fig.tight_layout(pad=2.0)
     plt.subplots_adjust(left=0.1, bottom=0.1)
@@ -395,11 +424,14 @@ def plot_many_confidences(args, pdf):
     pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
 
-#these even t files are in the LeNet directory
-# Can easily be adjustet to load all event file
 def plot_confidences(args):
-    loss = "EOS"
+    """Plots the confidence of a single model into pdf document
+    
+    Args:
+      args (dict): The parser arguments
+    """
     suffixes = get_experiment_suffix(args=args)
+    
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     event_dir = os.path.join(current_dir, '../LeNet/Logs/')
@@ -408,7 +440,7 @@ def plot_confidences(args):
     event_files = {}
     files = sorted(os.listdir(event_dir))
     
-    for suffix in suffixes:
+    for suffix in suffixes:   
     
         # Get the event files
         for f in files:
@@ -466,14 +498,22 @@ def plot_confidences(args):
     pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
 
+#####################################################################################
+
 def plot_softmax(args, suffix, score):
-  
+  """
+    Plots the SoftMax score of a single model
+
+    Args:
+      args (dict): The parser arguments
+      suffix (string): The suffix of the model name
+      score (dict): The scores of the experiment.
+        -scores has form {loss:{"val" or "test": scores}}
+  """
   loss = args.approach[0]
 
 
   fig, ax = pyplot.subplots(figsize=(5, 6))
-  font = 15
-  scale = 'linear' if args.linear else 'semilog'
   
   font_size = 15
   bins = 30
@@ -523,6 +563,16 @@ def plot_softmax(args, suffix, score):
   fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font_size)
 
 def plot_many_softmax(args, scores, pdf):
+  """
+    Plots the SoftMax score of all models in different subplots and saves them into the same pdf document
+
+
+    Args:
+      args (dict): The parser arguments
+      pdf: pdf document where to save the subplots
+      score (dict): The scores of the experiment.
+        -scores has form {loss:{"val" or "test": scores}}
+  """
   
   loss = args.approach[0]
   # create figure with 8 subplots
@@ -558,14 +608,23 @@ def plot_many_softmax(args, scores, pdf):
     ax.stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
     ax.stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
 
-    title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+    if suffix == "_no_negatives":
+          title = "no negatives"
+    else:
+          title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+          
     ax.set_title(title)
+    
+    ax.set_yscale('log')
+    ax.set_ylim(1, 1e4)
 
+    
     # set the tick parameters for the current axis handler
     ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
     ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font)
     ax.yaxis.set_major_locator(MaxNLocator(6))
     ax.label_outer()
+    
 
   # Manual legend
   ax.legend(['Known', 'Unknown'],
@@ -580,7 +639,19 @@ def plot_many_softmax(args, scores, pdf):
   fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font)
   pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
 
+#####################################################################################
+
 def conf_and_ccr_table(args, scores, epochs):
+  """
+    Calculates the confidence scores and CCR values for different protocols and approaches,
+    writing the results into a LaTeX table format.
+
+    Args:
+        args (dict): The parser arguments
+        scores (dict): Scores from validation and test files.
+        epochs (dict): Eepoch and best score information from the loaded model checkpoints.
+
+  """
   approach = args.approach
   args.protocols = ["1"]
   def find_nearest(array, value):
@@ -637,6 +708,7 @@ if __name__ == "__main__":
   print("Extracting and loading scores")
   scores, epoch = load_scores(args)  
   
+  '''
   for suffix in scores.keys():
     
     print("Writing file", suffix)
@@ -666,7 +738,7 @@ if __name__ == "__main__":
     
     finally:
       pdf.close()
-  
+    '''
   if args.all:
     
     print("Writing Combined OSC Comparison")

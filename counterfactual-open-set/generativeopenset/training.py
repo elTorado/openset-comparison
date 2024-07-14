@@ -15,8 +15,27 @@ from gradient_penalty import calc_gradient_penalty
 
 log = logutil.TimeSeries('Training GAN')
 
+'''
+    This file provides the training loop for the GAN trainnig. There is also additional code for trainig a classifier, which is not needed for our case.
+    The code was extended to load the process to GPUs and is suitable for EMNIST and ImageNet. The training loop fiters negative samples - which is important
+    for the ImageNet protocols to not train the generator on negative samples. 
 
-def train_gan(networks, optimizers, dataloader, epoch=None, **options):
+'''
+
+def train_gan(networks, optimizers, dataloader, epoch=None, **options): 
+    """
+    GAN training for generator, encode and discriminator. 
+    Logs various metrics and saves intermediate results for monitoring the training progress.
+
+    Args:
+        networks (dict): Contains the networks to be trained, Encoder, Generator, Discriminator
+        optimizers (dict): A dictionary containing the optimizers for each network - SGD or Adam.
+        dataloader (DataLoader): Dataloader object for the dataset.
+        epoch (int): The current epoch, used for loging purposes.
+
+    Returns:
+        bool: returns true when training is finished.
+    """    
     
     args = options
     # setup device

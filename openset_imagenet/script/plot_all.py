@@ -1,26 +1,25 @@
-"""Training of all models for the paper"""
-
 import argparse
-import multiprocessing
-import collections
-import subprocess
+import collections 
 import pathlib
 import openset_imagenet
 import os
 import torch
 import numpy
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-from pathlib import Path
-
 from matplotlib import cm, colors
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.ticker import MaxNLocator, LogLocator
+from matplotlib.ticker import MaxNLocator
 
-#def train_one(cmd):
-#  print(cmd)
-#  print(" ".join(cmd))
+"""
+  This code plots the open-set classifiers trained on the ImageNet dataset. The metrices plotted are
+        - OSCR
+        - Confidence
+        - SoftMax Scores
+  
+  The code can either plot a single experiment, or all expeirments into a single pdf (a pdf for each metrics).
 
+"""
 def get_args():
     """ Arguments handler.
 
@@ -134,10 +133,15 @@ def get_args():
     args.table = args.table or f"Results_{suffix}.tex"
     return args
 
-'''Creates a string suffix that can be used when writing files'''
 def get_experiment_suffix(args):
+  '''Provides a string of one or many suffix/-es that can be used when writing files or when loading files
+
+    Return:
+    list with file suffix in a list. Suffix relates to approach that was used for composing the negative samples.
+  
+  '''
   if args.all:
-    return ["_vanilla", "_counterfactuals",
+    return ["_no_negatives","_vanilla", "_counterfactuals",
             "_counterfactuals_mixed", "_arpl", 
             "_arpl_mixed", "_counterfactuals_arpl", 
             "_counterfactuals_arpl_mixed"]
@@ -155,16 +159,46 @@ def get_experiment_suffix(args):
         suffix += "_mixed"
         letters = False
     if not args.include_unknown:
-        suffix += "no_negatives"
+        suffix += "_no_negatives"
         letters = False
     if letters:
         suffix += "_vanilla"
 
     return [suffix]
 
+def suffix_to_label(suffix):
+  """Does string operations to replace characters present in experiment specific filename
+    (suffix) but unfit for plot labels. 
+    
 
+  Args:
+      suffix (string): suffix of filename e.g. "_arpl_counterfactuals_"
+
+  Returns:
+      str: changed filename e.g. "arpl & counterfactuals"
+  """  
+  # little string operation on the subplot title
+  if "no_negatives" in suffix:
+    return "no negatives"
+  elif suffix == "_vanilla":
+    return "original negatives"
+  else:
+    title = suffix[1:].replace("_", " & ").replace("mixed", "originals")
+  if title.endswith(" & best"):
+      title = title[:-7]
+  return title
+  
 def load_scores(args):
-    # collect all result files
+    """Load scores and epochs from model checkpoints, checks for files of given ImageNet protocol and loads its sccores.
+
+    Args:
+      args (dict): The parser arguments
+    
+    Returns:
+      tuple: A tuple containing:
+              - scores (dict): A dictionary with extracted scores from validation and test files.
+              - epoch (dict): A dictionary with epoch and best score information from the model checkpoints.
+    """ 
     
     suffixes = get_experiment_suffix(args=args)
     
@@ -190,8 +224,17 @@ def load_scores(args):
         """
     return scores, epoch
 
+#####################################################################################
 
 def plot_OSCR(args, scores, suffix):
+    """Plots ths OSCR curve of a single model into a pdf document.
+  
+    Args:
+    args (dict): The parser arguments
+    scores (dict): The scores of the experiment.
+        -scores has form {protocol:{"val" or "test": scores}}
+    suffix(str): suffix of experiment
+    """  
 
     protocol = args.protocols[0]
     suffix = suffix
@@ -210,8 +253,6 @@ def plot_OSCR(args, scores, suffix):
     
     args.labels = ["Val", "Test"] 
     
-    title = suffix.replace("_", " ")
-
     val = [scores[protocol][suffix]["val"]]
     openset_imagenet.util.plot_oscr(arrays=val, methods=args.loss_functions, scale=scale, title=f'$P{protocol}{suffix}$ Val',
                   ax_label_font=font, ax=ax, unk_label=-1, color=blue)
@@ -235,6 +276,14 @@ def plot_OSCR(args, scores, suffix):
     fig.text(-0.01, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font+1)
 
 def plot_many_OSCR(args, scores, pdf):
+  """Plots all OSCR curve of all given models into different subplots but into the same pdf document.
+  
+  Args:
+    args (dict): The parser arguments
+    scores (dict): The scores of the experiment.
+        -scores has form {suffix:{loss:{"val" or "test": scores}}}
+    pdf: the pdf document where the plots are saved to
+  """  
   protocol = args.protocols[0]
   
   # create figure with 8 subplots
@@ -261,11 +310,7 @@ def plot_many_OSCR(args, scores, pdf):
     red = plt.colormaps.get_cmap('tab10').colors[3]
     blue = plt.colormaps.get_cmap('tab10').colors[0]
 
-    # little string operation on the subplot title
-    title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
-    if title.endswith(" & best"):
-      title = title[:-7]
-    
+    title = suffix_to_label(suffix)
     # Plot test scores
     '''
     openset_imagenet.util.plot_oscr(arrays=val, methods=[loss], color=blue, scale=scale, title=title,
@@ -303,6 +348,14 @@ def plot_many_OSCR(args, scores, pdf):
   plt.close(fig)  
 
 def plot_OSC_comparison(args, scores, pdf):
+  """Plots the OSCR curve on the test set of all given models into the same plot and saves in a pdf document.
+  
+   Args:
+    args (dict): The parser arguments
+    scores (dict): The scores of the experiment.
+        -scores has form {suffix:{loss:{"val" or "test": scores}}}
+     pdf: the pdf document where the plots are saved to
+  """  
   protocol = args.protocols[0]
   
   # create figure with 8 subplots
@@ -324,13 +377,6 @@ def plot_OSC_comparison(args, scores, pdf):
     test = [score["test"]]
     color = colors[index % len(colors)]  # Cycle through colors if more than the colormap length
     
-    
-    label = suffix[1:].replace("_", " & ").replace("mixed", "letters")
-    if label.endswith(" & best"):
-      label = label[:-7]
-    labels.append(label)
-    # Plot test scores
-
     openset_imagenet.util.plot_oscr(arrays=test, methods=[loss], color=color, scale=scale, title="Test score comparison",
             ax_label_font=font, ax=ax, unk_label=-1,)
     
@@ -342,6 +388,7 @@ def plot_OSC_comparison(args, scores, pdf):
   ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
   
   ax.set_xlim(left=10**-2, right=10**0)
+  ax.set_ylim(0, 0.8)
   
   fig.text(0.45, 0.08, 'FPR', ha='center', fontsize=font)
   fig.text(0.085, 0.5, 'CCR', va='center', rotation='vertical', fontsize=font)
@@ -439,19 +486,119 @@ def plot_confidences(args):
   # X label
   fig.text(0.5, 0.05, 'Epoch', ha='center', fontsize=font_size)
 
+def plot_many_confidences(args, pdf):
+    """Plots the confidence of each model into a own subplot and saves them into the same pdf document
+    
+    Args:
+      args (dict): The parser arguments
+      pdf: the pdf document where the plots are saved to
+  
+    """
+  
+    suffixes = get_experiment_suffix(args=args)
+  
+    # we dont plot no negatives since no data on validation
+    suffixes = [s for s in suffixes if s != "_no_negatives"]
+    protocol = args.protocols[0]
+  
+    event_files = {}
+  
+    for suffix in suffixes:
+        event_dir = (args.output_directory / f"Protocol_{protocol}" / suffix).resolve()
+        # Locate event paths
+        files = sorted(os.listdir(event_dir))
+        for f in files:
+            if f.startswith("events") and not f.endswith("Identifier"):
+                file_path = os.path.abspath(os.path.join(event_dir, f))
+                event_files[suffix] = file_path
+                              
+    linewidth = 1.5
+    font_size = 15
+    color_palette = cm.get_cmap('tab10', 10).colors
+
+    # Adjust the number of subplots to match the number of suffixes
+    num_plots = len(suffixes)
+    fig, axs = plt.subplots(2, 4, figsize=(16, 8))
+    axs = axs.flatten()
+
+    def load_accumulators(files, suffix):
+        known_data, unknown_data = {}, {}
+        event_file = files[suffix]
+        try:
+            event_acc = EventAccumulator(str(event_file), size_guidance={'scalars': 0})
+            event_acc.Reload()
+          
+            tags = event_acc.Tags()
+          
+            for event in event_acc.Scalars('val/conf_kn'):
+                known_data[event.step + 1] = event.value
+            for event in event_acc.Scalars('val/conf_unk'):
+                unknown_data[event.step + 1] = event.value
+        except KeyError:
+            print("KEY ERROR IN EVENT ACCUMULATOR")
+            pass
+
+        # Re-structure
+        return zip(*sorted(known_data.items())), zip(*sorted(unknown_data.items()))
+
+    for index, suffix in enumerate(suffixes):
+        ax = axs[index]  # Get the specific subplot for this score
+        print(suffix)
+        (step_kn, val_kn), (step_unk, val_unk) = load_accumulators(event_files, suffix)
+
+        # Plot known and unknown confidences
+        ax.plot(step_kn, val_kn, linewidth=linewidth, label='Known', color=color_palette[1])
+        ax.plot(step_unk, val_unk, linewidth=linewidth, label='Unknown', color=color_palette[0])
+
+        title = suffix_to_label(suffix)
+        
+        ax.set_title(title, fontsize=font_size)
+        ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
+        ax.grid(axis='y', linestyle=':', linewidth=1, color='gainsboro')
+
+        ax.set_xlim(min(step_kn + step_unk), max(step_kn + step_unk))
+        ax.set_ylim(0.0, 1)
+
+        ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
+        ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font_size)
+
+    # Remove the last subplot if there are fewer suffixes than subplots
+    for index in range(num_plots, len(axs)):
+        fig.delaxes(axs[index])
+
+    # Adjust layout to prevent overlap
+    fig.tight_layout(pad=2.0)
+    plt.subplots_adjust(left=0.1, bottom=0.1)
+    
+    fig.text(0.5, 0.04, 'Epoch', ha='center', fontsize=font_size + 1)
+    fig.text(0.04, 0.5, 'Confidence', va='center', rotation='vertical', fontsize=font_size + 1)
+
+    ax.legend(["Confidence on Knowns", "Confidence on Negatives"], frameon=False, fontsize=15, bbox_to_anchor=(-0.2, -0.15), ncol=3, loc='upper center', handletextpad=0.5, 
+              columnspacing=1, markerscale=3)
+
+    # Save the final figure to the PDF
+    pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
 
 #####################################################################################
 
-
 def plot_softmax(args, scores):
+    """
+    Plots the SoftMax score of a single model
 
+    Args:
+      args (dict): The parser arguments
+      suffix (string): The suffix of the model name
+      score (dict): The scores of the experiment.
+        -scores has form {loss:{"val" or "test": scores}}
+    """
     font_size = 15
     bins = 30
     unk_label = -2
     P = len(args.protocols)
     N = len(args.loss_functions)
 
-    fig = pyplot.figure(figsize=(3*P+1, 2*N))
+    fig = plt.figure(figsize=(3*P+1, 2*N))
     gs = fig.add_gridspec(N, P, hspace=0.2, wspace=0.08)
     axs = gs.subplots(sharex=True, sharey=False)
     axs = axs.flat
@@ -508,10 +655,86 @@ def plot_softmax(args, scores):
     # X label
     fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font_size)
 
+def plot_many_softmax(args, scores, pdf):
+  """
+    Plots the SoftMax score of all models in different subplots and saves them into the same pdf document
 
+
+    Args:
+      args (dict): The parser arguments
+      pdf: pdf document where to save the subplots
+      score (dict): The scores of the experiment.
+        -scores has form {loss:{"val" or "test": scores}}
+  """ 
+  # create figure with 8 subplots
+  fig, axs = plt.subplots(2, 4, figsize=(18, 6))
+  font = 15
+  axs = axs.flatten()
+
+  bins = 30
+  unk_label = -1
+  protocol = args.protocols[0]
+  
+  # Manual colors
+  edge_unk = colors.to_rgba('indianred', 1)
+  fill_unk = colors.to_rgba('firebrick', 0.04)
+  edge_kn = colors.to_rgba('tab:blue', 1)
+  fill_kn = colors.to_rgba('tab:blue', 0.04)
+
+  #choose scores from given protocol
+  scores = scores[protocol]
+
+  for index, (suffix, score) in enumerate(scores.items()):
+    ax = axs[index]
+    
+    # Calculate histogram
+    kn_hist, kn_edges, unk_hist, unk_edges = openset_imagenet.util.get_histogram(
+        score["test"],
+        unk_label=unk_label,
+        metric='score',
+        bins=bins,
+        drop_bg=False
+          )
+
+    # Plot histograms
+    ax.stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
+    ax.stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
+    
+    title = suffix_to_label(suffix)
+      
+    
+    ax.set_title(title)
+
+    # set the tick parameters for the current axis handler
+    ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
+    ax.tick_params(labelbottom=True, labeltop=False, labelleft=True, labelright=False, labelsize=font)
+    ax.yaxis.set_major_locator(MaxNLocator(6))
+    ax.label_outer()
+
+  # Manual legend
+  ax.legend(['Known', 'Unknown'],
+                frameon=False,
+                fontsize=font-1,
+                 bbox_to_anchor=(-1, -0.25),
+                ncol=2,
+                handletextpad=0.3,
+                columnspacing=1,
+                markerscale=1)
+  # X label
+  fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font)
+  pdf.savefig(fig, bbox_inches='tight', pad_inches=0) 
+#####################################################################################
 
 def conf_and_ccr_table(args, scores, epochs):
+  """
+    Calculates the confidence scores and CCR values for different protocols and approaches,
+    writing the results into a LaTeX table format.
 
+    Args:
+        args (dict): The parser arguments
+        scores (dict): Scores from validation and test files.
+        epochs (dict): Eepoch and best score information from the loaded model checkpoints.
+  """
   def find_nearest(array, value):
       """Get the closest element in array to value"""
       array = numpy.asarray(array)
@@ -594,19 +817,31 @@ def main():
       pdf.close()
     
   if args.all:
-    '''
+       
+    
     print("Writing combined OSC plots")
     pdf = PdfPages("ImageNet_All_OSC_plots.pdf")
     plot_many_OSCR(args, scores, pdf)
     pdf.close()
-    '''
+    
     print("Writing OSC comparison")
     pdf = PdfPages("ImageNet_OSC_comparison.pdf")
     plot_OSC_comparison(args, scores, pdf)
     pdf.close()
+       
     
+    print("Writing combined confidences")
+    pdf = PdfPages("ImageNet_Combined_Confidences.pdf")
+    plot_many_confidences(args, pdf)
+    pdf.close()
     
-  '''
+  
+    print("Writing combined SoftMax scores")
+    pdf = PdfPages("ImageNet_Combined_Softmax_Scores.pdf")
+    plot_many_softmax(args,scores, pdf)
+    pdf.close()
+    '''
+  
   # create result table
   if not args.linear and not args.sort_by_loss:
     print("Creating Table")

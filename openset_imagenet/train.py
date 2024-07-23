@@ -314,7 +314,6 @@ def worker(cfg):
         train_ds = ImagenetDataset(
             csv_file=train_file,
             which_set="train",
-            include_unknown=cfg.include_unknown,
             imagenet_path=cfg.data.imagenet_path,
             counterfactuals_path= counterfactual_file,
             arpl_path= arpl_file,
@@ -324,7 +323,6 @@ def worker(cfg):
         val_ds = ImagenetDataset(
             csv_file=val_file,
             which_set="val",
-            include_unknown=cfg.include_unknown,
             imagenet_path=cfg.data.imagenet_path,
             counterfactuals_path= counterfactual_file,
             mixed_unknowns=cfg.mixed_unknowns,

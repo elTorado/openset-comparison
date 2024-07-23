@@ -340,7 +340,7 @@ def worker(cfg):
         elif cfg.loss.type == "softmax":
             # remove the negative label from softmax training set
             train_ds.remove_negative_label()
-            val_ds.remove_negative_label()
+
 
 
     else:

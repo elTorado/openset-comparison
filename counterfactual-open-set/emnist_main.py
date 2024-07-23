@@ -545,7 +545,7 @@ def get_loss_functions(args):
                     first_loss_func=nn.CrossEntropyLoss(reduction='mean'),
                     second_loss_func=lambda arg1, arg2, arg3=None, arg4=None: torch.tensor(0.),
                     training_data = Dataset(args, args.dataset_root, include_unknown=False , include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
-                    val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=False, include_arpl=args.include_arpl, include_counterfactuals=args.include_counterfactuals, mixed_unknowns=args.mixed_unknowns),
+                    val_data = Dataset(args, args.dataset_root, which_set="val", include_unknown=True, include_arpl=False, include_counterfactuals=False, mixed_unknowns=False),
                 )
     elif args.approach =="Garbage":
         print(" ========= Using Garbage Loss ===========")

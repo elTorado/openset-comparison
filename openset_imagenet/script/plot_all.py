@@ -180,7 +180,7 @@ def suffix_to_label(suffix):
   # little string operation on the subplot title
   if "no_negatives" in suffix:
     return "no negatives"
-  elif suffix == "_vanilla":
+  elif "vanilla" in suffix:
     return "original negatives"
   else:
     title = suffix[1:].replace("_", " & ").replace("mixed", "originals")
@@ -371,9 +371,8 @@ def plot_OSC_comparison(args, scores, pdf):
   scores = scores[protocol]
   for index, (suffix, score) in enumerate(scores.items()):
     loss = "EOS"
-    # if suffix == _vanilla:
-    #   loss = "SoftMax"
-    
+
+    labels.append(suffix_to_label(suffix))
     test = [score["test"]]
     color = colors[index % len(colors)]  # Cycle through colors if more than the colormap length
     
@@ -699,11 +698,12 @@ def plot_many_softmax(args, scores, pdf):
     # Plot histograms
     ax.stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
     ax.stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
+    ax.set_ylim(0, 750)
     
     title = suffix_to_label(suffix)
-      
-    
     ax.set_title(title)
+    
+    
 
     # set the tick parameters for the current axis handler
     ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
@@ -818,11 +818,12 @@ def main():
     
   if args.all:
        
-    
+    '''
     print("Writing combined OSC plots")
     pdf = PdfPages("ImageNet_All_OSC_plots.pdf")
     plot_many_OSCR(args, scores, pdf)
     pdf.close()
+    '''
     
     print("Writing OSC comparison")
     pdf = PdfPages("ImageNet_OSC_comparison.pdf")

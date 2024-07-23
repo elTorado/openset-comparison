@@ -104,6 +104,28 @@ def get_experiment_suffix(args):
 
     return [suffix]
 
+def suffix_to_label(suffix):
+  """Does string operations to replace characters present in experiment specific filename
+    (suffix) but unfit for plot labels. 
+    
+
+  Args:
+      suffix (string): suffix of filename e.g. "_arpl_counterfactuals_"
+
+  Returns:
+      str: changed filename e.g. "arpl & counterfactuals"
+  """  
+  # little string operation on the subplot title
+  if "no_negatives" in suffix:
+    return "no negatives"
+  elif "vanilla" in suffix:
+    return "original negatives"
+  else:
+    title = suffix[1:].replace("_", " & ").replace("mixed", "originals")
+  if title.endswith(" & best"):
+      title = title[:-7]
+  return title
+    
   
 def load_scores(args):
   """Load scores and epochs from model checkpoints
@@ -299,7 +321,7 @@ def plot_OSCR_comparison(args, scores, pdf):
         color = colors[index % len(colors)]  # Cycle through colors if more than the colormap length
 
         # Add label for the current test score
-        labels.append(suffix[1:].replace("_", " & ").replace("mixed", "letters"))
+        labels.append(suffix_to_label(suffix))
 
         # Plot test scores
         openset_imagenet.util.plot_oscr(arrays=test, methods=[args.approach], color=color, scale=scale, 
@@ -386,12 +408,8 @@ def plot_many_confidences(args, pdf):
         ax.plot(step_kn, val_kn, linewidth=linewidth, label='Known', color=color_palette[1])
         ax.plot(step_unk, val_unk, linewidth=linewidth, label='Unknown', color=color_palette[0])
 
-        if suffix == "_no_negatives":
-          title = "no negatives"
-        else:
-          title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
 
-        
+        title = suffix_to_label(suffix)
         ax.set_title(title, fontsize=font_size)
 
         ax.grid(axis='x', linestyle=':', linewidth=1, color='gainsboro')
@@ -608,10 +626,7 @@ def plot_many_softmax(args, scores, pdf):
     ax.stairs(kn_hist, kn_edges, fill=True, color=fill_kn, edgecolor=edge_kn, linewidth=1)
     ax.stairs(unk_hist, unk_edges, fill=True, color=fill_unk, edgecolor=edge_unk, linewidth=1)
 
-    if suffix == "_no_negatives":
-          title = "no negatives"
-    else:
-          title = suffix[1:].replace("_", " & ").replace("mixed", "letters")
+    title = suffix_to_label(suffix)
           
     ax.set_title(title)
     

@@ -104,6 +104,7 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
             log.collect('Discriminator Sampled', loss_fake_sampled)
             loss_fake_sampled.backward()
 
+            # Source Code commented out by Counterfactual Images authors
             """
             # Classify autoencoded images as fake
             more_images, more_labels = dataloader.get_batch()
@@ -135,6 +136,7 @@ def train_gan(networks, optimizers, dataloader, epoch=None, **options):
             ###########################
             netG.zero_grad()
 
+            # Source Code commented out by Counterfactual Images authors
             """
             # Minimize fakeness of sampled images
             noise = make_noise(batch_size, latent_size, sample_scale)

@@ -41,9 +41,6 @@ class encoder32(nn.Module):
         
         self.conv_out_9 = nn.Conv2d(128, latent_size, 3, 1, 1, bias=False)
 
-        self.conv10 = nn.Conv2d(128,    128,     3, 2, 1, bias=False)
-        self.conv_out_10 = nn.Conv2d(128, latent_size, 3, 1, 1, bias=False)
-
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(64)
         self.bn3 = nn.BatchNorm2d(128)
@@ -55,9 +52,6 @@ class encoder32(nn.Module):
         self.bn7 = nn.BatchNorm2d(128)
         self.bn8 = nn.BatchNorm2d(128)
         self.bn9 = nn.BatchNorm2d(128)
-        self.bn10 = nn.BatchNorm2d(128)
-
-        self.fc1 = nn.Linear(128*2*2, latent_size)
 
         self.dr1 = nn.Dropout2d(0.2)
         self.dr2 = nn.Dropout2d(0.2)
@@ -92,13 +86,6 @@ class encoder32(nn.Module):
         x = self.bn6(x)
         x = nn.LeakyReLU(0.2)(x)
 
-        # Image representation is now 8 x 8
-        if output_scale == 8:
-            x = self.conv_out_6(x)
-            x = x.view(batch_size, -1)
-            x = clamp_to_unit_sphere(x, 8*8)
-            return x
-
         x = self.dr3(x)
         x = self.conv7(x)
         x = self.bn7(x)
@@ -111,28 +98,14 @@ class encoder32(nn.Module):
         x = nn.LeakyReLU(0.2)(x)
 
         # Image representation is now 4x4
+        # JUST REMOVE THIS PART AND HANDLE ALWAYS LIKE THIS
         if output_scale == 4:
             x = self.conv_out_9(x)
             x = x.view(batch_size, -1)
             x = clamp_to_unit_sphere(x, 4*4)
             return x
 
-        x = self.dr4(x)
-        x = self.conv10(x)
-        x = self.bn10(x)
-        x = nn.LeakyReLU(0.2)(x)
 
-        # Image representation is now 2x2
-        if output_scale == 2:
-            x = self.conv_out_10(x)
-            x = x.view(batch_size, -1)
-            x = clamp_to_unit_sphere(x, 2*2)
-            return x
-
-        x = x.view(batch_size, -1)
-        x = self.fc1(x)
-        x = clamp_to_unit_sphere(x)
-        return x
 
 class encoder256(nn.Module):
     def __init__(self, latent_size=100, num_classes=2, batch_size=64, **kwargs):

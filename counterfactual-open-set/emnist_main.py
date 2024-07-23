@@ -107,7 +107,6 @@ class Dataset(torch.utils.data.dataset.Dataset):
 
     def __init__(self, args, dataset_root, which_set="train", include_unknown = False, has_garbage_class=False, include_arpl = False, include_counterfactuals = False, mixed_unknowns = False):
         
-        include_unknown = args.include_unknown
         self.which_letters = ""
         self.includes_synthetic_samples = include_arpl or include_counterfactuals
         assert not (which_set == "test" and self.includes_synthetic_samples), "TEST SET CANNOT INCLUDE SYNTHETIC SAMPLES!"

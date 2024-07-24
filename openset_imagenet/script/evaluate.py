@@ -162,7 +162,6 @@ def main():
     val_dataset = openset_imagenet.ImagenetDataset(
             csv_file=val_file,
             which_set="val",
-            include_unknown=cfg.include_unknown,
             imagenet_path=cfg.data.imagenet_path,
             counterfactuals_path= counterfactual_file,
             mixed_unknowns=cfg.mixed_unknowns,
@@ -172,7 +171,6 @@ def main():
     test_dataset = openset_imagenet.ImagenetDataset(
         which_set="test",
         csv_file=test_file,
-        include_unknown=cfg.include_unknown,
         imagenet_path=cfg.data.imagenet_path,
         counterfactuals_path= None,
         mixed_unknowns=None,

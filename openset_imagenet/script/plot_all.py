@@ -497,7 +497,7 @@ def plot_many_confidences(args, pdf):
     suffixes = get_experiment_suffix(args=args)
   
     # we dont plot no negatives since no data on validation
-    suffixes = [s for s in suffixes if s != "_no_negatives"]
+    # suffixes = [s for s in suffixes if s != "_no_negatives"]
     protocol = args.protocols[0]
   
     event_files = {}

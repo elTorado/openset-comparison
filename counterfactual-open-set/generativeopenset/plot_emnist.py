@@ -190,9 +190,7 @@ def plot_OSCR(args, scores):
   ############ FINAL PREPARATIONS ##############
   val = [score[loss]["val"]]
   test = [score[loss]["test"]]
-  
-  print(val)
-        
+          
   red = pyplot.colormaps.get_cmap('tab10').colors[3]
   blue = pyplot.colormaps.get_cmap('tab10').colors[0]
   
@@ -361,7 +359,7 @@ def plot_many_confidences(args, pdf):
     suffixes = get_experiment_suffix(args=args)
     
     #we dont plot no negatives since no data on validation
-    suffixes.remove("_no_negatives")
+    #suffixes.remove("_no_negatives")
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     event_dir = os.path.join(current_dir, '../LeNet/Logs/')

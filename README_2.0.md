@@ -204,26 +204,35 @@ Run: 'python generativeopenset/plot_emnist.py --all'
     - **include_arpl**: Set this flag to true to include ARPL negatives.
     - **mixed_unknowns**: Set this to true to mix generated samples with original negative samples.
 
-#### Classifier Evaluation
+### Classifier Evaluation
 
-1. Run `evaluate_imagenet.py config/train.yaml --loss entropic --protocol 2 --use-best --gpu 5`
-    - To instruct the script which classifier to evaluate, use the same flag as it was trained with:
-        - **loss**: entropic (in the current implementation, always use entropic. The code is hardcoded in some parts to look for this key)
-        - **include_unknown**: If this flag is set, evaluate the model trained with no unknowns.
-        - **include_counterfactuals**: Bool.
-        - **include_arpl**: Bool.
-        - **mixed_unknowns**: Bool.
+Run the command: evaluate_imagenet.py config/train.yaml --loss entropic --protocol 2 --use-best --gpu 5
+    - **loss**: loss function used in classifier (leave as entropic)
+    - **protocol**: ImageNet protocol.
+    - **use-best**: Tells the script to use the best model of this approach, in case there are several
+    - **gpu**: GPU to use.
 
-#### Plotting
+To instruct the script which classifier to evaluate, use the same flag as it was trained with:
+    - **include_unknown**: If this flag is set, to evaluate the model trained with no unknowns
+    - **include_counterfactuals**: Bool
+    - **include_arpl**: Bool
+    - **mixed_unknowns**: Bool
 
-You can plot a single classifier using: `plot_imagenet.py --use-best --protocols 2 -l entropic` and indicating which model to plot by the flags:
-    - **include_unknown**: If this flag is set, plot the model trained with no unknowns.
-    - **include_counterfactuals**: Bool.
-    - **include_arpl**: Bool.
-    - **mixed_unknowns**: Bool.
+### Plotting
 
+You can plot a single classifier using: 'plot_imagenet.py --use-best --protocols 2 -l entropic' 
+    - **l**: loss function used in classifier (leave as entropic)
+    - **protocols**: ImageNet protocol.
+    - **use-best**: Tells the script to use the best model of this approach, in case there are several
+    
+To instruct the script which classifier to evaluate, use the same flag as it was trained with:
+    - **include_unknown**: If this flag is set, to evaluate the model trained with no unknowns
+    - **include_counterfactuals**: Bool
+    - **include_arpl**: Bool
+    - **mixed_unknowns**: Bool
 
-Or plot all using 'plot_imagenet.py --use-best --protocols 2 -l entropic --all'. This will combined the subplots of the individual models into a pdf. 
+OR use: plot_imagenet.py --use-best --protocols 2 -l entropic --all
+This will combined the subplots of the individual models into a pdf. 
 
 
 

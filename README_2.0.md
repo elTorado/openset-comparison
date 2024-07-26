@@ -187,7 +187,7 @@ Run: 'python generativeopenset/plot_emnist.py --all'
 
 ### Classifier Training
 
-# Notes
+#### Notes
 - Ensure all generated images are moved to the appropriate directories ("trajectories/" subdirectory in the Openset-comparison repository).
 - Certain required parameters are hardcoded in configs/train.yaml
 	- Filenames of the ARPL & Counterfactual .dataset files

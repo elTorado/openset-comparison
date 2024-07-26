@@ -210,6 +210,7 @@ Run: 'python generativeopenset/plot_emnist.py --all'
 1. Run evaluate_imagenet.py config/train.yaml --loss entropic --protocol 2 --use-best --gpu 5
 	
 To instruct the script which classifier to evaluate, use the same flag as it was trained with:
+
     - ** loss**: entropic (in the current implementation, always use entropic. The code is hardcoded in some parts to look for this key)
     - **include_unknown**: If this flag is set, to evaluate the model trained with no unknowns
     - **include_counterfactuals**: Bool
@@ -219,8 +220,9 @@ To instruct the script which classifier to evaluate, use the same flag as it was
 
 ### Plotting
 
-You can plot a single classifier using: 'plot_imagenet.py --use-best --protocols 2 -l entropic' 
+You can plot a single classifier using: 'plot_imagenet.py --use-best --protocols 2 -l entropic'
 and indicating which model to plot by the flags:
+
     - **include_unknown**: If this flag is set, to plot the model trained with no unknowns
     - **include_counterfactuals**: Bool
     - **include_arpl**: Bool

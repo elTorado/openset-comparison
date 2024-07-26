@@ -155,7 +155,7 @@ class Dataset(torch.utils.data.dataset.Dataset):
         print("- - - - - - - - - - - - - - - - - - - - ", end='\n')
         
         if which_set == "test":
-            self.targets, self.which_letters = ([1,2,3,4,5,6,8,10,11,13,14], "A - N") if which_set != "test" else ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
+            self.targets, self.which_letters = ([16,17,18,19,20,21,22,23,24,25,26], "P - Z")
             self.letter_indexes = [i for i, t in enumerate(self.letters.targets) if t in self.targets]
             
             

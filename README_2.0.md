@@ -187,7 +187,7 @@ Run: 'python generativeopenset/plot_emnist.py --all'
 
 ### Classifier Training
 
-## Notes
+# Notes
 - Ensure all generated images are moved to the appropriate directories ("trajectories/" subdirectory in the Openset-comparison repository).
 - Certain required parameters are hardcoded in configs/train.yaml
 	- Filenames of the ARPL & Counterfactual .dataset files
@@ -196,7 +196,8 @@ Run: 'python generativeopenset/plot_emnist.py --all'
 - For certain commands, the -loss must always be set to entropic. This does not have any logical impact. The idea was to also be able to train and plot for different Loss Functions, but was not realized. 
 
 1. Run 'train_imagenet.py config/train.yaml  2 -g 5 
-	the 2 indicates the protocol to use, **g** the GPU to use. 
+	
+    -   the 2 indicates the protocol to use, **g** the GPU to use. 
 
 	indicate which data splits to use in training by using this flags:
     - **include_unknown**: If this flag is set, NO negatives will be used in training.

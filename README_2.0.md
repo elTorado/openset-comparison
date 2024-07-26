@@ -185,9 +185,9 @@ Run: 'python generativeopenset/plot_emnist.py --all'
     - **dataset_name**: Name of the dataset (use ending 'generated_arpl_imagenet.dataset` s the code is hardcoded to look for this name).
 
 
-### Classifier Training
+#### Classifier Training
 
-#### Notes
+##### Notes
 - Ensure all generated images are moved to the appropriate directories ("trajectories/" subdirectory in the Openset-comparison repository).
 - Certain required parameters are hardcoded in configs/train.yaml
 	- Filenames of the ARPL & Counterfactual .dataset files
@@ -195,38 +195,32 @@ Run: 'python generativeopenset/plot_emnist.py --all'
 	- Epochs
 - For certain commands, the -loss must always be set to entropic. This does not have any logical impact. The idea was to also be able to train and plot for different Loss Functions, but was not realized. 
 
-1. Run 'train_imagenet.py config/train.yaml  2 -g 5 
-	
-    -   the 2 indicates the protocol to use, **g** the GPU to use. 
+1. Run `train_imagenet.py config/train.yaml 2 -g 5`
+    - The `2` indicates the protocol to use, `-g` the GPU to use.
 
-	indicate which data splits to use in training by using this flags:
+    Indicate which data splits to use in training by using these flags:
     - **include_unknown**: If this flag is set, NO negatives will be used in training.
-    - **include_counterfactuals**: Set this flag to true, to include counterfactual negatives.
-    - **include_arpl**: Set this flag to true, to include ARPL negatives.
-    - **mixed_unknowns**: Set this to true, to mix generated samples with original negative samples 
+    - **include_counterfactuals**: Set this flag to true to include counterfactual negatives.
+    - **include_arpl**: Set this flag to true to include ARPL negatives.
+    - **mixed_unknowns**: Set this to true to mix generated samples with original negative samples.
 
+#### Classifier Evaluation
 
-### Classifier Evaluation
-1. Run evaluate_imagenet.py config/train.yaml --loss entropic --protocol 2 --use-best --gpu 5
-	
-To instruct the script which classifier to evaluate, use the same flag as it was trained with:
+1. Run `evaluate_imagenet.py config/train.yaml --loss entropic --protocol 2 --use-best --gpu 5`
+    - To instruct the script which classifier to evaluate, use the same flag as it was trained with:
+        - **loss**: entropic (in the current implementation, always use entropic. The code is hardcoded in some parts to look for this key)
+        - **include_unknown**: If this flag is set, evaluate the model trained with no unknowns.
+        - **include_counterfactuals**: Bool.
+        - **include_arpl**: Bool.
+        - **mixed_unknowns**: Bool.
 
-    - ** loss**: entropic (in the current implementation, always use entropic. The code is hardcoded in some parts to look for this key)
-    - **include_unknown**: If this flag is set, to evaluate the model trained with no unknowns
-    - **include_counterfactuals**: Bool
-    - **include_arpl**: Bool
-    - **mixed_unknowns**: Bool
+#### Plotting
 
-
-### Plotting
-
-You can plot a single classifier using: 'plot_imagenet.py --use-best --protocols 2 -l entropic'
-and indicating which model to plot by the flags:
-
-    - **include_unknown**: If this flag is set, to plot the model trained with no unknowns
-    - **include_counterfactuals**: Bool
-    - **include_arpl**: Bool
-    - **mixed_unknowns**: Bool
+You can plot a single classifier using: `plot_imagenet.py --use-best --protocols 2 -l entropic` and indicating which model to plot by the flags:
+    - **include_unknown**: If this flag is set, plot the model trained with no unknowns.
+    - **include_counterfactuals**: Bool.
+    - **include_arpl**: Bool.
+    - **mixed_unknowns**: Bool.
 
 
 Or plot all using 'plot_imagenet.py --use-best --protocols 2 -l entropic --all'. This will combined the subplots of the individual models into a pdf. 

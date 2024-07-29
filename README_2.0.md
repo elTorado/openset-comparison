@@ -1,4 +1,4 @@
-# EMNIST and ImageNet Experiments
+# EMNIST and ImageNet Experiments with synthetic negatives
 
 This guide provides instructions on how to create synthetic negatives samples from EMNIST and ImageNet datasets and train an open-set classifier using them. The process involves generating counterfactual and ARPL images, and subsequently training a classifier. The necessary source code repositories are provided.
 

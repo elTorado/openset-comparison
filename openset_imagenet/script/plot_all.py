@@ -702,8 +702,6 @@ def plot_many_softmax(args, scores, pdf):
     
     title = suffix_to_label(suffix)
     ax.set_title(title)
-    
-    
 
     # set the tick parameters for the current axis handler
     ax.tick_params(which='both', bottom=True, top=True, left=True, right=True, direction='in')
@@ -722,6 +720,7 @@ def plot_many_softmax(args, scores, pdf):
                 markerscale=1)
   # X label
   fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font)
+  fig.text(0.082, 0.5, 'Samples', va='center', rotation='vertical', fontsize=font+1)
   pdf.savefig(fig, bbox_inches='tight', pad_inches=0) 
 #####################################################################################
 
@@ -823,7 +822,7 @@ def main():
     pdf = PdfPages("ImageNet_All_OSC_plots.pdf")
     plot_many_OSCR(args, scores, pdf)
     pdf.close()
-    '''
+    '''    
     
     print("Writing OSC comparison")
     pdf = PdfPages("ImageNet_OSC_comparison.pdf")

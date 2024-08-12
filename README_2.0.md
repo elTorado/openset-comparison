@@ -6,8 +6,8 @@ The commands are listed with required parameters and an example value.
 
 ## Source Code
 
-- Counterfactuals Generation & Classifier Training: [Counterfact-Openset](https://www.github.com/counterfact-openset)
-- ARPL Generation: [ARPL](https://www.github.com/ARPL)
+- Counterfactuals Generation & Classifier Training: [Counterfact-Openset](https://github.com/elTorado/openset-comparison/tree/main)
+- ARPL Generation: [ARPL](https://github.com/elTorado/ARPL/tree/main)
 
 ## EMNIST Experiments
 

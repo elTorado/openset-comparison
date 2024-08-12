@@ -650,6 +650,7 @@ def plot_many_softmax(args, scores, pdf):
                 markerscale=1)
   # X label
   fig.text(0.5, 0.02, 'Score', ha='center', fontsize=font)
+  fig.text(0.082, 0.5, 'Samples', va='center', rotation='vertical', fontsize=font+1)
   pdf.savefig(fig, bbox_inches='tight', pad_inches=0)
 
 #####################################################################################
